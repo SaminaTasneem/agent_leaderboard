@@ -13,6 +13,40 @@
  */
 declare(strict_types=1);
 
+// require("session_auth.php");
+
+// mysqli_query($link, "SET SESSION group_concat_max_len = 1000000;");
+require("session_auth.php");
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (empty($_SESSION['user'])) {
+    $redirect = urlencode($_SERVER['REQUEST_URI']);
+    header("Location: admin.php?redirect=$redirect");
+    exit;
+}
+
+$PHP_AUTH_USER = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : '';
+$PHP_AUTH_PW   = isset($_SERVER['PHP_AUTH_PW']) ? $_SERVER['PHP_AUTH_PW'] : '';
+
+if (empty($PHP_AUTH_USER) && !empty($_SESSION['user'])) {
+    $PHP_AUTH_USER = $_SESSION['user'];
+
+    $stmt = "SELECT pass FROM vicidial_users WHERE user='" . mysqli_real_escape_string($link, $PHP_AUTH_USER) . "' LIMIT 1";
+    $rslt = mysqli_query($link, $stmt);
+    if ($rslt && mysqli_num_rows($rslt) > 0) {
+        $row = mysqli_fetch_row($rslt);
+        $PHP_AUTH_PW = $row[0];
+        $_SERVER['PHP_AUTH_USER'] = $PHP_AUTH_USER;
+        $_SERVER['PHP_AUTH_PW']   = $PHP_AUTH_PW;
+    }
+}
+
+$PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
+
 $config = [
     'timezone' => getenv('VICIDIAL_TIMEZONE') ?: date_default_timezone_get(),
     'refresh_seconds' => 10,
