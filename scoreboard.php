@@ -14,8 +14,8 @@
 declare(strict_types=1);
 
 // require("session_auth.php");
-
-// mysqli_query($link, "SET SESSION group_concat_max_len = 1000000;");
+require("dbconnect_mysqli.php");
+mysqli_query($link, "SET SESSION group_concat_max_len = 1000000;");
 require("session_auth.php");
 
 if (session_status() === PHP_SESSION_NONE) {
