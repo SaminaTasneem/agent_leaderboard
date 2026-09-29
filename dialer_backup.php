@@ -31324,7 +31324,7 @@ ishwari
 			function loadSMSConversations() {
 				var ext = (typeof extension !== 'undefined') ? extension : '';
 				var user_login = (typeof user !== 'undefined') ? user : '';
-				// console.log("Loading SMS conversations for extension: " + ext + " user: " + user_login);
+				console.log("Loading SMS conversations for extension: " + ext + " user: " + user_login);
 
 				var xhr = new XMLHttpRequest();
 				xhr.open("POST", "send_sms_ajax.php", true);
@@ -31335,7 +31335,7 @@ ishwari
 							var data = JSON.parse(this.responseText);
 							agent_sms_number = data.agent_number;
 							agent_sms_numbers = data.agent_numbers || [data.agent_number];
-							// console.log("Agent SMS numbers resolved: ", agent_sms_numbers, " | Conversations: " + (data.conversations ? data.conversations.length : 0));
+							console.log("Agent SMS numbers resolved: ", agent_sms_numbers, " | Conversations: " + (data.conversations ? data.conversations.length : 0));
 							renderConversationList(data.conversations, data.total_unread);
 						} catch (e) {
 							console.error("Error parsing conversations:", e, this.responseText);

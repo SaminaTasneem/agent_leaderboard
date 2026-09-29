@@ -1,7 +1,7 @@
 <?php
 // Keep the verified agent identity server-side for the personal rank endpoint.
 if (session_status() === PHP_SESSION_NONE) {
-	session_start(['use_strict_mode' => 1, 'cookie_httponly' => true, 'cookie_samesite' => 'Lax']);
+    session_start(['use_strict_mode' => 1, 'cookie_httponly' => true, 'cookie_samesite' => 'Lax']);
 }
 unset($_SESSION['leaderboard_agent']);
 
@@ -1246,7 +1246,7 @@ header("Pragma: no-cache"); // HTTP/1.0
 <html lang="en">
 
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 	<meta name='viewport' content='width=device-width'>
 	<meta charset='utf-8'>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -1272,159 +1272,6 @@ header("Pragma: no-cache"); // HTTP/1.0
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<script
 		src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-	<!-- Missed Calls: one dialog shared by the desktop and mobile menus. -->
-	<style id="klozer-missed-calls-styles">
-		body.klozer-missed-calls-open { overflow: hidden !important; }
-		#klozerMissedCallsDialog {
-			position: fixed; inset: 0; margin: auto; padding: 0;
-			width: calc(100% - 64px); max-width: 1100px;
-			height: 86vh; height: 86dvh; max-height: 820px;
-			border: 1px solid #234650; border-radius: 18px;
-			background: #001722; color: #fff; overflow: hidden;
-			box-shadow: 0 24px 80px rgba(0, 0, 0, .5);
-			font-family: 'Segoe UI', Tahoma, sans-serif; box-sizing: border-box;
-		}
-		#klozerMissedCallsDialog:not([open]) { display: none !important; }
-		#klozerMissedCallsDialog[open] { display: flex; flex-direction: column; }
-		#klozerMissedCallsDialog::backdrop { background: rgba(0, 10, 16, .75); }
-		#klozerMissedCallsDialog .missed-calls-dialog__header {
-			display: flex; align-items: center; justify-content: space-between;
-			flex: 0 0 auto; gap: 12px; padding: 16px 20px;
-			border-bottom: 1px solid #234650; background: #062b3a;
-		}
-		#klozerMissedCallsDialog h2 {
-			margin: 0; color: #00f0c2; font-size: 22px; font-weight: 700; line-height: 1.3;
-		}
-		#klozerMissedCallsDialog .missed-calls-dialog__actions { display: flex; gap: 8px; }
-		#klozerMissedCallsDialog button {
-			min-height: 44px; padding: 8px 14px; border: 1px solid #37606b;
-			border-radius: 8px; background: #123b48; color: #fff;
-			font: inherit; font-size: 14px; cursor: pointer;
-		}
-		#klozerMissedCallsDialog button:hover { background: #205363; }
-		#klozerMissedCallsDialog button:focus-visible { outline: 2px solid #00f0c2; outline-offset: 2px; }
-		#klozerMissedCallsDialog .missed-calls-dialog__status {
-			flex: 0 0 auto; margin: 0; padding: 10px 20px; color: #b9d4dc; font-size: 14px;
-		}
-		#klozerMissedCallsDialog .missed-calls-dialog__status[hidden] { display: none !important; }
-		#klozerMissedCallsFrame {
-			display: block; flex: 1 1 auto; width: 100%; min-width: 0; min-height: 0;
-			border: 0; background: #001722;
-		}
-	</style>
-	<script id="klozer-missed-calls-script">
-	(function () {
-		var dialog, frame, status, returnFocus, loadTimer;
-		var reportUrl = '';
-
-		function startLoading() {
-			window.clearTimeout(loadTimer);
-			status.hidden = false;
-			status.textContent = 'Loading missed calls...';
-			frame.setAttribute('aria-busy', 'true');
-			loadTimer = window.setTimeout(function () {
-				status.textContent = 'The report is taking longer than expected. You can refresh to try again.';
-			}, 20000);
-		}
-
-		function closeMissedCalls() {
-			if (dialog && dialog.open) dialog.close();
-		}
-
-		function createDialog() {
-			dialog = document.createElement('dialog');
-			dialog.id = 'klozerMissedCallsDialog';
-			dialog.setAttribute('aria-labelledby', 'klozerMissedCallsTitle');
-			dialog.innerHTML =
-				'<header class="missed-calls-dialog__header">' +
-					'<h2 id="klozerMissedCallsTitle">Missed Calls</h2>' +
-					'<div class="missed-calls-dialog__actions">' +
-						'<button type="button" data-missed-refresh aria-label="Refresh missed calls">Refresh</button>' +
-						'<button type="button" data-missed-close aria-label="Close missed calls" autofocus>Close</button>' +
-					'</div>' +
-				'</header>' +
-				'<p class="missed-calls-dialog__status" role="status" aria-live="polite" hidden></p>' +
-				'<iframe id="klozerMissedCallsFrame" title="Missed calls report"></iframe>';
-			document.body.appendChild(dialog);
-			frame = dialog.querySelector('iframe');
-			status = dialog.querySelector('[role="status"]');
-
-			dialog.querySelector('[data-missed-close]').addEventListener('click', closeMissedCalls);
-			dialog.querySelector('[data-missed-refresh]').addEventListener('click', function () {
-				startLoading();
-				try {
-					if (frame.contentWindow.location.href === 'about:blank') frame.src = reportUrl;
-					else frame.contentWindow.location.reload();
-				} catch (e) { frame.src = reportUrl; }
-			});
-			dialog.addEventListener('click', function (event) {
-				var rect = dialog.getBoundingClientRect();
-				if (event.target === dialog &&
-					(event.clientX < rect.left || event.clientX > rect.right ||
-					 event.clientY < rect.top || event.clientY > rect.bottom)) closeMissedCalls();
-			});
-			// Keep report keyboard use away from the dialer's call hotkeys.
-			['keydown', 'keypress', 'keyup'].forEach(function (type) {
-				dialog.addEventListener(type, function (event) { event.stopPropagation(); });
-			});
-			dialog.addEventListener('close', function () {
-				document.body.classList.remove('klozer-missed-calls-open');
-				var target = returnFocus;
-				if (!target || !target.getClientRects().length) {
-					target = document.querySelector('[data-mobile-more-button]') ||
-						document.querySelector('.legacy-tools-menu > a');
-				}
-				if (target && target.getClientRects().length) target.focus();
-			});
-			frame.addEventListener('load', function () {
-				try {
-					if (frame.contentWindow.location.href === 'about:blank') return;
-					window.clearTimeout(loadTimer);
-					frame.setAttribute('aria-busy', 'false');
-					var report = frame.contentDocument;
-					var form = report && report.querySelector('#missedCallsFilters');
-					status.hidden = !!form;
-					if (!form) status.textContent = 'The report could not be loaded. Use Refresh to try again.';
-					if (form) form.addEventListener('submit', startLoading);
-					if (report) report.addEventListener('keydown', function (event) {
-						if (event.key === 'Escape') {
-							event.preventDefault();
-							closeMissedCalls();
-						}
-					});
-				} catch (e) {
-					window.clearTimeout(loadTimer);
-					frame.setAttribute('aria-busy', 'false');
-					status.hidden = false;
-					status.textContent = 'The report could not be loaded. Use Refresh to try again.';
-				}
-			});
-		}
-
-		window.KlozerOpenMissedCalls = function () {
-			if (!dialog) createDialog();
-			if (dialog.open) return false;
-			returnFocus = document.activeElement;
-			var nextUrl = 'missedcalls.php?embedded=1&user=' + encodeURIComponent(window.user || '');
-			if (window.KlozerPhoneDevice === true) {
-				var shortSide = Math.min(Number(screen.width) || window.innerWidth,
-					Number(screen.height) || window.innerHeight);
-				nextUrl += '&phone_style=' + (shortSide <= 320 ? '20_320' : shortSide <= 480 ? '321_480' : '481_768');
-			}
-			dialog.showModal();
-			document.body.classList.add('klozer-missed-calls-open');
-			// Reopening keeps the current filters/results. Refresh reloads that same report.
-			if (reportUrl !== nextUrl) {
-				reportUrl = nextUrl;
-				startLoading();
-				frame.src = reportUrl;
-			}
-			return false;
-		};
-	}());
-	</script>
-
-
 	<!--For responsive css name-->
 	<script type='text/javascript'>
 		/*
@@ -1439,7 +1286,7 @@ header("Pragma: no-cache"); // HTTP/1.0
 				var uaDataMobile = false;
 				try {
 					uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
-				} catch (e) { }
+				} catch (e) {}
 
 				var phoneUA = /Android.+Mobile|iPhone|iPod|webOS|BlackBerry|IEMobile|Opera Mini|Windows Phone|Mobi/i.test(ua);
 				var coarsePhone = false;
@@ -1451,7 +1298,7 @@ header("Pragma: no-cache"); // HTTP/1.0
 						window.matchMedia &&
 						window.matchMedia('(pointer: coarse)').matches &&
 						shortSide <= 700;
-				} catch (e) { }
+				} catch (e) {}
 
 				return uaDataMobile || phoneUA || coarsePhone;
 			}
@@ -1467,7 +1314,7 @@ header("Pragma: no-cache"); // HTTP/1.0
 				var link = document.createElement('link');
 				link.rel = 'stylesheet';
 				link.type = 'text/css';
-				link.href = href + '?v=8.65';
+				link.href = href + '?v=8.64';
 				link.setAttribute('data-klozer-responsive', href);
 				document.head.appendChild(link);
 			}
@@ -1550,896 +1397,889 @@ header("Pragma: no-cache"); // HTTP/1.0
 
 		/* On small screens, set height to 'auto' for the grid */
 		@media screen and (max-width: 767px) {
-
-			/* ---------- Closer Group Selection Full Mobile Screen ---------- */
-			#CloserSelectBox {
-				position: fixed !important;
-				left: 0 !important;
-				top: 0 !important;
-				right: 0 !important;
-				bottom: 0 !important;
-				width: 100vw !important;
-				max-width: 100vw !important;
-				height: 100vh !important;
-				height: 100dvh !important;
-				min-height: 100dvh !important;
-				background-color: #002130 !important;
-				overflow-y: auto !important;
-				overflow-x: hidden !important;
-				padding: 22px 16px 120px 16px !important;
-				box-sizing: border-box !important;
-				z-index: 999999 !important;
-			}
-
-			#CloserSelectBox .row,
-			#CloserSelectBox .col-md-12,
-			#CloserSelectBox .col-lg-12,
-			#CloserSelectBox .content,
-			#CloserSelectBox .middleheight,
-			#CloserSelectContent,
-			#CloserSelectContent center {
-				width: 100% !important;
-				max-width: 100% !important;
-				height: auto !important;
-				min-height: 0 !important;
-				margin: 0 !important;
-				padding: 0 !important;
-				display: block !important;
-				box-sizing: border-box !important;
-			}
-
-			#CloserSelectContent table.popup_table,
-			#CloserSelectContent table.tranparent_table {
-				width: 100% !important;
-				max-width: 100% !important;
-				min-width: 0 !important;
-				margin: 0 auto !important;
-				display: block !important;
-				table-layout: fixed !important;
-			}
-
-			#CloserSelectContent thead,
-			#CloserSelectContent tbody,
-			#CloserSelectContent tr {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: block !important;
-				box-sizing: border-box !important;
-			}
-
-			#CloserSelectContent tr[style*="display:flex"] {
-				display: grid !important;
-				grid-template-columns: 1fr !important;
-				gap: 12px !important;
-				padding: 0 !important;
-			}
-
-			#CloserSelectContent td {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: block !important;
-				box-sizing: border-box !important;
-			}
-
-			#CloserSelectContent h3 {
-				width: 100% !important;
-				max-width: 100% !important;
-				font-size: 25px !important;
-				line-height: 1.25 !important;
-				text-align: center !important;
-				white-space: normal !important;
-				margin: 8px 0 24px 0 !important;
-				padding: 0 5px !important;
-				color: #00FFC5 !important;
-			}
-
-			#CloserSelectContent .group-selected {
-				font-size: 21px !important;
-				line-height: 1.3 !important;
-				margin: 0 0 8px 0 !important;
-				padding: 0 !important;
-				text-align: left !important;
-			}
-
-			#CloserSelectContent .bg-selected {
-				width: 100% !important;
-				max-width: 100% !important;
-				height: 260px !important;
-				min-height: 220px !important;
-				max-height: 280px !important;
-				background: #0b2f3d !important;
-				border-radius: 8px !important;
-				overflow-y: auto !important;
-				overflow-x: hidden !important;
-				padding: 12px !important;
-				box-sizing: border-box !important;
-			}
-
-			#CloserSelectAdd,
-			#CloserSelectDelete {
-				width: 100% !important;
-				margin: 0 !important;
-				padding: 0 !important;
-				box-sizing: border-box !important;
-			}
-
-			#CloserSelectContent .add-all {
-				display: block !important;
-				width: 100% !important;
-				color: #ffffff !important;
-				font-size: 16px !important;
-				line-height: 1.6 !important;
-				word-break: break-word !important;
-			}
-
-			#CloserSelectBox .checkbox_closer {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: flex-start !important;
-				gap: 10px !important;
-				text-align: left !important;
-				margin: 22px 0 24px 0 !important;
-				padding: 0 !important;
-				color: #ffffff !important;
-				box-sizing: border-box !important;
-			}
-
-			#CloserSelectBox .checkbox_closer label {
-				margin: 0 !important;
-				font-size: 15px !important;
-				line-height: 1.4 !important;
-			}
-
-			#CloserSelectBox .btn_closer {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: flex !important;
-				justify-content: center !important;
-				align-items: center !important;
-				gap: 14px !important;
-				margin: 20px 0 0 0 !important;
-				padding: 0 !important;
-				box-sizing: border-box !important;
-			}
-
-			#CloserSelectBox .btn_closer a,
-			#CloserSelectBox .btn_gre,
-			#CloserSelectBox .btn-blue {
-				min-width: 110px !important;
-				height: 52px !important;
-				padding: 0 22px !important;
-				border-radius: 28px !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-				font-size: 16px !important;
-				font-weight: 700 !important;
-				box-sizing: border-box !important;
-				text-decoration: none !important;
-			}
-
-			/* Hide original label row only on mobile */
-			#CloserSelectContent thead tr[style*="display:flex"] {
-				display: none !important;
-			}
-
-			/* Each group box gets its own label above it */
-			#CloserSelectContent .bg-selected {
-				position: relative !important;
-				margin-top: 48px !important;
-				overflow: visible !important;
-			}
-
-			/* Keep the inside list scrollable */
-			#CloserSelectAdd,
-			#CloserSelectDelete {
-				height: 100% !important;
-				max-height: 100% !important;
-				overflow-y: auto !important;
-				overflow-x: hidden !important;
-				margin: 0 !important;
-				box-sizing: border-box !important;
-			}
-
-			/* First box label */
-			#CloserSelectContent .bg-selected:nth-of-type(1)::before {
-				content: "Groups Not Selected";
-				position: absolute !important;
-				left: 0 !important;
-				top: -40px !important;
-				width: 100% !important;
-				color: #ffffff !important;
-				font-size: 21px !important;
-				font-weight: 700 !important;
-				line-height: 1.3 !important;
-			}
-
-			/* Second box label */
-			#CloserSelectContent .bg-selected:nth-of-type(2)::before {
-				content: "Selected Groups";
-				position: absolute !important;
-				left: 0 !important;
-				top: -40px !important;
-				width: 100% !important;
-				color: #ffffff !important;
-				font-size: 21px !important;
-				font-weight: 700 !important;
-				line-height: 1.3 !important;
-			}
-
-
-			/* ---------- Alert Popup Full Mobile Overlay ---------- */
-			#AlertBox {
-				position: fixed !important;
-				left: 0 !important;
-				top: 0 !important;
-				right: 0 !important;
-				bottom: 0 !important;
-				width: 100vw !important;
-				max-width: 100vw !important;
-				height: 100vh !important;
-				height: 100dvh !important;
-				z-index: 2147483000 !important;
-				background: rgba(0, 33, 48, 0.72) !important;
-				backdrop-filter: blur(6px) !important;
-				-webkit-backdrop-filter: blur(6px) !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-				padding: 16px !important;
-				box-sizing: border-box !important;
-				overflow: auto !important;
-			}
-
-			#AlertBox .alert_box_pop {
-				position: relative !important;
-				left: auto !important;
-				top: auto !important;
-				width: 100% !important;
-				max-width: 420px !important;
-				max-height: calc(100dvh - 32px) !important;
-				overflow-y: auto !important;
-				background: #062b3a !important;
-				border-radius: 22px !important;
-				padding: 28px 24px !important;
-				box-sizing: border-box !important;
-			}
-
-			#AlertBox .row,
-			#AlertBox .col-sm-12,
-			#AlertBox .space,
-			#AlertBox .no-padding {
-				width: 100% !important;
-				max-width: 100% !important;
-				margin: 0 !important;
-				padding: 0 !important;
-				box-sizing: border-box !important;
-			}
-
-			#AlertBox table,
-			#AlertBox tbody,
-			#AlertBox tr,
-			#AlertBox td {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: block !important;
-				margin: 0 !important;
-				padding: 0 !important;
-				box-sizing: border-box !important;
-			}
-
-			#AlertBox .td_alert_box td {
-				position: relative !important;
-				padding-right: 34px !important;
-			}
-
-			#AlertBoxContent {
-				display: block !important;
-				width: 100% !important;
-				color: #00FFC5 !important;
-				font-size: 22px !important;
-				line-height: 1.45 !important;
-				font-weight: 700 !important;
-				letter-spacing: 0.5px !important;
-				word-break: break-word !important;
-			}
-
-			#AlertBox svg {
-				position: absolute !important;
-				top: 0 !important;
-				right: 0 !important;
-				width: 22px !important;
-				height: 22px !important;
-				cursor: pointer !important;
-			}
-
-			body.body_tag {
-				overflow-y: auto !important;
-				overflow-x: hidden !important;
-			}
-
-			.row.content {
-				display: block !important;
-				width: 100% !important;
-				height: auto !important;
-				padding: 0 !important;
-			}
-
-			.left-sidebar.sidenav {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: block !important;
-				float: none !important;
-				position: relative !important;
-				overflow: visible !important;
-			}
-
-			.sidebar-cards {
-				width: 100% !important;
-				display: flex !important;
-				flex-wrap: wrap !important;
-				gap: 8px !important;
-				padding: 10px !important;
-				box-sizing: border-box !important;
-			}
-
-			.cardsDiv {
-				width: calc(50% - 8px) !important;
-				min-width: 0 !important;
-				box-sizing: border-box !important;
-			}
-
-			.inner-part.main-wrap {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: block !important;
-				float: none !important;
-				position: relative !important;
-				margin-left: 0 !important;
-				clear: both !important;
-			}
-
-			.right-sidebar.sidenav {
-				width: 100% !important;
-				max-width: 100% !important;
-				min-width: 100% !important;
-				display: block !important;
-				float: none !important;
-				clear: both !important;
-				position: relative !important;
-				left: auto !important;
-				right: auto !important;
-				margin: 0 !important;
-				padding: 0 15px 15px 15px !important;
-				box-sizing: border-box !important;
-				overflow: visible !important;
-			}
-
-			.right-sidebar .page-wrap,
-			.right-sidebar .bs-example,
-			.right-sidebar #left_sidebar,
-			.right-sidebar .cl-navblock,
-			.right-sidebar .menu-space {
-				width: 100% !important;
-				max-width: 100% !important;
-				min-width: 0 !important;
-				display: block !important;
-				float: none !important;
-				position: relative !important;
-				box-sizing: border-box !important;
-				overflow: visible !important;
-			}
-
-			#webphoneContainer {
-				width: 100% !important;
-				max-width: 100% !important;
-				min-width: 0 !important;
-				box-sizing: border-box !important;
-				overflow: visible !important;
-			}
-
-			#webphoneSpan,
-			#webphonecontent {
-				width: 100% !important;
-				max-width: 100% !important;
-				min-width: 0 !important;
-				display: block !important;
-				box-sizing: border-box !important;
-				overflow: hidden !important;
-			}
-
-			#webphoneContainer table,
-			#webphoneContainer tbody,
-			#webphoneContainer tr,
-			#webphoneContainer td {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: block !important;
-				box-sizing: border-box !important;
-			}
-
-			iframe#webphone,
-			#webphone {
-				width: 100% !important;
-				max-width: 100% !important;
-				min-width: 0 !important;
-				height: 340px !important;
-				position: relative !important;
-				right: auto !important;
-				left: auto !important;
-				box-sizing: border-box !important;
-			}
-
-			#right-dialpad {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: block;
-			}
-
-			.wd-hun {
-				width: 100% !important;
-				max-width: 100% !important;
-			}
-
-			.keypad {
-				width: 100% !important;
-				display: grid !important;
-				grid-template-columns: repeat(3, 1fr);
-				gap: 4px;
-			}
-
-			.keypad br {
-				display: none !important;
-			}
-
-			.keypad input[type="button"] {
-				width: 100% !important;
-				height: 38px !important;
-				margin: 0 !important;
-				box-sizing: border-box !important;
-			}
-
-			.keypad span {
-				width: 100% !important;
-				height: 34px !important;
-				display: flex !important;
-				align-items: center;
-				justify-content: center;
-				box-sizing: border-box !important;
-			}
-
-			.icon-hung-call {
-				width: 100% !important;
-				display: flex !important;
-				justify-content: space-around !important;
-				align-items: center !important;
-				gap: 10px !important;
-			}
-
-			.icon-hung-call>div {
-				flex: 1 !important;
-				text-align: center !important;
-			}
-
-			#VolumeControlSpan,
-			.dialpad-btns {
-				width: 100% !important;
-				display: flex !important;
-				gap: 10px !important;
-				align-items: center !important;
-				justify-content: space-between !important;
-			}
-
-			#SendDTMF {
-				width: 100% !important;
-				display: flex !important;
-				gap: 8px !important;
-			}
-
-			#send_dtmf_webphone {
-				flex: 1 !important;
-				width: auto !important;
-			}
-
-			#send_dtmf_webphone_btn {
-				width: auto !important;
-				white-space: nowrap !important;
-				margin-left: 0 !important;
-			}
-
-			/* Make webphone boundary long enough */
-			.right-sidebar.sidenav,
-			.right-sidebar .page-wrap,
-			.right-sidebar .bs-example,
-			.right-sidebar #left_sidebar,
-			.right-sidebar .cl-navblock,
-			.right-sidebar .menu-space {
-				height: auto !important;
-				min-height: 930px !important;
-				overflow: visible !important;
-				box-sizing: border-box !important;
-			}
-
-			#webphoneSpan,
-			#webphonecontent,
-			#webphoneContainer {
-				height: auto !important;
-				overflow: visible !important;
-			}
-
-			/* Keypad layout */
-			.keypad {
-				width: 100% !important;
-				display: grid !important;
-				grid-template-columns: repeat(3, 1fr) !important;
-				gap: 5px !important;
-			}
-
-			.keypad br {
-				display: none !important;
-			}
-
-			.keypad input[type="button"] {
-				width: 100% !important;
-				height: 38px !important;
-				margin: 0 !important;
-				box-sizing: border-box !important;
-			}
-
-			/* Backspace button left */
-			.keypad>span:not(.dial-delete) {
-				grid-column: 1 / 2 !important;
-				width: 100% !important;
-				height: 34px !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-				margin-top: 12px !important;
-				box-sizing: border-box !important;
-			}
-
-			/* Bin/Delete button right */
-			.keypad>span.dial-delete {
-				grid-column: 3 / 4 !important;
-				width: 100% !important;
-				height: 34px !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-				margin-top: 12px !important;
-				box-sizing: border-box !important;
-			}
-
-			.keypad .im-dial-close {
-				max-width: 18px !important;
-				max-height: 18px !important;
-			}
-
-			/* Remove the small info icon */
-			#getspandata,
-			.icon-hung-call #getspandata {
-				display: none !important;
-				visibility: hidden !important;
-				width: 0 !important;
-				height: 0 !important;
-				flex: 0 0 0 !important;
-				margin: 0 !important;
-				padding: 0 !important;
-			}
-
-			/* Call / Pause / Hangup alignment */
-			.icon-hung-call {
-				width: 100% !important;
-				display: grid !important;
-				grid-template-columns: repeat(3, 1fr) !important;
-				align-items: center !important;
-				justify-items: center !important;
-				gap: 16px !important;
-				margin: 30px 0 28px 0 !important;
-			}
-
-			.icon-hung-call>div:not(#getspandata) {
-				width: 100% !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-			}
-
-			#MDstatusSpan,
-			#DiaLControl,
-			#HangupControl {
-				width: 100% !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-			}
-
-			#MDstatusSpan .btn,
-			#HangupControl .btn {
-				width: 58px !important;
-				height: 58px !important;
-				border-radius: 50% !important;
-				padding: 0 !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-			}
-
-			#DiaLControl .btn {
-				width: 70px !important;
-				height: 70px !important;
-				border-radius: 50% !important;
-				padding: 0 !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-			}
-
-			/* Volume / mute / record buttons bigger */
-			#VolumeControlSpan {
-				width: 100% !important;
-				display: grid !important;
-				grid-template-columns: repeat(4, 1fr) !important;
-				gap: 14px !important;
-				align-items: center !important;
-				margin: 12px 0 14px 0 !important;
-			}
-
-			#VolumeControlSpan>div {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-			}
-
-			#VolumeControlSpan span {
-				width: 100% !important;
-				display: block !important;
-			}
-
-			#VolumeControlSpan .btn,
-			#VolumeControlSpan button {
-				width: 100% !important;
-				height: 46px !important;
-				min-width: 0 !important;
-				padding: 0 !important;
-				border-radius: 6px !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-			}
-
-			#VolumeControlSpan img {
-				width: 22px !important;
-				height: 22px !important;
-				object-fit: contain !important;
-			}
-
-			/* DTMF row */
-			#SendDTMF {
-				width: 100% !important;
-				display: grid !important;
-				grid-template-columns: 12px 1fr auto !important;
-				align-items: center !important;
-				gap: 8px !important;
-			}
-
-			#send_dtmf_webphone {
-				width: 100% !important;
-				min-width: 0 !important;
-			}
-
-			#send_dtmf_webphone_btn {
-				min-width: 108px !important;
-				margin-left: 0 !important;
-				white-space: nowrap !important;
-			}
-
-			/* Fix 1, 2, and hand button in same row */
-			.dialpad-btns {
-				width: 100% !important;
-				display: grid !important;
-				grid-template-columns: repeat(3, 1fr) !important;
-				gap: 12px !important;
-				align-items: center !important;
-				margin: 14px 0 14px 0 !important;
-			}
-
-			.dialpad-btns br {
-				display: none !important;
-			}
-
-			.dialpad-btns>span {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-				box-sizing: border-box !important;
-			}
-
-			.dialpad-btns .btn,
-			.dialpad-btns a,
-			.dialpad-btns button {
-				width: 100% !important;
-				height: 44px !important;
-				max-width: 100% !important;
-				margin: 0 !important;
-				box-sizing: border-box !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-			}
-
-			#ParkControl {
-				grid-column: auto !important;
-			}
-
-			#ParkControl .btn,
-			#ParkControl button {
-				width: 100% !important;
-				height: 44px !important;
-			}
-
-			#ParkControl img {
-				width: 22px !important;
-				height: 22px !important;
-				object-fit: contain !important;
-			}
-
-			/* Transfer button */
-			#XferControl {
-				width: 100% !important;
-				display: block !important;
-			}
-
-			#XferControl .btn,
-			#XferControl button {
-				width: 100% !important;
-				height: 46px !important;
-				margin: 0 !important;
-				box-sizing: border-box !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-				gap: 6px !important;
-			}
-
-			/* FAST DIAL button */
-			button.btn-white[onclick*="FAST"] {
-				width: 100% !important;
-				height: 40px !important;
-				margin-top: 14px !important;
-				box-sizing: border-box !important;
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-			}
-
-			#AlertBox {
-				position: fixed !important;
-				left: 0 !important;
-				top: 0 !important;
-				right: 0 !important;
-				bottom: 0 !important;
-				width: 100vw !important;
-				height: 100vh !important;
-				height: 100dvh !important;
-				min-height: 100dvh !important;
-				max-width: 100vw !important;
-				margin: 0 !important;
-				padding: 18px !important;
-				box-sizing: border-box !important;
-				background: rgba(0, 33, 48, 0.72) !important;
-				backdrop-filter: blur(6px) !important;
-				-webkit-backdrop-filter: blur(6px) !important;
-				align-items: center !important;
-				justify-content: center !important;
-				overflow: hidden !important;
-				z-index: 2147483000 !important;
-			}
-
-			#AlertBox .alert_box_pop {
-				position: relative !important;
-				left: auto !important;
-				top: auto !important;
-				transform: none !important;
-				width: 88vw !important;
-				max-width: 340px !important;
-				min-width: 0 !important;
-				margin: 0 auto !important;
-				padding: 26px 22px !important;
-				box-sizing: border-box !important;
-				background: #062b3a !important;
-				border-radius: 20px !important;
-				overflow: visible !important;
-			}
-
-			#AlertBox .row,
-			#AlertBox .alert_agent,
-			#AlertBox .no-padding,
-			#AlertBox .col-sm-12,
-			#AlertBox .space {
-				width: 100% !important;
-				max-width: 100% !important;
-				margin: 0 !important;
-				padding: 0 !important;
-				left: auto !important;
-				right: auto !important;
-				float: none !important;
-				box-sizing: border-box !important;
-			}
-
-			#AlertBox table,
-			#AlertBox tbody,
-			#AlertBox tr,
-			#AlertBox td {
-				width: 100% !important;
-				max-width: 100% !important;
-				display: block !important;
-				margin: 0 !important;
-				padding: 0 !important;
-				float: none !important;
-				box-sizing: border-box !important;
-			}
-
-			#AlertBox .td_alert_box td {
-				position: relative !important;
-				padding-right: 38px !important;
-			}
-
-			#AlertBoxContent {
-				display: block !important;
-				width: 100% !important;
-				max-width: 100% !important;
-				color: #00FFC5 !important;
-				font-size: 22px !important;
-				line-height: 1.45 !important;
-				font-weight: 700 !important;
-				letter-spacing: 0.5px !important;
-				text-align: left !important;
-				word-break: normal !important;
-				overflow-wrap: anywhere !important;
-				box-sizing: border-box !important;
-			}
-
-			#AlertBoxContent p {
-				margin: 0 !important;
-				padding: 0 !important;
-				font-size: 22px !important;
-				line-height: 1.45 !important;
-				color: #00FFC5 !important;
-				font-weight: 700 !important;
-				width: 100% !important;
-				max-width: 100% !important;
-				overflow-wrap: anywhere !important;
-				box-sizing: border-box !important;
-			}
-
-			#AlertBox .td_alert_box svg {
-				position: absolute !important;
-				top: 2px !important;
-				right: 0 !important;
-				width: 22px !important;
-				height: 22px !important;
-				cursor: pointer !important;
-			}
-
-			#MainPanel,
-			#MainTable,
-			#MainPanelCustInfo {
-				height: auto !important;
-				min-height: auto !important;
-				overflow: visible !important;
-				padding-bottom: 15px !important;
-				margin-bottom: 15px !important;
-				box-sizing: border-box !important;
-			}
-		}
-
+ /* ---------- Closer Group Selection Full Mobile Screen ---------- */
+  #CloserSelectBox {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    background-color: #002130 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 22px 16px 120px 16px !important;
+    box-sizing: border-box !important;
+    z-index: 999999 !important;
+  }
+
+  #CloserSelectBox .row,
+  #CloserSelectBox .col-md-12,
+  #CloserSelectBox .col-lg-12,
+  #CloserSelectBox .content,
+  #CloserSelectBox .middleheight,
+  #CloserSelectContent,
+  #CloserSelectContent center {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+
+  #CloserSelectContent table.popup_table,
+  #CloserSelectContent table.tranparent_table {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 auto !important;
+    display: block !important;
+    table-layout: fixed !important;
+  }
+
+  #CloserSelectContent thead,
+  #CloserSelectContent tbody,
+  #CloserSelectContent tr {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+
+  #CloserSelectContent tr[style*="display:flex"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 0 !important;
+  }
+
+  #CloserSelectContent td {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+
+  #CloserSelectContent h3 {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 25px !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    margin: 8px 0 24px 0 !important;
+    padding: 0 5px !important;
+    color: #00FFC5 !important;
+  }
+
+  #CloserSelectContent .group-selected {
+    font-size: 21px !important;
+    line-height: 1.3 !important;
+    margin: 0 0 8px 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+
+  #CloserSelectContent .bg-selected {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 260px !important;
+    min-height: 220px !important;
+    max-height: 280px !important;
+    background: #0b2f3d !important;
+    border-radius: 8px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  #CloserSelectAdd,
+  #CloserSelectDelete {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #CloserSelectContent .add-all {
+    display: block !important;
+    width: 100% !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    word-break: break-word !important;
+  }
+
+  #CloserSelectBox .checkbox_closer {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    text-align: left !important;
+    margin: 22px 0 24px 0 !important;
+    padding: 0 !important;
+    color: #ffffff !important;
+    box-sizing: border-box !important;
+  }
+
+  #CloserSelectBox .checkbox_closer label {
+    margin: 0 !important;
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+  }
+
+  #CloserSelectBox .btn_closer {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 14px !important;
+    margin: 20px 0 0 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #CloserSelectBox .btn_closer a,
+  #CloserSelectBox .btn_gre,
+  #CloserSelectBox .btn-blue {
+    min-width: 110px !important;
+    height: 52px !important;
+    padding: 0 22px !important;
+    border-radius: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    box-sizing: border-box !important;
+    text-decoration: none !important;
+  }
+ /* Hide original label row only on mobile */
+  #CloserSelectContent thead tr[style*="display:flex"] {
+    display: none !important;
+  }
+
+  /* Each group box gets its own label above it */
+  #CloserSelectContent .bg-selected {
+    position: relative !important;
+    margin-top: 48px !important;
+    overflow: visible !important;
+  }
+
+  /* Keep the inside list scrollable */
+  #CloserSelectAdd,
+  #CloserSelectDelete {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* First box label */
+  #CloserSelectContent .bg-selected:nth-of-type(1)::before {
+    content: "Groups Not Selected";
+    position: absolute !important;
+    left: 0 !important;
+    top: -40px !important;
+    width: 100% !important;
+    color: #ffffff !important;
+    font-size: 21px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Second box label */
+  #CloserSelectContent .bg-selected:nth-of-type(2)::before {
+    content: "Selected Groups";
+    position: absolute !important;
+    left: 0 !important;
+    top: -40px !important;
+    width: 100% !important;
+    color: #ffffff !important;
+    font-size: 21px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+  }
+
+
+  /* ---------- Alert Popup Full Mobile Overlay ---------- */
+  #AlertBox {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 2147483000 !important;
+    background: rgba(0, 33, 48, 0.72) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+  }
+
+  #AlertBox .alert_box_pop {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    max-height: calc(100dvh - 32px) !important;
+    overflow-y: auto !important;
+    background: #062b3a !important;
+    border-radius: 22px !important;
+    padding: 28px 24px !important;
+    box-sizing: border-box !important;
+  }
+
+  #AlertBox .row,
+  #AlertBox .col-sm-12,
+  #AlertBox .space,
+  #AlertBox .no-padding {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #AlertBox table,
+  #AlertBox tbody,
+  #AlertBox tr,
+  #AlertBox td {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #AlertBox .td_alert_box td {
+    position: relative !important;
+    padding-right: 34px !important;
+  }
+
+  #AlertBoxContent {
+    display: block !important;
+    width: 100% !important;
+    color: #00FFC5 !important;
+    font-size: 22px !important;
+    line-height: 1.45 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    word-break: break-word !important;
+  }
+
+  #AlertBox svg {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 22px !important;
+    height: 22px !important;
+    cursor: pointer !important;
+  }
+  body.body_tag {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  .row.content {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+
+  .left-sidebar.sidenav {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    float: none !important;
+    position: relative !important;
+    overflow: visible !important;
+  }
+
+  .sidebar-cards {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .cardsDiv {
+    width: calc(50% - 8px) !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .inner-part.main-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    float: none !important;
+    position: relative !important;
+    margin-left: 0 !important;
+    clear: both !important;
+  }
+  .right-sidebar.sidenav {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    display: block !important;
+    float: none !important;
+    clear: both !important;
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    margin: 0 !important;
+    padding: 0 15px 15px 15px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  .right-sidebar .page-wrap,
+  .right-sidebar .bs-example,
+  .right-sidebar #left_sidebar,
+  .right-sidebar .cl-navblock,
+  .right-sidebar .menu-space {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: block !important;
+    float: none !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  #webphoneContainer {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  #webphoneSpan,
+  #webphonecontent {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  #webphoneContainer table,
+  #webphoneContainer tbody,
+  #webphoneContainer tr,
+  #webphoneContainer td {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+
+  iframe#webphone,
+  #webphone {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 340px !important;
+    position: relative !important;
+    right: auto !important;
+    left: auto !important;
+    box-sizing: border-box !important;
+  }
+#right-dialpad {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block;
+  }
+
+  .wd-hun {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .keypad {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+
+  .keypad br {
+    display: none !important;
+  }
+
+  .keypad input[type="button"] {
+    width: 100% !important;
+    height: 38px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .keypad span {
+    width: 100% !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box !important;
+  }
+
+  .icon-hung-call {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .icon-hung-call > div {
+    flex: 1 !important;
+    text-align: center !important;
+  }
+
+  #VolumeControlSpan,
+  .dialpad-btns {
+    width: 100% !important;
+    display: flex !important;
+    gap: 10px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  #SendDTMF {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  #send_dtmf_webphone {
+    flex: 1 !important;
+    width: auto !important;
+  }
+
+  #send_dtmf_webphone_btn {
+    width: auto !important;
+    white-space: nowrap !important;
+    margin-left: 0 !important;
+  }
+
+ /* Make webphone boundary long enough */
+  .right-sidebar.sidenav,
+  .right-sidebar .page-wrap,
+  .right-sidebar .bs-example,
+  .right-sidebar #left_sidebar,
+  .right-sidebar .cl-navblock,
+  .right-sidebar .menu-space {
+    height: auto !important;
+    min-height: 930px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  #webphoneSpan,
+  #webphonecontent,
+  #webphoneContainer {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Keypad layout */
+  .keypad {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 5px !important;
+  }
+
+  .keypad br {
+    display: none !important;
+  }
+
+  .keypad input[type="button"] {
+    width: 100% !important;
+    height: 38px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Backspace button left */
+  .keypad > span:not(.dial-delete) {
+    grid-column: 1 / 2 !important;
+    width: 100% !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Bin/Delete button right */
+  .keypad > span.dial-delete {
+    grid-column: 3 / 4 !important;
+    width: 100% !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .keypad .im-dial-close {
+    max-width: 18px !important;
+    max-height: 18px !important;
+  }
+
+  /* Remove the small info icon */
+  #getspandata,
+  .icon-hung-call #getspandata {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    flex: 0 0 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Call / Pause / Hangup alignment */
+  .icon-hung-call {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    align-items: center !important;
+    justify-items: center !important;
+    gap: 16px !important;
+    margin: 30px 0 28px 0 !important;
+  }
+
+  .icon-hung-call > div:not(#getspandata) {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #MDstatusSpan,
+  #DiaLControl,
+  #HangupControl {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #MDstatusSpan .btn,
+  #HangupControl .btn {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #DiaLControl .btn {
+    width: 70px !important;
+    height: 70px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Volume / mute / record buttons bigger */
+  #VolumeControlSpan {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 14px !important;
+    align-items: center !important;
+    margin: 12px 0 14px 0 !important;
+  }
+
+  #VolumeControlSpan > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #VolumeControlSpan span {
+    width: 100% !important;
+    display: block !important;
+  }
+
+  #VolumeControlSpan .btn,
+  #VolumeControlSpan button {
+    width: 100% !important;
+    height: 46px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #VolumeControlSpan img {
+    width: 22px !important;
+    height: 22px !important;
+    object-fit: contain !important;
+  }
+
+  /* DTMF row */
+  #SendDTMF {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 12px 1fr auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  #send_dtmf_webphone {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #send_dtmf_webphone_btn {
+    min-width: 108px !important;
+    margin-left: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  /* Fix 1, 2, and hand button in same row */
+  .dialpad-btns {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+    align-items: center !important;
+    margin: 14px 0 14px 0 !important;
+  }
+
+  .dialpad-btns br {
+    display: none !important;
+  }
+
+  .dialpad-btns > span {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .dialpad-btns .btn,
+  .dialpad-btns a,
+  .dialpad-btns button {
+    width: 100% !important;
+    height: 44px !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #ParkControl {
+    grid-column: auto !important;
+  }
+
+  #ParkControl .btn,
+  #ParkControl button {
+    width: 100% !important;
+    height: 44px !important;
+  }
+
+  #ParkControl img {
+    width: 22px !important;
+    height: 22px !important;
+    object-fit: contain !important;
+  }
+
+  /* Transfer button */
+  #XferControl {
+    width: 100% !important;
+    display: block !important;
+  }
+
+  #XferControl .btn,
+  #XferControl button {
+    width: 100% !important;
+    height: 46px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  /* FAST DIAL button */
+  button.btn-white[onclick*="FAST"] {
+    width: 100% !important;
+    height: 40px !important;
+    margin-top: 14px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+#AlertBox {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    padding: 18px !important;
+    box-sizing: border-box !important;
+    background: rgba(0, 33, 48, 0.72) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    z-index: 2147483000 !important;
+  }
+
+  #AlertBox .alert_box_pop {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    width: 88vw !important;
+    max-width: 340px !important;
+    min-width: 0 !important;
+    margin: 0 auto !important;
+    padding: 26px 22px !important;
+    box-sizing: border-box !important;
+    background: #062b3a !important;
+    border-radius: 20px !important;
+    overflow: visible !important;
+  }
+
+  #AlertBox .row,
+  #AlertBox .alert_agent,
+  #AlertBox .no-padding,
+  #AlertBox .col-sm-12,
+  #AlertBox .space {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    float: none !important;
+    box-sizing: border-box !important;
+  }
+
+  #AlertBox table,
+  #AlertBox tbody,
+  #AlertBox tr,
+  #AlertBox td {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    box-sizing: border-box !important;
+  }
+
+  #AlertBox .td_alert_box td {
+    position: relative !important;
+    padding-right: 38px !important;
+  }
+
+  #AlertBoxContent {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    color: #00FFC5 !important;
+    font-size: 22px !important;
+    line-height: 1.45 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    text-align: left !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    box-sizing: border-box !important;
+  }
+
+  #AlertBoxContent p {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 22px !important;
+    line-height: 1.45 !important;
+    color: #00FFC5 !important;
+    font-weight: 700 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    box-sizing: border-box !important;
+  }
+
+  #AlertBox .td_alert_box svg {
+    position: absolute !important;
+    top: 2px !important;
+    right: 0 !important;
+    width: 22px !important;
+    height: 22px !important;
+    cursor: pointer !important;
+  }
+
+ #MainPanel,
+  #MainTable,
+  #MainPanelCustInfo {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 15px !important;
+    margin-bottom: 15px !important;
+    box-sizing: border-box !important;
+  }
+}
 		.activedate {
 			background-color: #77E698;
 		}
@@ -2488,8 +2328,7 @@ header("Pragma: no-cache"); // HTTP/1.0
 			}
 
 		}
-
-		.lead-preview-toggle {
+			.lead-preview-toggle {
 			display: flex;
 			align-items: center;
 			gap: 8px;
@@ -2497,22 +2336,20 @@ header("Pragma: no-cache"); // HTTP/1.0
 			color: #fff;
 			font-size: 15px;
 			font-weight: 600;
-			cursor: pointer;
-		}
-
-		.lead-preview-toggle,
-		.lead-preview-toggle span {
-			color: #fff !important;
-		}
+				cursor: pointer;
+			}
+			.lead-preview-toggle,
+			.lead-preview-toggle span {
+				color: #fff !important;
+			}
 
 		.lead-preview-toggle input {
-			width: 18px;
-			height: 18px;
-			margin: 0;
-			accent-color: #00ffc5;
-		}
-
-		.lead-preview-panel {
+					width: 18px;
+					height: 18px;
+					margin: 0;
+					accent-color: #00ffc5;
+				}
+				.lead-preview-panel {
 			display: flex;
 			flex-direction: column;
 			align-items: flex-start;
@@ -2714,35 +2551,35 @@ if ($LogiNAJAX > 0) {
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 -->
 	<script type="text/javascript">
-			<!-- 
-			var BrowseWidth = 0;
-			var BrowseHeight = 0;
-			var popupflag = true;
-			//~ ishwari
-			//~ 11-sep-19
-			var showflag=true;
+		<!-- 
+		var BrowseWidth = 0;
+		var BrowseHeight = 0;
+		var popupflag = true;
+		//~ ishwari
+		//~ 11-sep-19
+		var showflag=true;
 	
-		function openpopup() {
-			if(popupflag){
-				popupflag = false;
-			}else{
-				popupflag = true;
-			}
-
-			//~ var popup = document.getElementById("callpopup");
-			//~ popup.classList.toggle("show");
-			/*
-			var element = document.getElementById('callpopup'),
-				style = window.getComputedStyle(element),
-				display = style.getPropertyValue('display');
-			if(display=='none'){
-				var popup = document.getElementById("callpopup");
-				popup.classList.toggle("show");
-			}
-			*/
-
-
+	function openpopup() {
+		if(popupflag){
+			popupflag = false;
+		}else{
+			popupflag = true;
 		}
+
+		//~ var popup = document.getElementById("callpopup");
+		//~ popup.classList.toggle("show");
+		/*
+		var element = document.getElementById('callpopup'),
+			style = window.getComputedStyle(element),
+			display = style.getPropertyValue('display');
+		if(display=='none'){
+			var popup = document.getElementById("callpopup");
+			popup.classList.toggle("show");
+		}
+		*/
+
+
+	}
 		//ishwari
 		//23-aug-19
 		function closepopup() {
@@ -2775,21 +2612,21 @@ if ($LogiNAJAX > 0) {
 		}
 
 		function browser_dimensions() {
-			<?php
-			if (preg_match('/MSIE/', $browser)) {
-				echo "	if (document.documentElement && document.documentElement.clientHeight)\n";
-				echo "			{BrowseWidth = document.documentElement.clientWidth;}\n";
-				echo "		else if (document.body)\n";
-				echo "			{BrowseWidth = document.body.clientWidth;}\n";
-				echo "		if (document.documentElement && document.documentElement.clientHeight)\n";
-				echo "			{BrowseHeight = document.documentElement.clientHeight;}\n";
-				echo "		else if (document.body)\n";
-				echo "			{BrowseHeight = document.body.clientHeight;}\n";
-			} else {
-				echo "BrowseWidth = window.innerWidth;\n";
-				echo "		BrowseHeight = window.innerHeight;\n";
-			}
-			?>
+		<?php
+		if (preg_match('/MSIE/', $browser)) {
+			echo "	if (document.documentElement && document.documentElement.clientHeight)\n";
+			echo "			{BrowseWidth = document.documentElement.clientWidth;}\n";
+			echo "		else if (document.body)\n";
+			echo "			{BrowseWidth = document.body.clientWidth;}\n";
+			echo "		if (document.documentElement && document.documentElement.clientHeight)\n";
+			echo "			{BrowseHeight = document.documentElement.clientHeight;}\n";
+			echo "		else if (document.body)\n";
+			echo "			{BrowseHeight = document.body.clientHeight;}\n";
+		} else {
+			echo "BrowseWidth = window.innerWidth;\n";
+			echo "		BrowseHeight = window.innerHeight;\n";
+		}
+		?>
 
 				document.vicidial_form.JS_browser_width.value = BrowseWidth;
 			document.vicidial_form.JS_browser_height.value = BrowseHeight;
@@ -2836,20 +2673,20 @@ if ($LogiNAJAX > 0) {
 			}
 		}
 
-			<?php
+		<?php
 } else {
 	?>
 
 				<script type="text/javascript">
 					function browser_dimensions()
 					{
-			var nothing=0;
-		}
+		var nothing=0;
+	}
 					<?php
 }
 if ($login_submit_once > 0) {
 	?>
-			var submit_clicks=0;
+		var submit_clicks=0;
 					var image_loading = new Image();
 					image_loading.src='./images/<?php echo _QXZ("agent_loading_animation.gif") ?>';
 
@@ -2858,22 +2695,22 @@ if ($login_submit_once > 0) {
 					function login_click()
 					{
 						login_submit();
-				}
+			}
 					function login_submit()
 					{
 						submit_clicks++;
-				if (submit_clicks > 1)
+			if (submit_clicks > 1)
 					{
 						document.getElementById("login_sub").value = '<?php echo _QXZ("Loading, please wait..."); ?> ' + submit_clicks;
-					}
+				}
 					else
 					{
 						document.vicidial_form.submit();
 					document.getElementById("login_sub").value='<?php echo _QXZ("Loading, please wait..."); ?>';
 					document.getElementById("login_sub").disabled=true;
 					document.getElementById("LoginLoadingBox").style.visibility = 'visible';
-					}
 				}
+			}
 		// -->
 	</script>
 	<?php
@@ -9456,9 +9293,11 @@ if ($window_validation > 0) {
 					else { var temp_phone_code = document.vicidial_form.phone_code.value; }
 
 					// append dial prefix if phone number is greater than 7 digits on non-AGENTDIRECT calls
-					if ((manual_string.length > 7) && (xfer_agent_selected < 1)) {
-						if ((temp_phone_code.length > 0) && (manual_string.substring(0, temp_phone_code.length) == temp_phone_code)) { manual_string = temp_dial_prefix + "" + manual_string; }
-						else { manual_string = temp_dial_prefix + "" + temp_phone_code + "" + manual_string; }
+					if ((manual_string.length > 7) && (xfer_agent_selected < 1)) { 
+						if ( (temp_phone_code.length > 0) && (manual_string.substring(0, temp_phone_code.length) == temp_phone_code) )
+							{manual_string = temp_dial_prefix + "" + manual_string;}
+						else
+							{manual_string = temp_dial_prefix + "" + temp_phone_code + "" + manual_string;}
 					}
 				}
 				else { agent_dialed_type = 'XFER_OVERRIDE'; }
@@ -13194,13 +13033,7 @@ if ($window_validation > 0) {
 		// Fast version of manual dial
 		function NeWManuaLDiaLCalLSubmiTfast() {
 			var MDDiaLCodEform = document.vicidial_form.phone_code.value;
-			if (!MDDiaLCodEform || MDDiaLCodEform.length < 1) {
-				MDDiaLCodEform = document.vicidial_form.MDDiaLCodE ? document.vicidial_form.MDDiaLCodE.value : '';
-			}
 			var MDPhonENumbeRform = document.vicidial_form.phone_number.value;
-			if (!MDPhonENumbeRform || MDPhonENumbeRform.length < 1) {
-				MDPhonENumbeRform = document.vicidial_form.MDPhonENumbeR ? document.vicidial_form.MDPhonENumbeR.value : '';
-			}
 			var MDVendorLeadCode = document.vicidial_form.vendor_lead_code.value;
 		<?php
 		if (($SSmanual_dial_phone_strip != 'DISABLED') and (strlen($SSmanual_dial_phone_strip) > 0)) {
@@ -13992,7 +13825,7 @@ if ($window_validation > 0) {
 					trigger_manual_validation = 0;
 					if (alt_phone_dialing == 1) {
 						add_blinking();
-						var man_status = "<div class='lead-preview-panel'><div class='lead-preview-title'><?php echo _QXZ("Preview the Lead then"); ?></div><div class='lead-preview-actions'><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "','YES','0')\"><?php echo _QXZ("DIAL"); ?></button><span class='lead-preview-separator'><?php echo _QXZ("or"); ?></span><button type='button' class='lead-preview-action' onclick=\"ManualDialSkip('YES')\"><?php echo _QXZ("SKIP"); ?></button></div><div class='lead-preview-alt-actions'><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('ALTPhonE','YES')\"><?php echo _QXZ("ALT PHONE"); ?></button><span class='lead-preview-separator'><?php echo _QXZ("or"); ?></span><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('AddresS3','YES')\"><?php echo _QXZ("ADDRESS3"); ?></button></div></div>";
+							var man_status = "<div class='lead-preview-panel'><div class='lead-preview-title'><?php echo _QXZ("Preview the Lead then"); ?></div><div class='lead-preview-actions'><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "','YES','0')\"><?php echo _QXZ("DIAL"); ?></button><span class='lead-preview-separator'><?php echo _QXZ("or"); ?></span><button type='button' class='lead-preview-action' onclick=\"ManualDialSkip('YES')\"><?php echo _QXZ("SKIP"); ?></button></div><div class='lead-preview-alt-actions'><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('ALTPhonE','YES')\"><?php echo _QXZ("ALT PHONE"); ?></button><span class='lead-preview-separator'><?php echo _QXZ("or"); ?></span><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('AddresS3','YES')\"><?php echo _QXZ("ADDRESS3"); ?></button></div></div>";
 						//~ ishwari
 						//~ 23-aug-19
 						//var callmenu_status =" <div class='col-md-4 padding-b-5'><span id='dial_leads'><a class=\"enjoy-css_perrot\" style='7px 0 11px 0 !important;'  href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag  + "','YES','0'); closepopup();\"> <?php echo _QXZ("Dial 1"); ?></a></span></div><div class='col-md-4 padding-b-5'><span id='altphonespan'><a class=\"sky_enable_dial\" href=\"#\" onclick=\"ManualDialOnly('ALTPhonE','YES'); closepopup();\"> <?php echo _QXZ("Dial 2"); ?></a></span></div><div class='col-md-4 padding-b-5'><span id='skipspan'><a class=\"sky_enable\" href=\"#\" onclick=\"ManualDialSkip('YES'); closepopup();\"> <?php echo _QXZ("Skip"); ?></a></span></div> ";
@@ -14001,7 +13834,7 @@ if ($window_validation > 0) {
 						//~ 23-aug-19
 						var callmenu_status = "<div class='col-md-4 padding-b-5'><span id='dial_leads'><a class=\"callmenu-css\" style='background:#6FD78E;border: 1px solid #6FD78E !important;'  href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "','YES','0'); closepopup();\"> <?php echo _QXZ("Dial 1"); ?></a></span></div><div class='col-md-4 padding-b-5'><span id='altphonespan'><a class=\"callmenu-css\" style='background:#fb8d00 !important;border: 1px solid #fb8d00 !important;' href=\"#\" onclick=\"ManualDialOnly('ALTPhonE','YES'); closepopup();\"> <?php echo _QXZ("Dial 2"); ?></a></span></div><div class='col-md-4 padding-b-5'><span id='skipspan'><a class=\"callmenu-css\" style='background: #3f86bb !important;;border: 1px solid #3f86bb !important;' href=\"#\" onclick=\"ManualDialSkip('YES'); closepopup();\"> <?php echo _QXZ("Skip"); ?></a></span></div> ";
 						if (manual_preview_dial == 'PREVIEW_ONLY') {
-							var man_status = "<div class='lead-preview-panel'><div class='lead-preview-title'><?php echo _QXZ("Preview the Lead then"); ?></div><div class='lead-preview-actions'><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "','YES','0')\"><?php echo _QXZ("DIAL LEAD"); ?></button></div><div class='lead-preview-alt-actions'><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('ALTPhonE','YES')\"><?php echo _QXZ("ALT PHONE"); ?></button><span class='lead-preview-separator'><?php echo _QXZ("or"); ?></span><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('AddresS3','YES')\"><?php echo _QXZ("ADDRESS3"); ?></button></div></div>";
+								var man_status = "<div class='lead-preview-panel'><div class='lead-preview-title'><?php echo _QXZ("Preview the Lead then"); ?></div><div class='lead-preview-actions'><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "','YES','0')\"><?php echo _QXZ("DIAL LEAD"); ?></button></div><div class='lead-preview-alt-actions'><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('ALTPhonE','YES')\"><?php echo _QXZ("ALT PHONE"); ?></button><span class='lead-preview-separator'><?php echo _QXZ("or"); ?></span><button type='button' class='lead-preview-action' onclick=\"ManualDialOnly('AddresS3','YES')\"><?php echo _QXZ("ADDRESS3"); ?></button></div></div>";
 							//~ ishwari
 							//~ 23-aug-19
 							var callmenu_status = " <div class='col-md-4 padding-b-5'><span id='dial_leads'><a class=\"callmenu-css\" style='background:#6FD78E;border: 1px solid #6FD78E !important;'  href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "','YES','0'); closepopup();\"> <?php echo _QXZ("Dial 1"); ?></a></span></div><div class='col-md-4 padding-b-5'><span id='altphonespan'><a class=\"callmenu-css\" style='background:#fb8d00 !important;border: 1px solid #fb8d00 !important;' href=\"#\" onclick=\"ManualDialOnly('ALTPhonE','YES'); closepopup();\"> <?php echo _QXZ("Dial 2"); ?></a></span></div><div class='col-md-4 padding-b-5'><span id='skipspan'><a class=\"callmenu-css\" style='background: #3f86bb !important;;border: 1px solid #3f86bb !important;' href=\"#\" onclick=\"ManualDialSkip('YES'); closepopup();\"> <?php echo _QXZ("Skip"); ?></a></span></div> ";
@@ -18605,7 +18438,7 @@ if ($window_validation > 0) {
 			if (document.vicidial_form.PresetSelection) {
 				document.vicidial_form.PresetSelection.value = '';
 			}
-
+			
 			Presets_HTML = "<div class='preset-list-container' style='display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; max-width: 900px;'>";
 			var loop_ct = 0;
 			while (loop_ct < VD_preset_names_ct) {
@@ -18613,7 +18446,7 @@ if ($window_validation > 0) {
 				var pNum = VARpreset_numbers[loop_ct];
 				var pDtmf = VARpreset_dtmfs[loop_ct];
 				var pHide = VARpreset_hide_numbers[loop_ct];
-
+				
 				Presets_HTML += "<a href='#' class='preset-item' onclick=\"PresetSelect_submit('" + pName + "','" + pNum + "','" + pDtmf + "','" + pHide + "','N');return false;\" style='display: flex; justify-content: space-between; align-items: center; padding: 18px 25px; background: rgba(255,255,255,0.08); color: #fff; text-decoration: none; border-radius: 12px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.1);'>";
 				Presets_HTML += "<span style='font-weight: 600; font-size: 16px;'>" + pName + "</span>";
 				if (pHide == 'N') { Presets_HTML += "<span style='opacity: 0.5; font-size: 14px;'>" + pNum + "</span>"; }
@@ -18655,7 +18488,7 @@ if ($window_validation > 0) {
 
 			Presets_HTML += "</div>";
 			Presets_HTML += "<div style='margin-top: 40px; text-align: center;'><a href='#' class='btn_gre' onclick=\"hideDivVisible('PresetsSelectBox');return false;\" style='padding: 12px 45px; display: inline-block; font-weight: bold; font-size: 15px;'><?php echo _QXZ("Close"); ?> [X]</a></div>";
-
+			
 			document.getElementById("PresetsSelectBoxContent").innerHTML = Presets_HTML;
 		}
 
@@ -18982,28 +18815,28 @@ if ($window_validation > 0) {
 							document.getElementById("CBCommentsContent").innerHTML = "<input type=\"hidden\" name=\"cbcomment_comments\" id=\"cbcomment_comments\" form=\"vicidial_form\" value=\"" + document.vicidial_form.dispo_comments.value + "\" />";
 						}
 
+						
+// KLOZER MOBILE CALLBACK MODAL FIX
+function moveMobileCallbackToBody() {
+    if (document.body.classList.contains('klozer-phone-ui')) {
+        var cbBox = document.getElementById('CallBackSelectBox');
 
-						// KLOZER MOBILE CALLBACK MODAL FIX
-						function moveMobileCallbackToBody() {
-							if (document.body.classList.contains('klozer-phone-ui')) {
-								var cbBox = document.getElementById('CallBackSelectBox');
+        if (cbBox && cbBox.parentNode !== document.body) {
+            document.body.appendChild(cbBox);
+        }
 
-								if (cbBox && cbBox.parentNode !== document.body) {
-									document.body.appendChild(cbBox);
-								}
+        if (cbBox) {
+            cbBox.style.position = 'fixed';
+            cbBox.style.left = '0px';
+            cbBox.style.top = '0px';
+            cbBox.style.width = '100vw';
+            cbBox.style.height = '100vh';
+            cbBox.style.zIndex = '2147483647';
+        }
+    }
+}
 
-								if (cbBox) {
-									cbBox.style.position = 'fixed';
-									cbBox.style.left = '0px';
-									cbBox.style.top = '0px';
-									cbBox.style.width = '100vw';
-									cbBox.style.height = '100vh';
-									cbBox.style.zIndex = '2147483647';
-								}
-							}
-						}
-
-						moveMobileCallbackToBody();
+moveMobileCallbackToBody();
 						showDivVisible('CallBackSelectBox');
 						hideDivVisible('DispoSelectBox');
 						//get_agents_list();
@@ -19848,13 +19681,13 @@ if ($window_validation > 0) {
 		// ################################################################################
 		// Show message that there are no voice channels in the VICIDIAL session
 
-		function toggleHeight() {
-			var div = document.getElementById('DispoSelectBox');
-			if (div.style.height === '15%') {
-				div.style.height = '100%'; // Set height to 100% when toggled
-			} else {
-				div.style.height = '15%'; // Set height to 10% when toggled
-			}
+                function toggleHeight() {
+		var div = document.getElementById('DispoSelectBox');
+		if (div.style.height === '15%') {
+			div.style.height = '100%'; // Set height to 100% when toggled
+		} else {
+			div.style.height = '15%'; // Set height to 10% when toggled
+		}
 		}
 
 		function NoneInSession() {
@@ -19869,7 +19702,7 @@ if ($window_validation > 0) {
 			hideDivVisible('NoneInSessionBox');
 			WaitingForNextStep = 0;
 			nochannelinsession = 0;
-			toggleHeight();
+                        toggleHeight();
 		}
 		function NoneInSessionCalL(tempstate) {
 			//~ ishwari
@@ -20319,27 +20152,27 @@ if ($window_validation > 0) {
 		// }
 
 		function notifyMobileAppAgentSession(loggedIn) {
-			var message = JSON.stringify({
-				type: 'AGENT_SESSION_STATE',
-				loggedIn: loggedIn
-			});
+				var message = JSON.stringify({
+					type: 'AGENT_SESSION_STATE',
+					loggedIn: loggedIn
+				});
 
-			// React Native
-			if (
-				window.ReactNativeWebView &&
-				typeof window.ReactNativeWebView.postMessage === 'function'
-			) {
-				window.ReactNativeWebView.postMessage(message);
+				// React Native
+				if (
+					window.ReactNativeWebView &&
+					typeof window.ReactNativeWebView.postMessage === 'function'
+				) {
+					window.ReactNativeWebView.postMessage(message);
+				}
+
+				// Flutter: Tabassum apu please verify the below code.
+				// if (
+				// 	window.FlutterWebView &&
+				// 	typeof window.FlutterWebView.postMessage === 'function'
+				// ) {
+				// 	window.FlutterWebView.postMessage(message);
+				// }
 			}
-
-			// Flutter: Tabassum apu please verify the below code.
-			// if (
-			// 	window.FlutterWebView &&
-			// 	typeof window.FlutterWebView.postMessage === 'function'
-			// ) {
-			// 	window.FlutterWebView.postMessage(message);
-			// }
-		}
 
 		// ################################################################################
 		// Log the user out of the system when they close their browser while logged in
@@ -22616,23 +22449,23 @@ if ($useIE > 0) {
 	if ($useIE > 0) {
 		?>
 
-					var CallBackTimEHouRFORM = document.getElementById('CBT_hour');
+				var CallBackTimEHouRFORM = document.getElementById('CBT_hour');
 						var CallBackTimEHouR = CallBackTimEHouRFORM[CallBackTimEHouRFORM.selectedIndex].text;
 						//	var CallBackTimEHouRIDX = CallBackTimEHouRFORM.value;
 
 						var CallBackTimEMinuteSFORM = document.getElementById('CBT_minute');
 						var CallBackTimEMinuteS = CallBackTimEMinuteSFORM[CallBackTimEMinuteSFORM.selectedIndex].text;
-				//	var CallBackTimEMinuteSIDX = CallBackTimEMinuteSFORM.value;
+			//	var CallBackTimEMinuteSIDX = CallBackTimEMinuteSFORM.value;
 
-				<?php
-				if ($callback_time_24hour < 1) {
-					?>
-							var CallBackTimEAmpMFORM = document.getElementById('CBT_ampm');
-								var CallBackTimEAmpM = CallBackTimEAmpMFORM[CallBackTimEAmpMFORM.selectedIndex].text;
-						//	var CallBackTimEAmpMIDX = CallBackTimEAmpMFORM.value;
-						<?php
-				}
+			<?php
+			if ($callback_time_24hour < 1) {
 				?>
+					var CallBackTimEAmpMFORM = document.getElementById('CBT_ampm');
+								var CallBackTimEAmpM = CallBackTimEAmpMFORM[CallBackTimEAmpMFORM.selectedIndex].text;
+				//	var CallBackTimEAmpMIDX = CallBackTimEAmpMFORM.value;
+				<?php
+			}
+			?>
 							CallBackLeadStatus = document.vicidial_form.DispoSelection.value;
 
 						//	alert (CallBackTimEHouR + "|" + CallBackTimEHouRFORM + "|" + CallBackTimEHouRIDX + "|");
@@ -22640,42 +22473,42 @@ if ($useIE > 0) {
 						//	alert (CallBackTimEAmpM + "|" + CallBackTimEAmpMFORM + "|" + CallBackTimEAmpMIDX + "|");
 
 						CallBackTimEMinuteSFORM.selectedIndex = '0';
-				<?php
-				if ($callback_time_24hour < 1) {
-					?>
+			<?php
+			if ($callback_time_24hour < 1) {
+				?>
 									CallBackTimEHouRFORM.selectedIndex = '0';
 								CallBackTimEAmpMFORM.selectedIndex = '1';
-						<?php
-				} else {
-					?>
+				<?php
+			} else {
+				?>
 									CallBackTimEHouRFORM.selectedIndex = '11';
-						<?php
-				}
+				<?php
+			}
 	} else {
 		?>
 							CallBackTimEHouR = document.vicidial_form.CBT_hour.value;
 						CallBackTimEMinuteS = document.vicidial_form.CBT_minute.value;
-				<?php
-				if ($callback_time_24hour < 1) {
-					?>
+			<?php
+			if ($callback_time_24hour < 1) {
+				?>
 									CallBackTimEAmpM = document.vicidial_form.CBT_ampm.value;
 								document.vicidial_form.CBT_ampm.value = 'PM';
 								document.vicidial_form.CBT_hour.value = '01';
-						<?php
-				} else {
-					?>
-									document.vicidial_form.CBT_hour.value = '12';
-						<?php
-				}
+				<?php
+			} else {
 				?>
+									document.vicidial_form.CBT_hour.value = '12';
+				<?php
+			}
+			?>
 							CallBackLeadStatus = document.vicidial_form.DispoSelection.value;
 						document.vicidial_form.CBT_minute.value = '00';
 
-			<?php
+		<?php
 	}
 	if ($callback_time_24hour < 1) {
 		?>
-					if (CallBackTimEHouR == '12') {
+				if (CallBackTimEHouR == '12') {
 							if (CallBackTimEAmpM == 'AM') {
 								CallBackTimEHouR = '00';
 							}
@@ -22686,7 +22519,7 @@ if ($useIE > 0) {
 								CallBackTimEHouR = (CallBackTimEHouR + 12);
 							}
 						}
-				<?php
+			<?php
 	}
 	?>
 					CallBackDatETimE = CallBackDatEForM + " " + CallBackTimEHouR + ":" + CallBackTimEMinuteS + ":00";
@@ -22931,19 +22764,19 @@ if ($useIE > 0) {
 			// document.getElementById("SearcHResultSDisplaYBox").style.left = cust_left;
 			if (document.body.classList.contains('klozer-phone-ui')) {
 
-				let cb = document.getElementById("CallBackSelectBox");
+    let cb = document.getElementById("CallBackSelectBox");
 
-				cb.style.left = "0px";
-				cb.style.top = "0px";
-				cb.style.position = "fixed";
-				cb.style.width = "100vw";
-				cb.style.height = "100vh";
-				cb.style.zIndex = "999999999";
-			} else {
+    cb.style.left = "0px";
+    cb.style.top = "0px";
+    cb.style.position = "fixed";
+    cb.style.width = "100vw";
+    cb.style.height = "100vh";
+    cb.style.zIndex = "999999999";
+} else {
 
-				document.getElementById("CallBackSelectBox").style.left = cust_left;
+    document.getElementById("CallBackSelectBox").style.left = cust_left;
 
-			}
+}
 			//document.getElementById("PauseCodeSelectBox").style.left = cust_left;
 			// document.getElementById("HotKeyEntriesBox").style.left = cust_left;
 			// document.getElementById("CBcommentsBox").style.left = cust_left;
@@ -23720,7 +23553,7 @@ document.getElementById("ViewCommentsBox").style.width = cust_width;
 		if ($SSagent_screen_timer == 'EventSource') {
 			?>
 
-				if (typeof (EventSource) !== "undefined") {
+			if (typeof (EventSource) !== "undefined") {
 						if (!source) {
 							if (refresh_interval < 7300000) {
 								source = new EventSource("sse.php?refresh_interval=" + refresh_interval);
@@ -23743,7 +23576,7 @@ document.getElementById("ViewCommentsBox").style.width = cust_width;
 					else {
 						setTimeout("all_refresh()", refresh_interval);
 					}
-				<?php
+			<?php
 		} else if ($SSagent_screen_timer == 'setTimeoutAudioLoop') {
 			echo "\n		set_timeout_audio_loop = true;\n";
 			echo "\n		setTimeout(\"all_refresh()\", refresh_interval);\n";
@@ -24308,8 +24141,8 @@ document.getElementById("ViewCommentsBox").style.width = cust_width;
 			//~ 31-dec-19
 			hideDiv('Script2Panel');
 			hideDiv('Script2RefresH');
-			hideDiv('VicidialEmailPanel');
-			$('#VicidialEmailPanel').removeClass('active in').hide();
+                        hideDiv('VicidialEmailPanel'); 
+                        $('#VicidialEmailPanel').removeClass('active in').hide();
 			hideDiv('FormPanel');
 			hideDiv('FormRefresH');
 			hideDiv('EmailPanel');
@@ -24697,10 +24530,9 @@ document.getElementById("ViewCommentsBox").style.width = cust_width;
 echo "</head>\n";
 
 if (isset($auth) && (int) $auth === 1 && !empty($VD_login)) {
-	$_SESSION['leaderboard_agent'] = ['user' => (string) $VD_login, 'expires' => time() + 43200];
+    $_SESSION['leaderboard_agent'] = ['user' => (string) $VD_login, 'expires' => time() + 43200];
 }
-if (session_status() === PHP_SESSION_ACTIVE)
-	session_write_close();
+if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
 $zi = 2;
 
@@ -24743,13 +24575,9 @@ $zi = 2;
 					<li class="color-white" style="position: relative;left:50px;font-size:12px;">Username: <span
 							class="label label-default" style="font-size:12px;">
 							<?php echo $LOGfullname; ?>
-							<span id="myLeaderboardRank" class="my-rank-badge"
-								title="Today's rank across all campaigns">My Rank: </span>
+                            <span id="myLeaderboardRank" class="my-rank-badge" title="Today's rank across all campaigns">My Rank: —</span>
 						</span></li>
-					<li class="color-white" style="position: relative;left:60px;font-size:12px;">Phone: <span
-							class="label label-default" style="font-size:12px;">
-							<?php echo $phone_login; ?>
-						</span></li>
+<li class="color-white"  style="position: relative;left:60px;font-size:12px;">Phone: <span class="label label-default" style="font-size:12px;"><?php echo $phone_login; ?></span></li>
 					<li class="color-white" style="position: relative;left:70px;font-size:12px;">Camp: <span
 							class="label label-default" style="font-size:12px;">
 							<?php echo $VD_campaign; ?>
@@ -24809,15 +24637,14 @@ $zi = 2;
 								<li><a href="#"><img class="call_log" onclick="VieWCalLLoG();return false;"
 											src="./img/call-log.png"> </a></li>
 							</span> </span>
-						<li class="legacy-tools-menu"><a href="#" class="dropdown-toggle" data-toggle="dropdown"
-								role="button" aria-haspopup="true" aria-expanded="false"><img
-									style="height:25px;width:25px;" src="images/menu.png"> </a>
+						<li class="legacy-tools-menu"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+								aria-haspopup="true" aria-expanded="false"><img style="height:25px;width:25px;"
+									src="images/menu.png"> </a>
 							<ul class="dropdown-menu">
 								<li><a onclick="showdiv();show_calls_in_queue('SHOW');" href="#"><img
 											src="./img/phone-icon.png">Show Calls In Queue</a></li>
 								<li>
-																		<a href="#klozerMissedCallsDialog" onclick="return KlozerOpenMissedCalls();" aria-haspopup="dialog" aria-controls="klozerMissedCallsDialog"><img
-
+									<a href="missedcalls.php" target="_blank"><img
 											src="./img/missed-phone-icon.png">Missed Calls</a>
 								</li>
 								<li><a onclick="AgentsViewOpen('AgentViewSpan','open');return false;"
@@ -25125,8 +24952,8 @@ change theme version 1.5.2
 							echo $zi ?>;display:none;" id="Tabs">
 								<table border="0" bgcolor="#FFFFFF" width="<?php echo $MNwidth ?>px" height="30px">
 									<tr valign="top" align="left">
-										<td align="left" width="115px" bgcolor="#<?php echo $SSstd_row5_background ?>">
-											<a href="#" onclick="MainPanelToFront('NO','YES');"><img
+										<td align="left" width="115px" bgcolor="#<?php echo $SSstd_row5_background ?>"><a
+												href="#" onclick="MainPanelToFront('NO','YES');"><img
 													src="<?php echo $selected_logo ?>" alt="MAIN" width="115px"
 													height="30px" border="0" /></a></td>
 										<td align="left" width="67px"><a href="#"
@@ -25257,8 +25084,8 @@ change theme version 1.5.2
 
 
 
-							if ($email_enabled > 0) {
-								$customer_menues .= '<li role="presentation" class="othertab">
+if ($email_enabled > 0) {
+    $customer_menues .= '<li role="presentation" class="othertab">
         <a aria-controls="VicidialEmailPanel" 
            role="tab" 
            data-toggle="tab" 
@@ -25270,7 +25097,7 @@ change theme version 1.5.2
         </a>
     </li>';
 
-							}
+}
 							// if ($email_enabled > 0) {
 // 	$customer_menues .= '<li role="presentation" class="othertab">
 // 					<a aria-controls="Email" role="tab" data-toggle="tab" aria-expanded="false" onclick="EmailPanelToFront();" href="#EmailPanel" class="emailPanel">
@@ -25659,11 +25486,10 @@ change theme version 1.5.2
 
 																			<div class='col-lg-12 no-padding space'>
 																				<span style="display:none;position:absolute;left:600px;top:<?php echo $QLheight ?>px;z-index:<?php $zi++;
-																				   echo $zi ?>;" id="callsinqueuelink">
+																				  echo $zi ?>;" id="callsinqueuelink">
 																					<font class="body_text"><span
 																							id='callsinqueuelink'></span>
-																						<br />
-																					</font>
+																						<br /></font>
 																					<?php
 																					if ($view_calls_in_queue > 0) {
 																						if ($view_calls_in_queue_launch > 0) {
@@ -26091,58 +25917,56 @@ change theme version 1.5.2
 
 
 
-		<style>
-			/* Modern Dark UI Theme */
-			#VicidialEmailPanel .block-flat {
-				background: #0f1e24;
-				border: none;
-				color: #ffffff;
-			}
+<style>
+/* Modern Dark UI Theme */
+#VicidialEmailPanel .block-flat {
+    background: #0f1e24;
+    border: none;
+    color: #ffffff;
+}
 
-			#VicidialEmailPanel .header {
-				background: #0b161b;
-				padding: 15px;
-				border-bottom: 1px solid #1a2f38;
-			}
+#VicidialEmailPanel .header {
+    background: #0b161b;
+    padding: 15px;
+    border-bottom: 1px solid #1a2f38;
+}
 
-			#VicidialEmailPanel .nav-tabs {
-				border-bottom: 1px solid #1a2f38;
-			}
+#VicidialEmailPanel .nav-tabs {
+    border-bottom: 1px solid #1a2f38;
+}
 
-			#VicidialEmailPanel .nav-tabs li a {
-				color: #00d1b2;
-				background: transparent;
-				border: none;
-				font-weight: 600;
-			}
+#VicidialEmailPanel .nav-tabs li a {
+    color: #00d1b2;
+    background: transparent;
+    border: none;
+    font-weight: 600;
+}
 
-			#VicidialEmailPanel .nav-tabs li.active a {
-				color: #ffffff !important;
-				background: #00d1b2 !important;
-				border-radius: 5px 5px 0 0;
-			}
+#VicidialEmailPanel .nav-tabs li.active a {
+    color: #ffffff !important;
+    background: #00d1b2 !important;
+    border-radius: 5px 5px 0 0;
+}
 
-			/* Form Styling */
-			#email_compose_form .form-control {
-				background: #162a33;
-				border: 1px solid #1a2f38;
-				color: #fff;
-				border-radius: 4px;
-			}
+/* Form Styling */
+#email_compose_form .form-control {
+    background: #162a33;
+    border: 1px solid #1a2f38;
+    color: #fff;
+    border-radius: 4px;
+}
 
-			#email_compose_form .form-control:focus {
-				border-color: #00d1b2;
-				box-shadow: none;
-			}
+#email_compose_form .form-control:focus {
+    border-color: #00d1b2;
+    box-shadow: none;
+}
 
-			#email_send_btn {
-				background: #00d1b2;
-				border: none;
-				font-weight: bold;
-				color: #fff;
-			}
-
-
+#email_send_btn {
+    background: #00d1b2;
+    border: none;
+    font-weight: bold;
+    color: #fff;
+}
 
 
 
@@ -26152,235 +25976,212 @@ change theme version 1.5.2
 
 
 
-			#email_send_btn:hover {
-				background: #00b09b;
-			}
-
-			/* Inbox/Sent Table */
-			.inbox-table {
-				width: 100%;
-				color: #eee;
-				border-collapse: collapse;
-			}
-
-			.inbox-table tr {
-				border-bottom: 1px solid #1a2f38;
-				cursor: pointer;
-				transition: 0.3s;
-			}
-
-			.inbox-table tr:hover {
-				background: #162a33;
-			}
-
-			.inbox-table td {
-				padding: 12px 10px;
-				font-size: 13px;
-			}
-
-			.inbox-table .sender-col {
-				width: 25%;
-				font-weight: bold;
-				color: #00d1b2;
-			}
-		</style>
 
 
-		<div role="tabpanel" class="tab-pane" id="VicidialEmailPanel">
-			<div class="block-flat no-margin-bottom">
-				<div class="header no-border box-shadow">
-					<ul class="nav nav-tabs" style="margin-bottom: 10px;">
-						<li><a data-toggle="tab" href="#email_inbox" onclick="loadOutboundEmails()">Outbound Email</a>
-						</li>
-						<li><a data-toggle="tab" href="#email_compose" onclick="populateComposeForm()">Compose</a></li>
-						<li class="active"><a data-toggle="tab" href="#email_inbound_tab"
-								onclick="loadGmailStyleChat()">Inbound Email</a></li>
-					</ul>
+#email_send_btn:hover { background: #00b09b; }
+
+/* Inbox/Sent Table */
+.inbox-table {
+    width: 100%;
+    color: #eee;
+    border-collapse: collapse;
+}
+
+.inbox-table tr {
+    border-bottom: 1px solid #1a2f38;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.inbox-table tr:hover { background: #162a33; }
+.inbox-table td { padding: 12px 10px; font-size: 13px; }
+.inbox-table .sender-col { width: 25%; font-weight: bold; color: #00d1b2; }
+</style>
 
 
+<div role="tabpanel" class="tab-pane" id="VicidialEmailPanel">
+    <div class="block-flat no-margin-bottom">
+        <div class="header no-border box-shadow">
+            <ul class="nav nav-tabs" style="margin-bottom: 10px;">
+                <li><a data-toggle="tab" href="#email_inbox" onclick="loadOutboundEmails()">Outbound Email</a></li>
+                <li><a data-toggle="tab" href="#email_compose" onclick="populateComposeForm()">Compose</a></li>
+                <li class="active"><a data-toggle="tab" href="#email_inbound_tab" onclick="loadGmailStyleChat()">Inbound Email</a></li>
+            </ul>
+            
+            
 
-				</div>
+        </div>
 
 
 
 
-				<div id="emailViewModal" class="modal fade" role="dialog"
-					style="background: rgba(0,0,0,0.8); z-index: 9999;">
-					<div class="modal-dialog modal-lg">
-						<div class="modal-content" style="background: #0f1e24; color: #fff; border: 1px solid #1a2f38;">
-							<div class="modal-header" style="border-bottom: 1px solid #1a2f38;">
-								<button type="button" class="close" data-dismiss="modal"
-									style="color:#fff; opacity: 1;">&times;</button>
-								<h4 class="modal-title" id="view_email_subject"
-									style="color: #00d1b2; font-weight: bold;"></h4>
-							</div>
-							<div class="modal-body" style="max-height: 75vh; overflow-y: auto; padding: 20px;">
-								<div
-									style="margin-bottom: 20px; border-bottom: 1px solid #1a2f38; padding-bottom: 15px;">
-									<div style="font-size: 14px;">
-										<strong style="color: #00d1b2;">To:</strong> <span id="view_email_from"
-											style="color: #eee;"></span>
-									</div>
-									<div style="font-size: 12px; color: #888; margin-top: 5px;">
-										<i class="fa fa-calendar"></i> <span id="view_email_date"></span>
-									</div>
-								</div>
-
-								<div id="view_email_body" style="
-					white-space: pre-wrap !important; 
-					display: block;
-					word-wrap: break-word; 
-					line-height: 1.6; 
-					padding: 15px; 
-					background: #162a33; 
-					border-radius: 5px; 
-					font-size: 14px; 
-					color: #ddd;
-					font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-								</div>
-							</div>
-							<div class="modal-footer" style="border-top: 1px solid #1a2f38;">
-								<button type="button" class="btn btn-default" data-dismiss="modal"
-									style="background: #333; color: #fff; border: none; padding: 8px 20px;">Close</button>
-							</div>
-						</div>
-					</div>
-				</div>
+       <div id="emailViewModal" class="modal fade" role="dialog" style="background: rgba(0,0,0,0.8); z-index: 9999;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: #0f1e24; color: #fff; border: 1px solid #1a2f38;">
+            <div class="modal-header" style="border-bottom: 1px solid #1a2f38;">
+                <button type="button" class="close" data-dismiss="modal" style="color:#fff; opacity: 1;">&times;</button>
+                <h4 class="modal-title" id="view_email_subject" style="color: #00d1b2; font-weight: bold;"></h4>
+            </div>
+            <div class="modal-body" style="max-height: 75vh; overflow-y: auto; padding: 20px;">
+                <div style="margin-bottom: 20px; border-bottom: 1px solid #1a2f38; padding-bottom: 15px;">
+                    <div style="font-size: 14px;">
+                        <strong style="color: #00d1b2;">To:</strong> <span id="view_email_from" style="color: #eee;"></span>
+                    </div>
+                    <div style="font-size: 12px; color: #888; margin-top: 5px;">
+                        <i class="fa fa-calendar"></i> <span id="view_email_date"></span>
+                    </div>
+                </div>
+                
+                <div id="view_email_body" style="
+                    white-space: pre-wrap !important; 
+                    display: block;
+                    word-wrap: break-word; 
+                    line-height: 1.6; 
+                    padding: 15px; 
+                    background: #162a33; 
+                    border-radius: 5px; 
+                    font-size: 14px; 
+                    color: #ddd;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #1a2f38;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="background: #333; color: #fff; border: none; padding: 8px 20px;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 
-				<div class="tab-content" style="background: #0f1e24;">
-					<div id="email_inbox" class="tab-pane fade">
-						<div class="content no-padding" style="height: 60vh; overflow-y: auto; padding: 10px;">
-							<table class="inbox-table" id="outbound_log_table">
-								<tbody id="outbound_emails_body">
-									<tr>
-										<td colspan="3" style="text-align:center; padding:50px;">
-											<i class="fa fa-spinner fa-spin"></i> Loading Emails...
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
+        <div class="tab-content" style="background: #0f1e24;">
+            <div id="email_inbox" class="tab-pane fade">
+                <div class="content no-padding" style="height: 60vh; overflow-y: auto; padding: 10px;">
+                    <table class="inbox-table" id="outbound_log_table">
+                        <tbody id="outbound_emails_body">
+                            <tr>
+                                <td colspan="3" style="text-align:center; padding:50px;">
+                                    <i class="fa fa-spinner fa-spin"></i> Loading Emails...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
 
 
 
 
-					<style>
-						/* ==========================================================================
+<style>
+/* ==========================================================================
    Premium Inbound Chat & Inbox Theme 
    ========================================================================== */
 
-						/* ???????? ?-???? ???? ????? */
-						.unified-email-container {
-							display: flex;
-							height: 65vh;
-							background: #081119 !important;
-							border-radius: 8px;
-							overflow: hidden;
-							font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
-							border: 1px solid #182a38 !important;
-						}
+/* ইউনিফাইড ৩-কলাম মেইন লেআউট */
+.unified-email-container {
+    display: flex; 
+    height: 65vh; 
+    background: #081119 !important; 
+    border-radius: 8px; 
+    overflow: hidden; 
+    font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; 
+    border: 1px solid #182a38 !important;
+}
 
-						/* ??? ????? ?????? ??? ???? */
-						.inbox-feed-sidebar {
-							width: 35%;
-							border-right: 1px solid #182a38 !important;
-							overflow-y: auto;
-							background: #0b161f !important;
-							display: flex;
-							flex-direction: column;
-						}
+/* বাম পাশের ইনবক্স ফিড কলাম */
+.inbox-feed-sidebar {
+    width: 35%; 
+    border-right: 1px solid #182a38 !important; 
+    overflow-y: auto; 
+    background: #0b161f !important;
+    display: flex;
+    flex-direction: column;
+}
 
-						.inbox-feed-header {
-							padding: 14px 18px;
-							border-bottom: 1px solid #182a38 !important;
-							background: #0f202c !important;
-							color: #00e5c1 !important;
-							font-weight: 700;
-							font-size: 13.5px;
-							letter-spacing: 0.5px;
-							position: sticky;
-							top: 0;
-							z-index: 10;
-							box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-						}
+.inbox-feed-header {
+    padding: 14px 18px; 
+    border-bottom: 1px solid #182a38 !important; 
+    background: #0f202c !important; 
+    color: #00e5c1 !important; 
+    font-weight: 700; 
+    font-size: 13.5px; 
+    letter-spacing: 0.5px;
+    position: sticky; 
+    top: 0; 
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
 
-						/* ?????? ????? ????? ??? ????????? ????????? ????? */
-						.inbox-feed-table {
-							width: 100%;
-							border-collapse: collapse;
-							font-size: 13px;
-							table-layout: fixed;
-							/* ?????? ???????? ???????? ???? */
-						}
+/* ইনবক্স লিস্ট টেবিল এবং হরিজন্টাল স্ক্রলবার ফিক্স */
+.inbox-feed-table {
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 13px;
+    table-layout: fixed; /* টেক্সট ওভারফ্লো কন্ট্রোল করবে */
+}
 
-						/* ????????? ????????? ?? ?? ???? ?????? */
-						.inbox-feed-table tr.active-thread-row {
-							background: #152836 !important;
-							border-left: 4px solid #00e5c1 !important;
-						}
+/* অ্যাক্টিভ সিলেক্টেড রো এর গ্লো ইফেক্ট */
+.inbox-feed-table tr.active-thread-row {
+    background: #152836 !important;
+    border-left: 4px solid #00e5c1 !important;
+}
 
-						/* ??? ????? ????? ????? ?????? */
-						.chat-display-window {
-							width: 65%;
-							display: flex;
-							flex-direction: column;
-							background: #081119 !important;
-						}
+/* ডান পাশের চ্যাট মেসেজ উইন্ডো */
+.chat-display-window {
+    width: 65%; 
+    display: flex; 
+    flex-direction: column;
+    background: #081119 !important;
+}
 
-						.chat-display-header {
-							padding: 12px 20px;
-							border-bottom: 1px solid #182a38 !important;
-							background: #0f202c !important;
-							display: flex;
-							justify-content: space-between;
-							align-items: center;
-							box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-						}
+.chat-display-header {
+    padding: 12px 20px; 
+    border-bottom: 1px solid #182a38 !important; 
+    background: #0f202c !important; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
 
-						/* ?????? ?????-?????? ??????? ???? */
-						.btn-reply-premium {
-							background: rgba(0, 229, 193, 0.1) !important;
-							color: #00e5c1 !important;
-							border: 1px solid rgba(0, 229, 193, 0.4) !important;
-							padding: 8px 18px;
-							border-radius: 20px;
-							font-weight: 600;
-							cursor: pointer;
-							font-size: 12.5px;
-							transition: all 0.2s ease;
-							white-space: nowrap;
-						}
+/* মডার্ন গ্লাস-স্টাইল রিপ্লাই বাটন */
+.btn-reply-premium {
+    background: rgba(0, 229, 193, 0.1) !important; 
+    color: #00e5c1 !important; 
+    border: 1px solid rgba(0, 229, 193, 0.4) !important; 
+    padding: 8px 18px; 
+    border-radius: 20px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    font-size: 12.5px; 
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
 
-						.btn-reply-premium:hover {
-							background: #00e5c1 !important;
-							color: #081119 !important;
-							box-shadow: 0 4px 12px rgba(0, 229, 193, 0.3);
-						}
+.btn-reply-premium:hover {
+    background: #00e5c1 !important;
+    color: #081119 !important;
+    box-shadow: 0 4px 12px rgba(0, 229, 193, 0.3);
+}
 
-						/* ?????? ????????? ????????? */
-						.custom-scroll-panel::-webkit-scrollbar {
-							width: 6px;
-							height: 6px;
-						}
+/* কাস্টম প্রিমিয়াম স্ক্রলবার */
+.custom-scroll-panel::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scroll-panel::-webkit-scrollbar-track {
+    background: #081119;
+}
+.custom-scroll-panel::-webkit-scrollbar-thumb {
+    background: #1c3242;
+    border-radius: 10px;
+}
+.custom-scroll-panel::-webkit-scrollbar-thumb:hover {
+    background: #00e5c1;
+}
 
-						.custom-scroll-panel::-webkit-scrollbar-track {
-							background: #081119;
-						}
-
-						.custom-scroll-panel::-webkit-scrollbar-thumb {
-							background: #1c3242;
-							border-radius: 10px;
-						}
-
-						.custom-scroll-panel::-webkit-scrollbar-thumb:hover {
-							background: #00e5c1;
-						}
-
-						.email-chip {
+.email-chip {
 							display: inline-flex;
 							align-items: center;
 							background: #1b3542;
@@ -26410,461 +26211,453 @@ change theme version 1.5.2
 							box-shadow: 0 0 5px rgba(0, 209, 178, 0.5);
 						}
 
-						/* ?? ???-??? ????????????? ???? ??? ????? ???? ???? ????? */
+						/* 🚀 অটো-ফিল ব্যাকগ্রাউন্ড সাদা হয়ে যাওয়া বন্ধ করার ফিক্স */
 						input:-webkit-autofill,
 						input:-webkit-autofill:hover,
 						input:-webkit-autofill:focus,
 						input:-webkit-autofill:active {
 							-webkit-box-shadow: 0 0 0 30px #0b1b26 inset !important;
-							/* ????? ????????????? ????? */
+							/* সিসির ব্যাকগ্রাউন্ড কালার */
 							-webkit-text-fill-color: #fff !important;
-							/* ?????? ????? ???? ????? */
+							/* টেক্সট কালার সাদা থাকবে */
 							transition: background-color 5000s ease-in-out 0s;
 						}
 
-						/* ?? ????? ????? ????? ?? ????? CC/BCC ???? ??? ???? ??? ???? */
+						/* 🚀 ইমেইল ট্যাব একটিভ না থাকলে CC/BCC বাটন অটো হাইড হয়ে যাবে */
 						.tab-pane:not(.active) #toggle_cc,
 						.tab-pane:not(.active) #toggle_bcc {
 							display: none !important;
 						}
-					</style>
-
-					<div id="email_inbound_tab" class="tab-pane fade in active">
-						<div class="unified-email-container">
-
-							<div class="inbox-feed-sidebar custom-scroll-panel">
-								<div class="inbox-feed-header">
-									?? Unified Inbox (All Threads)
-								</div>
-								<table class="inbox-feed-table">
-									<tbody id="unified-inbox-list">
-										<tr>
-											<td style="text-align:center; padding:30px; color:#537188;"><i
-													class="fa fa-spinner fa-spin"></i> Loading Inbox...</td>
-										</tr>
-									</tbody>
-								</table>
-							</div>
-
-							<div class="chat-display-window">
-								<div class="chat-display-header">
-									<div>
-										<h4 id="thread-subject"
-											style="margin: 0; font-size: 14.5px; color: #ffffff; font-weight: 700; word-break: break-word; line-height: 1.4;">
-											Select a thread from Inbox</h4>
-										<span id="customer-email-span"
-											style="font-size: 12px; color:#8fa0a6; display: block; margin-top: 3px;"></span>
-									</div>
-									<div id="action-section" style="display: none;">
-										<button type="button" class="btn-reply-premium" onclick="openInComposeTab()">
-											<i class="fa fa-reply"></i> Reply
-										</button>
-									</div>
-								</div>
-
-								<div id="chat-messages-box" class="custom-scroll-panel"
-									style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; background: #081119;">
-									<div style="text-align:center; padding:50px; color:#537188;">
-										<i class="fa fa-comments-o"
-											style="font-size: 36px; display: block; margin-bottom: 12px; color: #1c3242;"></i>
-										Select an email to view conversation history
-									</div>
-								</div>
-							</div>
-
-						</div>
-					</div>
-
-					<input type="hidden" id="current_email_id" value="">
-
-					<script>
-							function loadUnifiedInbox() {
-								var agentUser = typeof user !== 'undefined' ? user : '';
-								fetch('fetch_unified_inbox.php?user=' + encodeURIComponent(agentUser) + '&t=' + new Date().getTime())
-									.then(response => response.text())
-									.then(data => {
-										var inboxList = document.getElementById('unified-inbox-list');
-										if (inboxList) inboxList.innerHTML = data;
-									})
-									.catch(err => console.error('Inbox loading error:', err));
-							}
-
-							function handleRowClick(rowEl) {
-								// ???? ????????????: ???? ?? ?? ???? ????? ????? ????? ??? ??????? ??-?? ????? ??? ???
-								document.querySelectorAll('.inbox-feed-table tr').forEach(function (tr) {
-									tr.classList.remove('active-thread-row');
-								});
-								rowEl.classList.add('active-thread-row');
-
-								var threadId = rowEl.getAttribute('data-lead-id');
-								var emailId = rowEl.getAttribute('data-email-id');
-								var contactEmail = rowEl.getAttribute('data-contact');
-								var subject = rowEl.getAttribute('data-subject');
-
-								rowEl.style.background = '#152836';
-								rowEl.style.borderLeft = '4px solid #00e5c1';
-								rowEl.setAttribute('onmouseout', "this.style.background=''");
-								rowEl.classList.remove('is-unread-row');
-
-								var nameText = rowEl.querySelector('strong');
-								if (nameText) nameText.style.color = '#fff';
-
-								if (document.getElementById('current_email_id')) document.getElementById('current_email_id').value = emailId;
-								if (document.getElementById('compose_lead_id')) document.getElementById('compose_lead_id').value = threadId;
-								if (document.getElementById('to_email')) document.getElementById('to_email').value = contactEmail;
-
-								var cleanSubject = subject.trim();
-								if (cleanSubject && !cleanSubject.toLowerCase().startsWith('re:')) {
-									cleanSubject = 'Re: ' + cleanSubject;
-								}
-								if (document.getElementById('subject')) document.getElementById('subject').value = cleanSubject;
-
-								document.getElementById('thread-subject').innerText = subject;
-								document.getElementById('customer-email-span').innerText = contactEmail;
-								document.getElementById('action-section').style.display = 'block';
-
-								loadGmailStyleChat(false);
-
-								// set_mail_read.php ????? email_row_id ??????????? ?????? ?????
-								fetch(`set_mail_read.php?email_row_id=${encodeURIComponent(emailId)}&lead_id=${encodeURIComponent(threadId)}&t=${new Date().getTime()}`)
-									.then(response => response.text())
-									.then(res => {
-										if (res.trim() === 'success') {
-											loadUnifiedInbox();
-										}
-									})
-									.catch(err => console.error('Status update error:', err));
-							}
-
-							function formatMobileInboundMessageMetadata() {
-								if (window.KlozerPhoneDevice !== true) return;
-
-								var msgBox = document.getElementById('chat-messages-box');
-								if (!msgBox) return;
-
-								/*
-								 * V8.11:
-								 * Do NOT iterate only msgBox.children. fetch_thread_messages.php can return
-								 * several message cards inside one shared wrapper, which made V8.10 format
-								 * only the first INBOUND/OUTBOUND badge in that wrapper.
-								 *
-								 * Scan EVERY exact direction badge in the entire loaded conversation.
-								 */
-								var descendants = msgBox.querySelectorAll('*');
-								var statusElements = [];
-
-								for (var d = 0; d < descendants.length; d++) {
-									var candidate = descendants[d];
-									var statusText = (candidate.textContent || '')
-										.replace(/\s+/g, ' ')
-										.trim()
-										.toUpperCase();
-
-									if (statusText !== 'INBOUND' && statusText !== 'OUTBOUND') {
-										continue;
-									}
-
-									/*
-									 * Prefer the smallest/leaf element carrying the badge text. This avoids
-									 * accidentally treating a wrapper as a second status badge.
-									 */
-									var childHasSameStatus = false;
-									var children = candidate.children || [];
-
-									for (var cc = 0; cc < children.length; cc++) {
-										var childText = (children[cc].textContent || '')
-											.replace(/\s+/g, ' ')
-											.trim()
-											.toUpperCase();
-
-										if (childText === statusText) {
-											childHasSameStatus = true;
-											break;
-										}
-									}
-
-									if (!childHasSameStatus) {
-										statusElements.push(candidate);
-									}
-								}
-
-								function countDirectionBadges(container) {
-									if (!container) return 0;
-
-									var count = 0;
-									var nodes = container.querySelectorAll('*');
-
-									for (var i = 0; i < nodes.length; i++) {
-										var text = (nodes[i].textContent || '')
-											.replace(/\s+/g, ' ')
-											.trim()
-											.toUpperCase();
-
-										if (text !== 'INBOUND' && text !== 'OUTBOUND') continue;
-
-										var hasSameChild = false;
-										var nodeChildren = nodes[i].children || [];
-
-										for (var j = 0; j < nodeChildren.length; j++) {
-											var nodeChildText = (nodeChildren[j].textContent || '')
-												.replace(/\s+/g, ' ')
-												.trim()
-												.toUpperCase();
-
-											if (nodeChildText === text) {
-												hasSameChild = true;
-												break;
-											}
-										}
-
-										if (!hasSameChild) count++;
-									}
-
-									return count;
-								}
-
-								for (var s = 0; s < statusElements.length; s++) {
-									var statusEl = statusElements[s];
-
-									if (!msgBox.contains(statusEl)) continue;
-
-									var metaGroup = statusEl.parentElement;
-									var metaGuard = 0;
-
-									/*
-									 * Find the smallest wrapper around this badge that also contains its
-									 * date/time, but not the From/To sender block.
-									 */
-									while (metaGroup && metaGroup !== msgBox && metaGuard < 6) {
-										var metaText = (metaGroup.textContent || '')
-											.replace(/\s+/g, ' ')
-											.trim();
-
-										var hasDate =
-											/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(metaText) ||
-											/\b\d{1,2}:\d{2}\s*(?:AM|PM)?\b/i.test(metaText) ||
-											/\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b/.test(metaText);
-
-										var hasSender =
-											/\bFrom\s*:/i.test(metaText) ||
-											/\bTo\s*:/i.test(metaText);
-
-										if (hasDate && !hasSender) break;
-
-										metaGroup = metaGroup.parentElement;
-										metaGuard++;
-									}
-
-									if (!metaGroup || metaGroup === msgBox) {
-										metaGroup = statusEl.parentElement;
-									}
-									if (!metaGroup) continue;
-
-									/*
-									 * Find the smallest sender/header wrapper belonging to THIS message.
-									 * Requiring exactly one direction badge prevents us from climbing into
-									 * a parent wrapper containing several emails in the same thread.
-									 */
-									var header = metaGroup.parentElement;
-									var headerGuard = 0;
-									var fallbackHeader = null;
-
-									while (header && header !== msgBox && headerGuard < 8) {
-										var headerText = (header.textContent || '')
-											.replace(/\s+/g, ' ')
-											.trim();
-
-										var hasFrom = /\bFrom\s*:/i.test(headerText);
-										var hasTo = /\bTo\s*:/i.test(headerText);
-
-										if (hasFrom && hasTo) {
-											if (!fallbackHeader) fallbackHeader = header;
-
-											if (countDirectionBadges(header) === 1) {
-												break;
-											}
-										}
-
-										header = header.parentElement;
-										headerGuard++;
-									}
-
-									if (!header || header === msgBox || countDirectionBadges(header) !== 1) {
-										header = fallbackHeader;
-									}
-
-									if (!header || header === msgBox) continue;
-
-									header.classList.add('klozer-mobile-inbound-message-header');
-									metaGroup.classList.add('klozer-mobile-inbound-message-meta');
-									statusEl.classList.add('klozer-mobile-inbound-status');
-
-									/*
-									 * Make metadata the last direct child of this ONE message header so the
-									 * existing V8.10 CSS puts status + date on a separate full-width row.
-									 */
-									if (metaGroup.parentNode !== header || header.lastElementChild !== metaGroup) {
-										header.appendChild(metaGroup);
-									}
-
-									/*
-									 * Tag the narrowest date/time element in this metadata group.
-									 */
-									var metaCandidates = metaGroup.querySelectorAll('*');
-									var taggedDate = false;
-
-									for (var m = 0; m < metaCandidates.length; m++) {
-										var dateCandidate = metaCandidates[m];
-
-										if (dateCandidate === statusEl || dateCandidate.contains(statusEl)) {
-											continue;
-										}
-
-										var childText = (dateCandidate.textContent || '')
-											.replace(/\s+/g, ' ')
-											.trim();
-
-										var looksLikeDate =
-											/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(childText) ||
-											/\b\d{1,2}:\d{2}\s*(?:AM|PM)?\b/i.test(childText);
-
-										if (!looksLikeDate) continue;
-
-										/*
-										 * Prefer a leaf/small wrapper rather than a parent that also wraps
-										 * unrelated metadata.
-										 */
-										var nestedDate = false;
-										var dateChildren = dateCandidate.children || [];
-
-										for (var dc = 0; dc < dateChildren.length; dc++) {
-											var nestedText = (dateChildren[dc].textContent || '')
-												.replace(/\s+/g, ' ')
-												.trim();
-
-											if (
-												/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(nestedText) ||
-												/\b\d{1,2}:\d{2}\s*(?:AM|PM)?\b/i.test(nestedText)
-											) {
-												nestedDate = true;
-												break;
-											}
-										}
-
-										if (!nestedDate) {
-											dateCandidate.classList.add('klozer-mobile-inbound-date');
-											taggedDate = true;
-											break;
-										}
-									}
-
-									/*
-									 * Some responses put the date as a direct text node next to the badge.
-									 * The metadata row CSS still lays that text horizontally even when
-									 * there is no separate date element to tag.
-									 */
-									if (!taggedDate) {
-										metaGroup.classList.add('klozer-mobile-inbound-date-inline');
-									}
-								}
-							}
-
-
-							function loadGmailStyleChat(isAutoRefresh) {
-								var emailId = document.getElementById('current_email_id') ? document.getElementById('current_email_id').value : '';
-								var leadId = document.getElementById('compose_lead_id').value;
-								var contactEmail = document.getElementById('to_email').value;
-								var agentUser = typeof user !== 'undefined' ? user : '';
-
-								if (!emailId && !leadId && !contactEmail) return;
-
-								if (!isAutoRefresh) {
-									var msgBox = document.getElementById('chat-messages-box');
-									if (msgBox) msgBox.innerHTML = `<div style='text-align:center;padding:30px;color:#8fa0a6;'><i class='fa fa-spinner fa-spin'></i> Loading Conversations...</div>`;
-								}
-
-								fetch(`fetch_thread_messages.php?email_id=${encodeURIComponent(emailId)}&lead_id=${encodeURIComponent(leadId)}&email=${encodeURIComponent(contactEmail)}&user=${encodeURIComponent(agentUser)}&t=${new Date().getTime()}`)
-									.then(response => response.text())
-									.then(data => {
-										var msgBox = document.getElementById('chat-messages-box');
-										if (msgBox) {
-											msgBox.innerHTML = data;
-
-											// Phone-only: move INBOUND/OUTBOUND + date onto a clean metadata row.
-											formatMobileInboundMessageMetadata();
-
-											if (!isAutoRefresh) {
-												msgBox.scrollTop = msgBox.scrollHeight;
-											}
-										}
-									})
-									.catch(err => console.error('Thread error:', err));
-							}
-
-							function openInComposeTab() {
-								var customerEmail = document.getElementById('to_email').value;
-								var subjectText = document.getElementById('subject').value;
-								var leadId = document.getElementById('compose_lead_id').value;
-
-								if (!customerEmail) {
-									alert("Please select an email thread first!");
-									return;
-								}
-
-								if (document.getElementById('to_email')) document.getElementById('to_email').value = customerEmail;
-								if (document.getElementById('subject')) document.getElementById('subject').value = subjectText;
-								if (document.getElementById('compose_lead_id')) document.getElementById('compose_lead_id').value = leadId;
-
-								$('a[href="#email_compose"]').tab('show');
-							}
-
-							document.addEventListener("DOMContentLoaded", function () {
-								loadUnifiedInbox();
-								setInterval(function () {
-									loadUnifiedInbox();
-									var emailId = document.getElementById('current_email_id') ? document.getElementById('current_email_id').value : '';
-									if (emailId) {
-										loadGmailStyleChat(true);
-									}
-								}, 10000);
-							});
-					</script>
-
-
-
-
-
-
-
-
-
-
-
-					<div id="email_compose" class="tab-pane fade">
+
+</style>
+
+<div id="email_inbound_tab" class="tab-pane fade in active">
+    <div class="unified-email-container">
+        
+        <div class="inbox-feed-sidebar custom-scroll-panel">
+            <div class="inbox-feed-header">
+                📬 Unified Inbox (All Threads)
+            </div>
+            <table class="inbox-feed-table">
+                <tbody id="unified-inbox-list">
+                    <tr><td style="text-align:center; padding:30px; color:#537188;"><i class="fa fa-spinner fa-spin"></i> Loading Inbox...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chat-display-window">
+            <div class="chat-display-header">
+                <div>
+                    <h4 id="thread-subject" style="margin: 0; font-size: 14.5px; color: #ffffff; font-weight: 700; word-break: break-word; line-height: 1.4;">Select a thread from Inbox</h4>
+                    <span id="customer-email-span" style="font-size: 12px; color:#8fa0a6; display: block; margin-top: 3px;"></span>
+                </div>
+                <div id="action-section" style="display: none;">
+                    <button type="button" class="btn-reply-premium" onclick="openInComposeTab()">
+                        <i class="fa fa-reply"></i> Reply
+                    </button>
+                </div>
+            </div>
+
+            <div id="chat-messages-box" class="custom-scroll-panel" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; background: #081119;">
+                <div style="text-align:center; padding:50px; color:#537188;">
+                    <i class="fa fa-comments-o" style="font-size: 36px; display: block; margin-bottom: 12px; color: #1c3242;"></i> 
+                    Select an email to view conversation history
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<input type="hidden" id="current_email_id" value="">
+
+<script>
+function loadUnifiedInbox() {
+    var agentUser = typeof user !== 'undefined' ? user : '';
+    fetch('fetch_unified_inbox.php?user=' + encodeURIComponent(agentUser) + '&t=' + new Date().getTime())
+    .then(response => response.text())
+    .then(data => {
+        var inboxList = document.getElementById('unified-inbox-list');
+        if(inboxList) inboxList.innerHTML = data;
+    })
+    .catch(err => console.error('Inbox loading error:', err));
+}
+
+function handleRowClick(rowEl) {
+    // ইউআই কাস্টমাইজেশন: আগের সব রো থেকে একটিভ ক্লাস সরানো এবং বর্তমান রো-তে ক্লাস যোগ করা
+    document.querySelectorAll('.inbox-feed-table tr').forEach(function(tr) {
+        tr.classList.remove('active-thread-row');
+    });
+    rowEl.classList.add('active-thread-row');
+
+    var threadId = rowEl.getAttribute('data-lead-id');
+    var emailId = rowEl.getAttribute('data-email-id'); 
+    var contactEmail = rowEl.getAttribute('data-contact');
+    var subject = rowEl.getAttribute('data-subject');
+    
+    rowEl.style.background = '#152836'; 
+    rowEl.style.borderLeft = '4px solid #00e5c1';
+    rowEl.setAttribute('onmouseout', "this.style.background=''");
+    rowEl.classList.remove('is-unread-row');
+    
+    var nameText = rowEl.querySelector('strong');
+    if(nameText) nameText.style.color = '#fff';
+
+    if(document.getElementById('current_email_id')) document.getElementById('current_email_id').value = emailId;
+    if(document.getElementById('compose_lead_id')) document.getElementById('compose_lead_id').value = threadId;
+    if(document.getElementById('to_email')) document.getElementById('to_email').value = contactEmail;
+
+    var cleanSubject = subject.trim();
+    if (cleanSubject && !cleanSubject.toLowerCase().startsWith('re:')) {
+        cleanSubject = 'Re: ' + cleanSubject;
+    }
+    if(document.getElementById('subject')) document.getElementById('subject').value = cleanSubject;
+
+    document.getElementById('thread-subject').innerText = subject;
+    document.getElementById('customer-email-span').innerText = contactEmail;
+    document.getElementById('action-section').style.display = 'block';
+
+    loadGmailStyleChat(false);
+
+    // set_mail_read.php ফাইলে email_row_id প্যারামিটার পাঠানো হচ্ছে
+    fetch(`set_mail_read.php?email_row_id=${encodeURIComponent(emailId)}&lead_id=${encodeURIComponent(threadId)}&t=${new Date().getTime()}`)
+    .then(response => response.text())
+    .then(res => {
+        if(res.trim() === 'success') {
+            loadUnifiedInbox();
+        }
+    })
+    .catch(err => console.error('Status update error:', err));
+}
+
+function formatMobileInboundMessageMetadata() {
+    if (window.KlozerPhoneDevice !== true) return;
+
+    var msgBox = document.getElementById('chat-messages-box');
+    if (!msgBox) return;
+
+    /*
+     * V8.11:
+     * Do NOT iterate only msgBox.children. fetch_thread_messages.php can return
+     * several message cards inside one shared wrapper, which made V8.10 format
+     * only the first INBOUND/OUTBOUND badge in that wrapper.
+     *
+     * Scan EVERY exact direction badge in the entire loaded conversation.
+     */
+    var descendants = msgBox.querySelectorAll('*');
+    var statusElements = [];
+
+    for (var d = 0; d < descendants.length; d++) {
+        var candidate = descendants[d];
+        var statusText = (candidate.textContent || '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toUpperCase();
+
+        if (statusText !== 'INBOUND' && statusText !== 'OUTBOUND') {
+            continue;
+        }
+
+        /*
+         * Prefer the smallest/leaf element carrying the badge text. This avoids
+         * accidentally treating a wrapper as a second status badge.
+         */
+        var childHasSameStatus = false;
+        var children = candidate.children || [];
+
+        for (var cc = 0; cc < children.length; cc++) {
+            var childText = (children[cc].textContent || '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toUpperCase();
+
+            if (childText === statusText) {
+                childHasSameStatus = true;
+                break;
+            }
+        }
+
+        if (!childHasSameStatus) {
+            statusElements.push(candidate);
+        }
+    }
+
+    function countDirectionBadges(container) {
+        if (!container) return 0;
+
+        var count = 0;
+        var nodes = container.querySelectorAll('*');
+
+        for (var i = 0; i < nodes.length; i++) {
+            var text = (nodes[i].textContent || '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toUpperCase();
+
+            if (text !== 'INBOUND' && text !== 'OUTBOUND') continue;
+
+            var hasSameChild = false;
+            var nodeChildren = nodes[i].children || [];
+
+            for (var j = 0; j < nodeChildren.length; j++) {
+                var nodeChildText = (nodeChildren[j].textContent || '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toUpperCase();
+
+                if (nodeChildText === text) {
+                    hasSameChild = true;
+                    break;
+                }
+            }
+
+            if (!hasSameChild) count++;
+        }
+
+        return count;
+    }
+
+    for (var s = 0; s < statusElements.length; s++) {
+        var statusEl = statusElements[s];
+
+        if (!msgBox.contains(statusEl)) continue;
+
+        var metaGroup = statusEl.parentElement;
+        var metaGuard = 0;
+
+        /*
+         * Find the smallest wrapper around this badge that also contains its
+         * date/time, but not the From/To sender block.
+         */
+        while (metaGroup && metaGroup !== msgBox && metaGuard < 6) {
+            var metaText = (metaGroup.textContent || '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            var hasDate =
+                /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(metaText) ||
+                /\b\d{1,2}:\d{2}\s*(?:AM|PM)?\b/i.test(metaText) ||
+                /\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b/.test(metaText);
+
+            var hasSender =
+                /\bFrom\s*:/i.test(metaText) ||
+                /\bTo\s*:/i.test(metaText);
+
+            if (hasDate && !hasSender) break;
+
+            metaGroup = metaGroup.parentElement;
+            metaGuard++;
+        }
+
+        if (!metaGroup || metaGroup === msgBox) {
+            metaGroup = statusEl.parentElement;
+        }
+        if (!metaGroup) continue;
+
+        /*
+         * Find the smallest sender/header wrapper belonging to THIS message.
+         * Requiring exactly one direction badge prevents us from climbing into
+         * a parent wrapper containing several emails in the same thread.
+         */
+        var header = metaGroup.parentElement;
+        var headerGuard = 0;
+        var fallbackHeader = null;
+
+        while (header && header !== msgBox && headerGuard < 8) {
+            var headerText = (header.textContent || '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            var hasFrom = /\bFrom\s*:/i.test(headerText);
+            var hasTo = /\bTo\s*:/i.test(headerText);
+
+            if (hasFrom && hasTo) {
+                if (!fallbackHeader) fallbackHeader = header;
+
+                if (countDirectionBadges(header) === 1) {
+                    break;
+                }
+            }
+
+            header = header.parentElement;
+            headerGuard++;
+        }
+
+        if (!header || header === msgBox || countDirectionBadges(header) !== 1) {
+            header = fallbackHeader;
+        }
+
+        if (!header || header === msgBox) continue;
+
+        header.classList.add('klozer-mobile-inbound-message-header');
+        metaGroup.classList.add('klozer-mobile-inbound-message-meta');
+        statusEl.classList.add('klozer-mobile-inbound-status');
+
+        /*
+         * Make metadata the last direct child of this ONE message header so the
+         * existing V8.10 CSS puts status + date on a separate full-width row.
+         */
+        if (metaGroup.parentNode !== header || header.lastElementChild !== metaGroup) {
+            header.appendChild(metaGroup);
+        }
+
+        /*
+         * Tag the narrowest date/time element in this metadata group.
+         */
+        var metaCandidates = metaGroup.querySelectorAll('*');
+        var taggedDate = false;
+
+        for (var m = 0; m < metaCandidates.length; m++) {
+            var dateCandidate = metaCandidates[m];
+
+            if (dateCandidate === statusEl || dateCandidate.contains(statusEl)) {
+                continue;
+            }
+
+            var childText = (dateCandidate.textContent || '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            var looksLikeDate =
+                /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(childText) ||
+                /\b\d{1,2}:\d{2}\s*(?:AM|PM)?\b/i.test(childText);
+
+            if (!looksLikeDate) continue;
+
+            /*
+             * Prefer a leaf/small wrapper rather than a parent that also wraps
+             * unrelated metadata.
+             */
+            var nestedDate = false;
+            var dateChildren = dateCandidate.children || [];
+
+            for (var dc = 0; dc < dateChildren.length; dc++) {
+                var nestedText = (dateChildren[dc].textContent || '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                if (
+                    /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(nestedText) ||
+                    /\b\d{1,2}:\d{2}\s*(?:AM|PM)?\b/i.test(nestedText)
+                ) {
+                    nestedDate = true;
+                    break;
+                }
+            }
+
+            if (!nestedDate) {
+                dateCandidate.classList.add('klozer-mobile-inbound-date');
+                taggedDate = true;
+                break;
+            }
+        }
+
+        /*
+         * Some responses put the date as a direct text node next to the badge.
+         * The metadata row CSS still lays that text horizontally even when
+         * there is no separate date element to tag.
+         */
+        if (!taggedDate) {
+            metaGroup.classList.add('klozer-mobile-inbound-date-inline');
+        }
+    }
+}
+
+
+function loadGmailStyleChat(isAutoRefresh) {
+    var emailId = document.getElementById('current_email_id') ? document.getElementById('current_email_id').value : '';
+    var leadId = document.getElementById('compose_lead_id').value;
+    var contactEmail = document.getElementById('to_email').value;
+    var agentUser = typeof user !== 'undefined' ? user : '';
+
+    if (!emailId && !leadId && !contactEmail) return;
+
+    if (!isAutoRefresh) {
+        var msgBox = document.getElementById('chat-messages-box');
+        if(msgBox) msgBox.innerHTML = `<div style='text-align:center;padding:30px;color:#8fa0a6;'><i class='fa fa-spinner fa-spin'></i> Loading Conversations...</div>`;
+    }
+
+    fetch(`fetch_thread_messages.php?email_id=${encodeURIComponent(emailId)}&lead_id=${encodeURIComponent(leadId)}&email=${encodeURIComponent(contactEmail)}&user=${encodeURIComponent(agentUser)}&t=${new Date().getTime()}`)
+    .then(response => response.text())
+    .then(data => {
+        var msgBox = document.getElementById('chat-messages-box');
+        if (msgBox) {
+            msgBox.innerHTML = data;
+
+            // Phone-only: move INBOUND/OUTBOUND + date onto a clean metadata row.
+            formatMobileInboundMessageMetadata();
+
+            if(!isAutoRefresh) {
+                msgBox.scrollTop = msgBox.scrollHeight;
+            }
+        }
+    })
+    .catch(err => console.error('Thread error:', err));
+}
+
+function openInComposeTab() {
+    var customerEmail = document.getElementById('to_email').value;
+    var subjectText = document.getElementById('subject').value;
+    var leadId = document.getElementById('compose_lead_id').value;
+    
+    if(!customerEmail) {
+        alert("Please select an email thread first!");
+        return;
+    }
+    
+    if(document.getElementById('to_email')) document.getElementById('to_email').value = customerEmail;
+    if(document.getElementById('subject')) document.getElementById('subject').value = subjectText;
+    if(document.getElementById('compose_lead_id')) document.getElementById('compose_lead_id').value = leadId;
+
+    $('a[href="#email_compose"]').tab('show');
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    loadUnifiedInbox();
+    setInterval(function() {
+        loadUnifiedInbox();
+        var emailId = document.getElementById('current_email_id') ? document.getElementById('current_email_id').value : '';
+        if (emailId) {
+            loadGmailStyleChat(true);
+        }
+    }, 10000);
+});
+</script> 
+
+
+
+
+
+
+
+
+
+
+            
+            <div id="email_compose" class="tab-pane fade">
 						<div class="content no-padding" style="padding: 15px;">
 							<form id="email_compose_form" onsubmit="sendCustomEmail(event); return false;">
 								<div class="form-group" style="position: relative;">
-									<?php
-									$agent_email_dynamic = "";
-									if (!empty($VD_login) && $link) {
-										$clean_agent = mysqli_real_escape_string($link, $VD_login);
-										$user_q = "SELECT email FROM phones WHERE extension='$clean_agent' OR login='$clean_agent' LIMIT 1";
-										$user_r = @mysqli_query($link, $user_q);
-										if ($user_r && mysqli_num_rows($user_r) > 0) {
-											$user_rw = mysqli_fetch_assoc($user_r);
-											if (!empty($user_rw['email'])) {
-												$agent_email_dynamic = trim($user_rw['email']);
-											}
+                                                                         <?php
+								$agent_email_dynamic = "";
+								if (!empty($VD_login) && $link) {
+									$clean_agent = mysqli_real_escape_string($link, $VD_login);
+									$user_q = "SELECT email FROM phones WHERE extension='$clean_agent' OR login='$clean_agent' LIMIT 1";
+									$user_r = @mysqli_query($link, $user_q);
+									if ($user_r && mysqli_num_rows($user_r) > 0) {
+										$user_rw = mysqli_fetch_assoc($user_r);
+										if (!empty($user_rw['email'])) {
+											$agent_email_dynamic = trim($user_rw['email']);
 										}
 									}
-									?>
-									<div class="form-group" style="margin-bottom: 15px;">
-										<label style="color:#00d1b2; display: block; margin-bottom: 5px;">From:</label>
-										<input type="email" name="from_email" id="from_email" class="form-control"
-											readonly
-											style="background: #112532; color: #94a3b8; border: 1px solid #1e293b; cursor: not-allowed; width: 100%; height: 34px; padding: 6px 12px; box-sizing: border-box;"
-											value="<?php echo htmlspecialchars($agent_email_dynamic); ?>">
-									</div>
+								}
+								?>
+								<div class="form-group" style="margin-bottom: 15px;">
+									<label style="color:#00d1b2; display: block; margin-bottom: 5px;">From:</label>
+									<input type="email" name="from_email" id="from_email" class="form-control" readonly
+										style="background: #112532; color: #94a3b8; border: 1px solid #1e293b; cursor: not-allowed; width: 100%; height: 34px; padding: 6px 12px; box-sizing: border-box;"
+										value="<?php echo htmlspecialchars($agent_email_dynamic); ?>">
+								</div>
 
 									<label style="color:#00d1b2; display: block; margin-bottom: 5px;">To: <span
 											class="text-danger">*</span></label>
@@ -27237,59 +27030,9 @@ change theme version 1.5.2
 					background: rgba(255, 255, 255, 0.1);
 				}
 
-				.user.active,
 				.user.active-user {
-					background: rgba(0, 255, 197, 0.15) !important;
-					border-left: 4px solid #00FFC5 !important;
-				}
-
-				.user.unread,
-				#EmailPanel #sms_user_list .user.unread,
-				#EmailPanel .user-list .user.unread {
-					background: rgba(255, 204, 0, 0.18) !important;
-					border-left: 4px solid #ffcc00 !important;
-				}
-
-				.user.unread .user-name,
-				#EmailPanel #sms_user_list .user.unread .user-name,
-				#EmailPanel .user-list .user.unread .user-name,
-				#EmailPanel #sms_user_list .user.unread .user-phone,
-				#EmailPanel #sms_user_list .user.unread h4,
-				#EmailPanel .user-list .user.unread h4 {
-					font-weight: 700 !important;
-					color: #ffdd44 !important;
-				}
-
-				.user.unread .last-message,
-				#EmailPanel #sms_user_list .user.unread .last-message,
-				#EmailPanel .user-list .user.unread .last-message,
-				#EmailPanel #sms_user_list .user.unread p,
-				#EmailPanel .user-list .user.unread p {
-					font-weight: 600 !important;
-					color: #ffffff !important;
-				}
-
-				.user.unread .sms-time,
-				.user.unread .user-name span,
-				#EmailPanel #sms_user_list .user.unread .sms-time,
-				#EmailPanel #sms_user_list .user.unread .user-name span,
-				#EmailPanel #sms_user_list .user.unread span,
-				#EmailPanel .user-list .user.unread span {
-					color: #ffcc00 !important;
-					font-weight: 700 !important;
-					opacity: 1 !important;
-				}
-
-				.unread-badge {
-					background: #ffcc00 !important;
-					color: #000000 !important;
-					font-size: 11px !important;
-					font-weight: 700 !important;
-					padding: 2px 7px !important;
-					border-radius: 10px !important;
-					margin-left: 6px !important;
-					box-shadow: 0 0 8px rgba(255, 204, 0, 0.6) !important;
-					display: inline-block !important;
+					background: rgba(0, 255, 197, 0.15);
+					border-left: 4px solid #00FFC5;
 				}
 
 				.user-info {
@@ -27363,23 +27106,22 @@ change theme version 1.5.2
 				}
 
 				.message.sent {
-					align-self: flex-end !important;
-					margin-left: auto !important;
-					margin-right: 0 !important;
-					background: #00FFC5;
-					color: #000;
-					border-bottom-right-radius: 2px;
-				}
+														align-self: flex-end !important;
+														margin-left: auto !important;
+														margin-right: 0 !important;
+														background: #00FFC5;
+														color: #000;
+														border-bottom-right-radius: 2px;
+													}
 
-				.message.received {
-					align-self: flex-start !important;
-					margin-right: auto !important;
-					margin-left: 0 !important;
-					background: rgba(255, 255, 255, 0.1);
-					color: #fff;
-					border-bottom-left-radius: 2px;
-				}
-
+													.message.received {
+														align-self: flex-start !important;
+														margin-right: auto !important;
+														margin-left: 0 !important;
+														background: rgba(255, 255, 255, 0.1);
+														color: #fff;
+														border-bottom-left-radius: 2px;
+													}
 				.message .time {
 					display: block;
 					font-size: 10px;
@@ -27438,66 +27180,6 @@ change theme version 1.5.2
 
 				.sms_send_btn:hover {
 					background: #00e0b0;
-				}
-
-				.sms_block_btn {
-					background: rgba(239, 68, 68, 0.15);
-					color: #ff5c5c;
-					border: 1px solid rgba(239, 68, 68, 0.4);
-					padding: 8px 16px;
-					border-radius: 20px;
-					font-weight: 600;
-					font-size: 13px;
-					cursor: pointer;
-					margin-left: 8px;
-					white-space: nowrap;
-					transition: all 0.2s ease;
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-					gap: 5px;
-				}
-
-				.sms_block_btn:hover {
-					background: #ef4444;
-					color: #ffffff;
-					border-color: #ef4444;
-					box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-				}
-
-				.sms_block_btn:disabled {
-					opacity: 0.6;
-					cursor: not-allowed;
-				}
-
-				.sms_unblock_btn {
-					background: rgba(34, 197, 94, 0.18);
-					color: #22c55e;
-					border: 1px solid rgba(34, 197, 94, 0.5);
-					padding: 8px 16px;
-					border-radius: 20px;
-					font-weight: 600;
-					font-size: 13px;
-					cursor: pointer;
-					margin-left: 8px;
-					white-space: nowrap;
-					transition: all 0.2s ease;
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-					gap: 5px;
-				}
-
-				.sms_unblock_btn:hover {
-					background: #22c55e;
-					color: #ffffff;
-					border-color: #22c55e;
-					box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
-				}
-
-				.sms_unblock_btn:disabled {
-					opacity: 0.6;
-					cursor: not-allowed;
 				}
 
 				.send-btn {
@@ -27602,381 +27284,370 @@ change theme version 1.5.2
 					height: 1px;
 					background: rgba(255, 255, 255, 0.1);
 				}
+/* Callback disposition comment textarea fix */
+#cbcomment_comments,
+#dispo_comments,
+.cust_form_text {
+    background: #062b3a !important;
+    color: #ffffff !important;
+    border: 1px solid #1a4655 !important;
+    border-radius: 4px;
+    padding: 10px;
+}
 
-				/* Callback disposition comment textarea fix */
-				#cbcomment_comments,
-				#dispo_comments,
-				.cust_form_text {
-					background: #062b3a !important;
-					color: #ffffff !important;
-					border: 1px solid #1a4655 !important;
-					border-radius: 4px;
-					padding: 10px;
-				}
+#cbcomment_comments::placeholder,
+#dispo_comments::placeholder,
+.cust_form_text::placeholder {
+    color: #b8c7cc !important;
+}
 
-				#cbcomment_comments::placeholder,
-				#dispo_comments::placeholder,
-				.cust_form_text::placeholder {
-					color: #b8c7cc !important;
-				}
-
-				#cbcomment_comments:focus,
-				#dispo_comments:focus,
-				.cust_form_text:focus {
-					background: #062b3a !important;
-					color: #ffffff !important;
-					border-color: #00d1b2 !important;
-					outline: none;
-				}
-
-				/* ================================
+#cbcomment_comments:focus,
+#dispo_comments:focus,
+.cust_form_text:focus {
+    background: #062b3a !important;
+    color: #ffffff !important;
+    border-color: #00d1b2 !important;
+    outline: none;
+}
+/* ================================
    MOBILE FIX: SMS List + Conversation Separate Sections
 ================================ */
-				@media screen and (max-width: 767px) {
+@media screen and (max-width: 767px) {
 
-					/* Main SMS tab area */
-					#EmailPanel {
-						width: 100% !important;
-						max-width: 100% !important;
-						padding: 10px 8px 90px 8px !important;
-						box-sizing: border-box !important;
-						overflow: visible !important;
-					}
+  /* Main SMS tab area */
+  #EmailPanel {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px 8px 90px 8px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
 
-					/* SMS List / Quick SMS buttons */
-					#EmailPanel .sms_col_tab {
-						width: 100% !important;
-						display: flex !important;
-						gap: 10px !important;
-						margin: 0 0 14px 0 !important;
-						padding: 0 !important;
-						box-sizing: border-box !important;
-					}
+  /* SMS List / Quick SMS buttons */
+  #EmailPanel .sms_col_tab {
+    width: 100% !important;
+    display: flex !important;
+    gap: 10px !important;
+    margin: 0 0 14px 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel .sms_col_tab a {
-						flex: 1 !important;
-						text-align: center !important;
-						padding: 12px 8px !important;
-						font-size: 13px !important;
-						letter-spacing: 1px !important;
-						border-radius: 8px !important;
-						white-space: nowrap !important;
-					}
+  #EmailPanel .sms_col_tab a {
+    flex: 1 !important;
+    text-align: center !important;
+    padding: 12px 8px !important;
+    font-size: 13px !important;
+    letter-spacing: 1px !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+  }
 
-					/* Main SMS wrapper becomes vertical on mobile */
-					#EmailPanel .chat-app-container {
-						width: 100% !important;
-						max-width: 100% !important;
-						height: auto !important;
-						min-height: 0 !important;
+  /* Main SMS wrapper becomes vertical on mobile */
+  #EmailPanel .chat-app-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
 
-						display: flex !important;
-						flex-direction: column !important;
-						gap: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
 
-						background: transparent !important;
-						border: none !important;
-						border-radius: 0 !important;
-						overflow: visible !important;
-						box-sizing: border-box !important;
-					}
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
 
-					/* SECTION 1: SMS list */
-					#EmailPanel #sms_user_list,
-					#EmailPanel .user-list {
-						width: 100% !important;
-						max-width: 100% !important;
-						height: 260px !important;
-						min-height: 220px !important;
-						max-height: 280px !important;
+  /* SECTION 1: SMS list */
+  #EmailPanel #sms_user_list,
+  #EmailPanel .user-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 260px !important;
+    min-height: 220px !important;
+    max-height: 280px !important;
 
-						display: flex !important;
-						flex-direction: column !important;
+    display: flex !important;
+    flex-direction: column !important;
 
-						background: #0b2f3d !important;
-						border: 1px solid rgba(32, 171, 137, 0.35) !important;
-						border-radius: 10px !important;
-						border-right: 1px solid rgba(32, 171, 137, 0.35) !important;
+    background: #0b2f3d !important;
+    border: 1px solid rgba(32, 171, 137, 0.35) !important;
+    border-radius: 10px !important;
+    border-right: 1px solid rgba(32, 171, 137, 0.35) !important;
 
-						overflow-y: auto !important;
-						overflow-x: hidden !important;
-						box-sizing: border-box !important;
-					}
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel .user {
-						width: 100% !important;
-						min-height: 54px !important;
-						padding: 12px 14px !important;
-						box-sizing: border-box !important;
-					}
+  #EmailPanel .user {
+    width: 100% !important;
+    min-height: 54px !important;
+    padding: 12px 14px !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel .user-info {
-						width: 100% !important;
-						min-width: 0 !important;
-						display: flex !important;
-						align-items: center !important;
-						gap: 10px !important;
-					}
+  #EmailPanel .user-info {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
 
-					#EmailPanel .user-details {
-						width: calc(100% - 45px) !important;
-						min-width: 0 !important;
-					}
+  #EmailPanel .user-details {
+    width: calc(100% - 45px) !important;
+    min-width: 0 !important;
+  }
 
-					#EmailPanel .user-details h4,
-					#EmailPanel .user-details p {
-						max-width: 100% !important;
-						overflow: hidden !important;
-						text-overflow: ellipsis !important;
-						white-space: nowrap !important;
-					}
+  #EmailPanel .user-details h4,
+  #EmailPanel .user-details p {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
 
-					/* SECTION 2: Conversation */
-					#EmailPanel #sms_chat_container,
-					#EmailPanel .chat-container {
-						width: 100% !important;
-						max-width: 100% !important;
-						height: 430px !important;
-						min-height: 430px !important;
+  /* SECTION 2: Conversation */
+  #EmailPanel #sms_chat_container,
+  #EmailPanel .chat-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 430px !important;
+    min-height: 430px !important;
 
-						flex: none !important;
-						flex-direction: column !important;
+    flex: none !important;
+    flex-direction: column !important;
 
-						background: #0b2f3d !important;
-						border: 1px solid rgba(32, 171, 137, 0.35) !important;
-						border-radius: 10px !important;
+    background: #0b2f3d !important;
+    border: 1px solid rgba(32, 171, 137, 0.35) !important;
+    border-radius: 10px !important;
 
-						overflow: hidden !important;
-						box-sizing: border-box !important;
-					}
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel .chat-header {
-						width: 100% !important;
-						min-height: 52px !important;
-						padding: 14px 16px !important;
-						background: rgba(255, 255, 255, 0.06) !important;
-						border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-						box-sizing: border-box !important;
-					}
+  #EmailPanel .chat-header {
+    width: 100% !important;
+    min-height: 52px !important;
+    padding: 14px 16px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel .chat-header .contact-name,
-					#EmailPanel #sms_contact_name {
-						font-size: 16px !important;
-						line-height: 1.3 !important;
-						color: #ffffff !important;
-						word-break: break-word !important;
-					}
+  #EmailPanel .chat-header .contact-name,
+  #EmailPanel #sms_contact_name {
+    font-size: 16px !important;
+    line-height: 1.3 !important;
+    color: #ffffff !important;
+    word-break: break-word !important;
+  }
 
-					#EmailPanel #sms_chat_messages,
-					#EmailPanel .chat-messages {
-						width: 100% !important;
-						flex: 1 1 auto !important;
-						min-height: 0 !important;
-						padding: 14px !important;
+  #EmailPanel #sms_chat_messages,
+  #EmailPanel .chat-messages {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 14px !important;
 
-						display: flex !important;
-						flex-direction: column !important;
-						gap: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
 
-						overflow-y: auto !important;
-						overflow-x: hidden !important;
-						box-sizing: border-box !important;
-					}
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel .message {
-						max-width: 82% !important;
-						padding: 10px 12px !important;
-						font-size: 12px !important;
-						line-height: 1.35 !important;
-						word-break: break-word !important;
-						overflow-wrap: anywhere !important;
-					}
+  #EmailPanel .message {
+    max-width: 82% !important;
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
 
-					#EmailPanel .message.sent {
-						align-self: flex-end !important;
-						margin-left: auto !important;
-						margin-right: 0 !important;
-					}
+  #EmailPanel .message.sent {
+    align-self: flex-end !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+  }
 
-					#EmailPanel .message.received {
-						align-self: flex-start !important;
-						margin-left: 0 !important;
-						margin-right: auto !important;
-					}
+  #EmailPanel .message.received {
+    align-self: flex-start !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+  }
 
-					/* Chat input stays at bottom of conversation box */
-					#EmailPanel .chat-input {
-						width: 100% !important;
-						flex: 0 0 auto !important;
-						padding: 12px !important;
-						background: rgba(255, 255, 255, 0.06) !important;
-						border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-						box-sizing: border-box !important;
-					}
+  /* Chat input stays at bottom of conversation box */
+  #EmailPanel .chat-input {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+    padding: 12px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel .input_inner_chat {
-						width: 100% !important;
-						min-height: 46px !important;
-						padding: 5px 8px 5px 12px !important;
-						display: flex !important;
-						align-items: center !important;
-						box-sizing: border-box !important;
-					}
+  #EmailPanel .input_inner_chat {
+    width: 100% !important;
+    min-height: 46px !important;
+    padding: 5px 8px 5px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel #sms_chat_input {
-						width: 100% !important;
-						min-width: 0 !important;
-						flex: 1 1 auto !important;
-						padding: 9px 8px !important;
-						font-size: 12px !important;
-						box-sizing: border-box !important;
-					}
+  #EmailPanel #sms_chat_input {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    padding: 9px 8px !important;
+    font-size: 12px !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel #sms_send_btn_chat,
-					#EmailPanel .sms_send_btn {
-						flex: 0 0 auto !important;
-						min-width: 66px !important;
-						padding: 9px 14px !important;
-						margin-left: 6px !important;
-						font-size: 13px !important;
-						border-radius: 20px !important;
-						box-sizing: border-box !important;
-					}
+  #EmailPanel #sms_send_btn_chat,
+  #EmailPanel .sms_send_btn {
+    flex: 0 0 auto !important;
+    min-width: 66px !important;
+    padding: 9px 14px !important;
+    margin-left: 6px !important;
+    font-size: 13px !important;
+    border-radius: 20px !important;
+    box-sizing: border-box !important;
+  }
 
-					/* No conversation selected message */
-					#EmailPanel #sms_no_chat_selected {
-						width: 100% !important;
-						min-height: 160px !important;
-						padding: 20px !important;
-						background: #0b2f3d !important;
-						border: 1px solid rgba(32, 171, 137, 0.35) !important;
-						border-radius: 10px !important;
-						box-sizing: border-box !important;
-					}
+  /* No conversation selected message */
+  #EmailPanel #sms_no_chat_selected {
+    width: 100% !important;
+    min-height: 160px !important;
+    padding: 20px !important;
+    background: #0b2f3d !important;
+    border: 1px solid rgba(32, 171, 137, 0.35) !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+  }
 
-					/* Quick SMS mobile form */
-					#EmailPanel .form_inner_sms {
-						width: 100% !important;
-						max-width: 100% !important;
-						padding: 18px !important;
-						box-sizing: border-box !important;
-					}
+  /* Quick SMS mobile form */
+  #EmailPanel .form_inner_sms {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 18px !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel .flex_clients textarea,
-					#EmailPanel .flex_clients select {
-						width: 100% !important;
-						max-width: 100% !important;
-						box-sizing: border-box !important;
-					}
+  #EmailPanel .flex_clients textarea,
+  #EmailPanel .flex_clients select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+#EmailPanel #sms_user_list .user,
+  #EmailPanel .user-list .user {
+    width: 100% !important;
+    min-height: 68px !important;
+    padding: 10px 14px !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
 
-					#EmailPanel #sms_user_list .user,
-					#EmailPanel .user-list .user {
-						width: 100% !important;
-						min-height: 68px !important;
-						padding: 10px 14px !important;
-						display: block !important;
-						box-sizing: border-box !important;
-					}
+  #EmailPanel #sms_user_list .user-info,
+  #EmailPanel .user-list .user-info {
+    width: 100% !important;
+    display: block !important;
+    min-width: 0 !important;
+  }
 
-					#EmailPanel #sms_user_list .user-info,
-					#EmailPanel .user-list .user-info {
-						width: 100% !important;
-						display: block !important;
-						min-width: 0 !important;
-					}
+  #EmailPanel #sms_user_list .user-details,
+  #EmailPanel .user-list .user-details {
+    width: 100% !important;
+    display: block !important;
+    min-width: 0 !important;
+  }
 
-					#EmailPanel #sms_user_list .user-details,
-					#EmailPanel .user-list .user-details {
-						width: 100% !important;
-						display: block !important;
-						min-width: 0 !important;
-					}
+  /* Phone number must get full row priority */
+  #EmailPanel #sms_user_list .user-details h4,
+  #EmailPanel .user-list .user-details h4,
+  #EmailPanel #sms_user_list .user h4,
+  #EmailPanel .user-list .user h4 {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
 
-					/* Phone number must get full row priority */
-					#EmailPanel #sms_user_list .user-details h4,
-					#EmailPanel .user-list .user-details h4,
-					#EmailPanel #sms_user_list .user h4,
-					#EmailPanel .user-list .user h4 {
-						display: block !important;
-						width: 100% !important;
-						max-width: 100% !important;
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
 
-						font-size: 15px !important;
-						line-height: 1.35 !important;
-						font-weight: 700 !important;
-						color: #ffffff !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
 
-						white-space: nowrap !important;
-						overflow: visible !important;
-						text-overflow: clip !important;
+    margin: 0 0 5px 0 !important;
+    padding: 0 !important;
+  }
 
-						margin: 0 0 5px 0 !important;
-						padding: 0 !important;
-					}
+  /* Message preview goes below number */
+  #EmailPanel #sms_user_list .user-details p,
+  #EmailPanel .user-list .user-details p,
+  #EmailPanel #sms_user_list .user p,
+  #EmailPanel .user-list .user p {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
 
-					/* Message preview goes below number */
-					#EmailPanel #sms_user_list .user-details p,
-					#EmailPanel .user-list .user-details p,
-					#EmailPanel #sms_user_list .user p,
-					#EmailPanel .user-list .user p {
-						display: block !important;
-						width: 100% !important;
-						max-width: 100% !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    color: #9fb4bf !important;
 
-						font-size: 12px !important;
-						line-height: 1.3 !important;
-						color: #9fb4bf !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 
-						white-space: nowrap !important;
-						overflow: hidden !important;
-						text-overflow: ellipsis !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 
-						margin: 0 !important;
-						padding: 0 !important;
-					}
+  /* If date is beside the number, keep it smaller */
+  #EmailPanel #sms_user_list .user-details span,
+  #EmailPanel .user-list .user-details span,
+  #EmailPanel #sms_user_list .user span,
+  #EmailPanel .user-list .user span {
+    font-size: 10px !important;
+    color: #00ffc5 !important;
+    margin-left: 4px !important;
+    white-space: nowrap !important;
+  }
 
-					/* If date is beside the number, keep it smaller */
-					#EmailPanel #sms_user_list .user-details span,
-					#EmailPanel .user-list .user-details span,
-					#EmailPanel #sms_user_list .user span,
-					#EmailPanel .user-list .user span {
-						font-size: 10px !important;
-						color: #9fb4bf !important;
-						margin-left: 4px !important;
-						white-space: nowrap !important;
-					}
+#EmailPanel.mobile-quick-sms .chat-app-container,
+  #EmailPanel.mobile-quick-sms #sms_user_list,
+  #EmailPanel.mobile-quick-sms #sms_chat_container,
+  #EmailPanel.mobile-quick-sms #sms_no_chat_selected {
+    display: none !important;
+  }
 
-					#EmailPanel #sms_user_list .user.unread span,
-					#EmailPanel .user-list .user.unread span,
-					#EmailPanel #sms_user_list .user.unread .sms-time,
-					#EmailPanel .user-list .user.unread .sms-time {
-						color: #ffcc00 !important;
-						font-weight: 700 !important;
-					}
+  #EmailPanel.mobile-quick-sms #col_two_chat,
+  #EmailPanel.mobile-quick-sms .form_inner_sms {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 
-					#EmailPanel.mobile-quick-sms .chat-app-container,
-					#EmailPanel.mobile-quick-sms #sms_user_list,
-					#EmailPanel.mobile-quick-sms #sms_chat_container,
-					#EmailPanel.mobile-quick-sms #sms_no_chat_selected {
-						display: none !important;
-					}
+  #EmailPanel.mobile-sms-list .chat-app-container {
+    display: flex !important;
+  }
 
-					#EmailPanel.mobile-quick-sms #col_two_chat,
-					#EmailPanel.mobile-quick-sms .form_inner_sms {
-						display: block !important;
-						width: 100% !important;
-						max-width: 100% !important;
-					}
-
-					#EmailPanel.mobile-sms-list .chat-app-container {
-						display: flex !important;
-					}
-
-					#EmailPanel.mobile-sms-list #col_two_chat,
-					#EmailPanel.mobile-sms-list .form_inner_sms {
-						display: none !important;
-					}
-				}
+  #EmailPanel.mobile-sms-list #col_two_chat,
+  #EmailPanel.mobile-sms-list .form_inner_sms {
+    display: none !important;
+  }
+}
 			</style>
 
 			<div class="sms_col_tab">
@@ -28003,11 +27674,10 @@ change theme version 1.5.2
 					<div class="chat-input">
 						<div class="input_inner_chat">
 							<input type="text" id="sms_chat_input" placeholder="Type your message here..."
-								onkeypress="if(event.keyCode==13) { sendChatSMS(); return false; }"><button
-								type="button" id="sms_send_btn_chat" onclick="sendChatSMS();"
-								class="sms_send_btn">Send</button><button
-								type="button" id="sms_block_btn_chat" onclick="toggleBlockContact();"
-								class="sms_block_btn" title="Block Number / Add to DNC"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 3px;"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>Block</button>
+
+
+onkeypress="if(event.keyCode==13) { sendChatSMS(); return false; }"><button type="button" id="sms_send_btn_chat" onclick="sendChatSMS();"
+								class="sms_send_btn">Send</button>
 						</div>
 					</div>
 				</div>
@@ -28637,8 +28307,7 @@ change theme version 1.5.2
 											<td align="left">
 												<div class="col-md-3"><input class="form-control" type="text" size="7"
 														maxlength="10" name="MDDiaLCodE" id="MDDiaLCodE"
-														class="form-control"
-														value="<?php echo $default_phone_code ?>" />
+														class="form-control" value="<?php echo $default_phone_code ?>" />
 												</div>&nbsp;
 												<?php echo _QXZ("(This is usually a 1 in the USA-Canada)"); ?>
 											</td>
@@ -28925,7 +28594,7 @@ change theme version 1.5.2
 												</td>
 												<td colspan="2">
 													<font class="body_small">
-														<?php echo _QXZ("Se Attivi, ti basterÃÆÃÂ  selezionare un esito con i numeri </br> e la chiamata sarÃÆÃÂ  agganciata automaticamente:"); ?>
+														<?php echo _QXZ("Se Attivi, ti basterÃƒÆ’Ã‚Â  selezionare un esito con i numeri </br> e la chiamata sarÃƒÆ’Ã‚Â  agganciata automaticamente:"); ?>
 													</font>
 												</td>
 											</tr>
@@ -29038,7 +28707,7 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 		echo $zi ?>;" id="CallBackSelectBox">
 			<div
 				style="width:90%; height:auto;  min-height:80vh; background-color:#002130; margin:20px auto; color:#fff; padding:20px 30px;border-radius:18px;">
-
+				
 				<!--<div class="col-lg-11 col-xs-11">-->
 				<div class="row">
 					<div>
@@ -29059,10 +28728,10 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 												}
 												?>
 
-												<input type="hidden" name="CallBackDatESelectioN"
-													id="CallBackDatESelectioN" form="vicidial_form" />
-												<input type="hidden" name="CallBackTimESelectioN"
-													id="CallBackTimESelectioN" form="vicidial_form" />
+								<input type="hidden" name="CallBackDatESelectioN"
+									id="CallBackDatESelectioN" form="vicidial_form" />
+								<input type="hidden" name="CallBackTimESelectioN"
+									id="CallBackTimESelectioN" form="vicidial_form" />
 												<center>
 													<div class="col-lg-12 no-padding">
 
@@ -29071,13 +28740,13 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 																<label class="" style="color: #fff;width:100px;">
 																	<?php echo _QXZ("Date: ") ?>
 																</label>
-																<label id="CallBackDatELabel" style="display:none;">
+														<label id="CallBackDatELabel" style="display:none;">
 																	<?php // echo _QXZ("Select a Date Below") ?>
 																</label>
 																<div class="input-group date" id="CallBackDatEPrinT"
 																	style="width:100%;">
 																	<input type="text" class="form-control"
-																		id="datepicker" form="vicidial_form"
+																				id="datepicker" form="vicidial_form"
 																		onchange="CB_date_pick(this.value);">
 																	<span class="input-group-addon">
 																		<i class="glyphicon glyphicon-calendar"></i>
@@ -29091,8 +28760,8 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 																<div style="margin-right:10px;">
 																	<?php echo _QXZ("Hour:"); ?>
 																</div>
-																<select class='form-control' size="1" name="CBT_hour"
-																	id="CBT_hour" form="vicidial_form">
+														<select class='form-control' size="1" name="CBT_hour"
+															id="CBT_hour" form="vicidial_form">
 																	<?php
 																	if ($callback_time_24hour > 0) {
 																		?>
@@ -29138,8 +28807,7 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 																</div>
 																<div class="col-lg-10 no-padding">
 																	<select class='form-control' size="1"
-																		name="CBT_minute" id="CBT_minute"
-																		form="vicidial_form">
+																				name="CBT_minute" id="CBT_minute" form="vicidial_form">
 																		<option>00</option>
 																		<option>05</option>
 																		<option>10</option>
@@ -29183,16 +28851,16 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 
 														echo "<div class=\"col-lg-12 no-padding space\"'>";
 														if ($comments_callback_screen != 'REPLACE_CB_NOTES') {
-															echo "<div style=\"\" class=\"comment_inner_select\"><span>" . _QXZ("CB Comments:") . " </span> <input class=\"form-control\" type=\"text\" name=\"CallBackCommenTsField\" id=\"CallBackCommenTsField\" form=\"vicidial_form\" size=\"50\"  /></div>\n";
-														} else {
-															echo "<input type=\"hidden\" name=\"CallBackCommenTsField\" id=\"CallBackCommenTsField\" form=\"vicidial_form\" value=\"\" /><br />\n";
+														echo "<div style=\"\" class=\"comment_inner_select\"><span>" . _QXZ("CB Comments:") . " </span> <input class=\"form-control\" type=\"text\" name=\"CallBackCommenTsField\" id=\"CallBackCommenTsField\" form=\"vicidial_form\" size=\"50\"  /></div>\n";
+													} else {
+														echo "<input type=\"hidden\" name=\"CallBackCommenTsField\" id=\"CallBackCommenTsField\" form=\"vicidial_form\" value=\"\" /><br />\n";
 														}
 
 														if ($agentonly_callbacks) {
-															echo "<div class=\"col-lg-12 inner_check_select\"><input type=\"checkbox\" name=\"CallBackOnlyMe\" id=\"CallBackOnlyMe\" form=\"vicidial_form\" size=\"1\" value=\"0\" /> " . _QXZ("MY CALLBACK ONLY") . " </div><br />";
+														echo "<div class=\"col-lg-12 inner_check_select\"><input type=\"checkbox\" name=\"CallBackOnlyMe\" id=\"CallBackOnlyMe\" form=\"vicidial_form\" size=\"1\" value=\"0\" /> " . _QXZ("MY CALLBACK ONLY") . " </div><br />";
 														}
 														echo "</div>";
-														echo "<span class='pull-left padding5' id=\"CBCommentsContent\"><input type=\"hidden\" name=\"cbcomment_comments\" id=\"cbcomment_comments\" form=\"vicidial_form\" value=\"\" /></span><br />\n";
+												echo "<span class='pull-left padding5' id=\"CBCommentsContent\"><input type=\"hidden\" name=\"cbcomment_comments\" id=\"cbcomment_comments\" form=\"vicidial_form\" value=\"\" /></span><br />\n";
 														echo "<div class=\"col-lg-12 no-padding space\" style='display:none;'><div class=\"col-lg-2 no-padding\">" . _QXZ("Select Agent:") . " </div><div  class=\"col-lg-3 no-padding\" id='selectagent'><select id='new_agent' name='new_agent'></select></div></div></br>\n";
 														?>
 
@@ -29252,8 +28920,7 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 
 
 		<span style="visibility:hidden;position:fixed;left:0px;top:0px;width:100%;height:100%;z-index:<?php $zi++;
-		echo $zi ?>;background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); color: rgb(255, 255, 255);"
-			id="TransferMain">
+		echo $zi ?>;background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); color: rgb(255, 255, 255);" id="TransferMain">
 			<div class="popup_overlay_transfer" id="TransferMain">
 				<div class="popup_content_transfer">
 					<div class="flex justify-between items-center mb-35">
@@ -29445,7 +29112,7 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 		</div>
 
 		<!-- <span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++;
-		   echo $zi ?>;" id="EAcommentsBox"> -->
+		  echo $zi ?>;" id="EAcommentsBox"> -->
 		<span style="visibility:hidden;position:absolute;left:5px;top:0px; background: #fff; z-index:<?php $zi++;
 		echo $zi ?>; display:none;" id="EAcommentsBox">
 			<table border="0" bgcolor="" height="70px">
@@ -29471,7 +29138,7 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 		</span>
 
 		<!-- <span style="position:absolute;left:695px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++;
-		   echo $zi ?>;" id="EAcommentsMinBox"> -->
+		  echo $zi ?>;" id="EAcommentsMinBox"> -->
 		<span style="visibility:hidden;position:absolute;right:0;top:0px;background: #fff; z-index:<?php $zi++;
 		echo $zi ?>; display:none;" id="EAcommentsMinBox">
 			<table border="0" bgcolor="" width="40px" height="20px">
@@ -29741,16 +29408,14 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 									echo "<div id=\"webphoneContainer\" style=\"display:none;\"><span style=\"margin-top: 1%;z-index:1;position:relative;height:57%;width: 100%;overflow:hidden;\" id=\"webphoneSpan\"><table cellpadding=\"$webphone_pad\" cellspacing=\"0\" border=\"0\"><tr><td align=\"center\"><span id=\"webphonecontent\">$webphone_content</span></td></tr></table></span></div>\n";
 								}
 								?>
-
+								
 								<!-- Lead preview checkbox - only show if dial method is inbound -->
 								<div id="leadPreviewControl"
 									style="<?php echo (($dial_method == 'INBOUND_MAN') && ($manual_dial_preview > 0)) ? '' : 'display:none;'; ?>">
 									<span id="DiaLLeaDPrevieW">
 										<label class="lead-preview-toggle">
 											<input type="checkbox" name="LeadPreview" value="0" />
-											<span>
-												<?php echo _QXZ("LEAD PREVIEW"); ?>
-											</span>
+											<span><?php echo _QXZ("LEAD PREVIEW"); ?></span>
 										</label>
 									</span>
 								</div>
@@ -29873,7 +29538,7 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 
 								<!--volume span-->
 								<div id="VolumeControlSpan" class="vici-theme mt-2"
-    style="display: flex;gap:10px;align-items: center;">
+									style="display:none !important;">
 									<!--
 	<span style="" id="VolumeControlSpan">
 -->
@@ -29886,10 +29551,8 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 
 									<div class="" style="width:25%">
 										<span id="AgentMuteSpan">
-											<button id="AgentMuteSpanBtnn"
-												onclick="volume_control('MUTING', agentchannel, 'AgenT'); muteclick(); return false;"
-												type="button" class="btn btn-40" title="Mute"><img
-													src="./img/<?php echo _QXZ("mic-symbol.png"); ?>" /></button>
+											<button id="AgentMuteSpanBtnn" onclick="volume_control('MUTING', agentchannel, 'AgenT'); muteclick(); return false;" type="button"
+												class="btn btn-40" title="Mute"><img src="./img/<?php echo _QXZ("mic-symbol.png"); ?>" /></button>
 										</span>
 									</div>
 
@@ -29923,8 +29586,7 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 											class="w-100" style="border-radius: 8px;
 	border: none;padding:6px; outline:none;" class="" value="" maxlength="50" />
 										<button style="margin-left:6%;" class="btn w-40 btn-white"
-											id="send_dtmf_webphone_btn" alt="Send DTMF"
-											onclick="SendConfDTMF(session_id,'YES'); return false;">Send DTMF</button>
+											id="send_dtmf_webphone_btn" alt="Send DTMF" onclick="SendConfDTMF(session_id,'YES'); return false;">Send DTMF</button>
 										<?php /* onclick="SendConfDTMF(session_id,'YES');return false;"*/ ?>
 									</span>
 
@@ -29947,22 +29609,22 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 												}, '*'); // Replace '*' with iframe's origin for security
 											});
 
-											function muteclick() {
-												const muteIframe = document.getElementById('webphone');
-												console.log('PARENT: muteclick fired', muteIframe);
+											function muteclick(){
+	const muteIframe = document.getElementById('webphone');
+	console.log('PARENT: muteclick fired', muteIframe);
 
-												if (!muteIframe || !muteIframe.contentWindow) {
-													console.log('PARENT: iframe/contentWindow missing');
-													return;
-												}
+	if (!muteIframe || !muteIframe.contentWindow) {
+		console.log('PARENT: iframe/contentWindow missing');
+		return;
+	}
 
-												muteIframe.contentWindow.postMessage({
-													action: 'MUTE_TOGGLE',
-													buttonId: 'mic_mute'
-												}, '*');
+	muteIframe.contentWindow.postMessage({
+	  action: 'MUTE_TOGGLE',
+	  buttonId: 'mic_mute'
+	}, '*');
 
-												console.log('PARENT: MUTE_TOGGLE sent');
-											}
+	console.log('PARENT: MUTE_TOGGLE sent');
+}
 
 
 
@@ -30300,42 +29962,42 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 												});
 
 												$('.chat-app-container').show();
-												$('.form_inner_sms').hide();
+$('.form_inner_sms').hide();
 
-												/* MOBILE DEFAULT: SMS List mode */
-												if (window.KlozerPhoneDevice === true) {
-													$('#EmailPanel')
-														.removeClass('mobile-quick-sms')
-														.addClass('mobile-sms-list');
-												}
+/* MOBILE DEFAULT: SMS List mode */
+if (window.KlozerPhoneDevice === true) {
+  $('#EmailPanel')
+    .removeClass('mobile-quick-sms')
+    .addClass('mobile-sms-list');
+}
 
-												$('.chat_list').on('click', function () {
-													$('.chat-app-container').show();
-													$('.form_inner_sms').hide();
-													$(this).addClass('active');
-													$('.quick_sms').removeClass('active');
+$('.chat_list').on('click', function () {
+  $('.chat-app-container').show();
+  $('.form_inner_sms').hide();
+  $(this).addClass('active');
+  $('.quick_sms').removeClass('active');
 
-													/* MOBILE ONLY */
-													if (window.KlozerPhoneDevice === true) {
-														$('#EmailPanel')
-															.removeClass('mobile-quick-sms')
-															.addClass('mobile-sms-list');
-													}
-												});
+  /* MOBILE ONLY */
+  if (window.KlozerPhoneDevice === true) {
+    $('#EmailPanel')
+      .removeClass('mobile-quick-sms')
+      .addClass('mobile-sms-list');
+  }
+});
 
-												$('.quick_sms').on('click', function () {
-													$('.chat-app-container').hide();
-													$('.form_inner_sms').show();
-													$(this).addClass('active');
-													$('.chat_list').removeClass('active');
+$('.quick_sms').on('click', function () {
+  $('.chat-app-container').hide();
+  $('.form_inner_sms').show();
+  $(this).addClass('active');
+  $('.chat_list').removeClass('active');
 
-													/* MOBILE ONLY */
-													if (window.KlozerPhoneDevice === true) {
-														$('#EmailPanel')
-															.removeClass('mobile-sms-list')
-															.addClass('mobile-quick-sms');
-													}
-												});
+  /* MOBILE ONLY */
+  if (window.KlozerPhoneDevice === true) {
+    $('#EmailPanel')
+      .removeClass('mobile-sms-list')
+      .addClass('mobile-quick-sms');
+  }
+});
 											});
 											document.addEventListener('DOMContentLoaded', function () {
 												const users = document.querySelectorAll('.user');
@@ -30553,9 +30215,9 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 				<!-- ZZZZZZZZZZZZ  action links -->
 
 				<span style="position:absolute;left:0px;top:<?php echo $DBheight ?>px;z-index:<?php $zi++;
-				   echo $zi ?>;" id="debugbottomspan"></span>
+				  echo $zi ?>;" id="debugbottomspan"></span>
 				<span style="position:absolute;left:<?php echo $PDwidth ?>px;top:<?php echo $AMheight ?>px;display:none;z-index:<?php $zi++;
-					  echo $zi ?>;" id="AgentMuteANDPreseTDiaL">
+					echo $zi ?>;" id="AgentMuteANDPreseTDiaL">
 					<font class="body_text">
 						<?php
 						if ($PreseT_DiaL_LinKs) {
@@ -30572,7 +30234,7 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 
 
 				<span style="position:absolute;left:500px;top:<?php echo $AMheight ?>px;z-index:<?php $zi++;
-				   echo $zi ?>;display:none;" id="OtherTabCommentsSpan">
+				  echo $zi ?>;display:none;" id="OtherTabCommentsSpan">
 					<?php
 					if (($comments_all_tabs == 'ENABLED') and ($label_comments != '---HIDE---')) {
 						$zi++;
@@ -30607,12 +30269,9 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 										</h5> <span id="DispoSelectPhonE"></span><span id="DispoSelectHAspan">
 									</div>
 									<div style="display: flex; align-items: center; gap: 30px;">
-										<div onclick="NoneInSessionOK(); return false;"
-											style="width: 22px; height: 22px; font-size: 14px; text-align: center; line-height: 22px; background-color: transparent; color: white; cursor: pointer;">
-											Minimize??</div>
-										<path fill-rule="evenodd" clip-rule="evenodd"
-											d="M10.9999 13.3292L18.0705 20.3999C18.4457 20.7751 18.9546 20.9859 19.4852 20.9859C20.0158 20.9859 20.5247 20.7751 20.8999 20.3999C21.2751 20.0247 21.4859 19.5158 21.4859 18.9852C21.4859 18.4546 21.2751 17.9458 20.8999 17.5706L13.8265 10.4999L20.8985 3.42924C21.0842 3.24346 21.2315 3.02293 21.332 2.78023C21.4324 2.53754 21.4841 2.27743 21.484 2.01476C21.484 1.7521 21.4322 1.49202 21.3316 1.24937C21.231 1.00672 21.0837 0.786259 20.8979 0.600569C20.7121 0.41488 20.4916 0.267601 20.2489 0.16714C20.0062 0.0666795 19.7461 0.0150048 19.4834 0.0150667C19.2207 0.0151286 18.9607 0.0669256 18.718 0.167501C18.4754 0.268076 18.2549 0.41546 18.0692 0.601236L10.9999 7.6719L3.92921 0.601236C3.74481 0.410131 3.52419 0.257664 3.28023 0.152733C3.03627 0.0478014 2.77386 -0.00749392 2.50831 -0.00992589C2.24275 -0.0123579 1.97937 0.0381217 1.73353 0.138568C1.48769 0.239013 1.26432 0.387414 1.07644 0.57511C0.88857 0.762806 0.739959 0.986039 0.639282 1.23178C0.538604 1.47753 0.487876 1.74086 0.490058 2.00642C0.492239 2.27198 0.547286 2.53444 0.651988 2.7785C0.756689 3.02256 0.908948 3.24332 1.09988 3.4279L8.17321 10.4999L1.10121 17.5719C0.910281 17.7565 0.758023 17.9772 0.653322 18.2213C0.54862 18.4654 0.493573 18.7278 0.491391 18.9934C0.489209 19.2589 0.539937 19.5223 0.640615 19.768C0.741293 20.0138 0.889904 20.237 1.07778 20.4247C1.26565 20.6124 1.48902 20.7608 1.73486 20.8612C1.9807 20.9617 2.24408 21.0122 2.50964 21.0097C2.77519 21.0073 3.03761 20.952 3.28157 20.8471C3.52552 20.7421 3.74614 20.5897 3.93055 20.3986L10.9999 13.3292Z"
-											fill="white" fill-opacity="0.5"></path>
+										<div onclick="NoneInSessionOK(); return false;" style="width: 22px; height: 22px; font-size: 14px; text-align: center; line-height: 22px; background-color: transparent; color: white; cursor: pointer;">Minimize⬇️</div>											<path fill-rule="evenodd" clip-rule="evenodd"
+												d="M10.9999 13.3292L18.0705 20.3999C18.4457 20.7751 18.9546 20.9859 19.4852 20.9859C20.0158 20.9859 20.5247 20.7751 20.8999 20.3999C21.2751 20.0247 21.4859 19.5158 21.4859 18.9852C21.4859 18.4546 21.2751 17.9458 20.8999 17.5706L13.8265 10.4999L20.8985 3.42924C21.0842 3.24346 21.2315 3.02293 21.332 2.78023C21.4324 2.53754 21.4841 2.27743 21.484 2.01476C21.484 1.7521 21.4322 1.49202 21.3316 1.24937C21.231 1.00672 21.0837 0.786259 20.8979 0.600569C20.7121 0.41488 20.4916 0.267601 20.2489 0.16714C20.0062 0.0666795 19.7461 0.0150048 19.4834 0.0150667C19.2207 0.0151286 18.9607 0.0669256 18.718 0.167501C18.4754 0.268076 18.2549 0.41546 18.0692 0.601236L10.9999 7.6719L3.92921 0.601236C3.74481 0.410131 3.52419 0.257664 3.28023 0.152733C3.03627 0.0478014 2.77386 -0.00749392 2.50831 -0.00992589C2.24275 -0.0123579 1.97937 0.0381217 1.73353 0.138568C1.48769 0.239013 1.26432 0.387414 1.07644 0.57511C0.88857 0.762806 0.739959 0.986039 0.639282 1.23178C0.538604 1.47753 0.487876 1.74086 0.490058 2.00642C0.492239 2.27198 0.547286 2.53444 0.651988 2.7785C0.756689 3.02256 0.908948 3.24332 1.09988 3.4279L8.17321 10.4999L1.10121 17.5719C0.910281 17.7565 0.758023 17.9772 0.653322 18.2213C0.54862 18.4654 0.493573 18.7278 0.491391 18.9934C0.489209 19.2589 0.539937 19.5223 0.640615 19.768C0.741293 20.0138 0.889904 20.237 1.07778 20.4247C1.26565 20.6124 1.48902 20.7608 1.73486 20.8612C1.9807 20.9617 2.24408 21.0122 2.50964 21.0097C2.77519 21.0073 3.03761 20.952 3.28157 20.8471C3.52552 20.7421 3.74614 20.5897 3.93055 20.3986L10.9999 13.3292Z"
+												fill="white" fill-opacity="0.5"></path>
 										</svg>
 									</div>
 								</div>
@@ -30772,26 +30431,26 @@ echo $zi ?>; display: block; left: 468px; top:254px !important; visibility: visi
 				</font>
 
 				<!-- <span style="position:absolute;left:<?php echo $MUwidth ?>px;top:<?php echo $SLheight ?>px;z-index:<?php $zi++;
-					  echo $zi ?>;" id="AgentMuteSpan"></span>
+					echo $zi ?>;" id="AgentMuteSpan"></span>
 
 <span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++;
-	  echo $zi ?>;" id="MainCommit">
+	echo $zi ?>;" id="MainCommit">
 <a href="#" onclick="CustomerData_update('YES')"><font class="body_small"><?php echo _QXZ("commit"); ?></font></a>
 </span> -->
 
 				<!-- <span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++;
-					  echo $zi ?>;" id="ScriptRefresH">
+					echo $zi ?>;" id="ScriptRefresH">
 <a href="#" onclick="RefresHScript('','YES')"><font class="body_small"><?php echo _QXZ("refresh"); ?></font></a>
 </span>
 
 <span style="position:absolute;left:<?php $tempAMwidth = ($AMwidth - 15);
 echo $tempAMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++;
-	 echo $zi ?>;" id="FormRefresH">
+   echo $zi ?>;" id="FormRefresH">
 <a href="#" onclick="FormContentsLoad('YES')"><font class="body_small"><?php echo _QXZ("reset form"); ?></font></a>
 </span> -->
 
 				<!-- <span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++;
-					  echo $zi ?>;" id="EmailRefresH">
+					echo $zi ?>;" id="EmailRefresH">
 <a href="#" onclick="EmailContentsLoad('YES')"><font class="body_small"><?php echo _QXZ("refresh"); ?></font></a>
 </span> -->
 
@@ -30802,7 +30461,7 @@ ishwari
 -->
 				<!--
 <span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++;
-   echo $zi ?>;" id="Script2Panelfhh">
+  echo $zi ?>;" id="Script2Panelfhh">
 	<?php
 	if ($webphone_location == 'bar') {
 		echo "<img src=\"./images/" . _QXZ("pixel.gif") . "\" width=\"1px\" height=\"" . $webphone_height . "px\" /><br />\n";
@@ -30811,7 +30470,7 @@ ishwari
 	<table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="Script2Contents"><?php echo _QXZ("AGENT SCRIPT 2"); ?></div></font></td></tr></table>
 </span>
 <span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++;
-	  echo $zi ?>;" id="Script2RefresH">
+	echo $zi ?>;" id="Script2RefresH">
 <a href="#" onclick="RefresHScript2('','YES')"><font class="body_small"><?php echo _QXZ("refresh"); ?></font></a>
 </span>
 -->
@@ -30831,10 +30490,7 @@ end
 
 				<?php //end AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
 
-				<span class='col-md-12'
-					style="visibility:hidden;background-color: rgba(0, 33, 48, 0.95) !important;backdrop-filter: blur(8px);height:100%;width:100%;position:fixed;left:0px;top:0px;z-index:<?php $zi++;
-					echo $zi ?>;"
-					id="PresetsSelectBox">
+				<span class='col-md-12' style="visibility:hidden;background-color: rgba(0, 33, 48, 0.95) !important;backdrop-filter: blur(8px);height:100%;width:100%;position:fixed;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="PresetsSelectBox">
 					<div class="row">
 						<div class="col-md-12 side_space1">
 							<div class="">
@@ -30883,7 +30539,7 @@ end
 											if (($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) and ($dial_method != 'INBOUND_MAN') and ($VU_agent_choose_blended > 0)) {
 												?>
 												<input type="checkbox" name="CloserSelectBlended" id="CloserSelectBlended"
-													size="1" value="0" checked /><label>
+													size="1" value="0" checked/><label>
 													<?php echo _QXZ(" Blended Calling (Outbound Activated)"); ?>
 												</label> <br /><br />
 												<?php
@@ -31247,7 +30903,7 @@ echo $zi ?>;" id="TerritorySelectBox">
 				echo $zi ?>;"></div>
 
 				<span style="position:absolute;left:0px;top:<?php echo $GHheight ?>px;z-index:<?php $zi++;
-				   echo $zi ?>;display:none;" id="GENDERhideFORieALT"></span>
+				  echo $zi ?>;display:none;" id="GENDERhideFORieALT"></span>
 
 	</form>
 
@@ -31324,7 +30980,7 @@ ishwari
 			function loadSMSConversations() {
 				var ext = (typeof extension !== 'undefined') ? extension : '';
 				var user_login = (typeof user !== 'undefined') ? user : '';
-				// console.log("Loading SMS conversations for extension: " + ext + " user: " + user_login);
+				console.log("Loading SMS conversations for extension: " + ext + " user: " + user_login);
 
 				var xhr = new XMLHttpRequest();
 				xhr.open("POST", "send_sms_ajax.php", true);
@@ -31335,8 +30991,8 @@ ishwari
 							var data = JSON.parse(this.responseText);
 							agent_sms_number = data.agent_number;
 							agent_sms_numbers = data.agent_numbers || [data.agent_number];
-							// console.log("Agent SMS numbers resolved: ", agent_sms_numbers, " | Conversations: " + (data.conversations ? data.conversations.length : 0));
-							renderConversationList(data.conversations, data.total_unread);
+							console.log("Agent SMS numbers resolved: ", agent_sms_numbers, " | Conversations: " + (data.conversations ? data.conversations.length : 0));
+							renderConversationList(data.conversations);
 						} catch (e) {
 							console.error("Error parsing conversations:", e, this.responseText);
 							document.getElementById('sms_user_list').innerHTML = '<div style="padding:20px; color:red;">Error loading conversations</div>';
@@ -31346,137 +31002,42 @@ ishwari
 				xhr.send("ACTION=GET_CONVERSATIONS&extension=" + encodeURIComponent(ext) + "&user_login=" + encodeURIComponent(user_login));
 			}
 
-			function updateSmsBadge(count) {
-				var badge = document.querySelector('.sms_col_tab .sms_number');
-				if (badge) {
-					badge.innerText = count > 0 ? count : '';
-					badge.style.display = count > 0 ? 'inline-block' : 'none';
-				}
-			}
-
-			function renderConversationList(conversations, total_unread) {
+			function renderConversationList(conversations) {
 				var list = document.getElementById('sms_user_list');
 				if (!conversations || conversations.length === 0) {
 					list.innerHTML = '<div style="padding:20px; text-align:center; color:#888;">No conversations found</div>';
-					updateSmsBadge(0);
 					return;
 				}
-
-				updateSmsBadge(typeof total_unread !== 'undefined' ? total_unread : 0);
 
 				var html = '';
 				conversations.forEach(function (conv) {
 					var activeClass = (active_sms_contact === conv.contact_number) ? 'active' : '';
-					var isUnread = (conv.unread_count && parseInt(conv.unread_count) > 0);
-					var unreadClass = (isUnread && active_sms_contact !== conv.contact_number) ? 'unread' : '';
 					var timeLabel = formatSmsTime(conv.time);
-					var badgeHtml = (isUnread && active_sms_contact !== conv.contact_number)
-						? '<span class="unread-badge" id="badge_' + conv.contact_number + '">' + conv.unread_count + '</span>'
-						: '';
 
-					html += '<div class="user ' + activeClass + ' ' + unreadClass + '" id="sms_user_' + conv.contact_number + '" onclick="selectSMSConversation(\'' + conv.contact_number + '\')">' +
-						'    <div class="user-info" style="width: 100%;">' +
-						'        <div class="user-name" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">' +
-						'            <span class="user-phone">' + conv.contact_number + '</span>' +
-						'            <div style="display: flex; align-items: center; gap: 6px;">' +
-						'                <span class="sms-time" style="font-size: 11px;">' + timeLabel + '</span>' +
-						'                ' + badgeHtml +
-						'            </div>' +
-						'        </div>' +
-						'        <div class="last-message" style="margin-top: 4px;">' + escapeHTML(conv.sms) + '</div>' +
+					html += '<div class="user ' + activeClass + '" onclick="selectSMSConversation(\'' + conv.contact_number + '\')">' +
+						'    <div class="user-info">' +
+						'        <div class="user-name">' + conv.contact_number + ' <span>' + timeLabel + '</span></div>' +
+						'        <div class="last-message">' + escapeHTML(conv.sms) + '</div>' +
 						'    </div>' +
 						'</div>';
 				});
 				list.innerHTML = html;
 			}
 
-			var current_contact_is_blocked = false;
-
-			function renderBlockUI(contact, is_blocked) {
-				var headerEl = document.getElementById('sms_contact_name');
-				if (headerEl) {
-					if (is_blocked) {
-						headerEl.innerHTML = escapeHTML(contact) + ' <span style="background: rgba(239, 68, 68, 0.2); color: #ff5c5c; border: 1px solid #ef4444; font-size: 11px; padding: 2px 8px; border-radius: 12px; margin-left: 8px; font-weight: bold; vertical-align: middle;">[DNC / Blocked]</span>';
-					} else {
-						headerEl.innerText = contact;
-					}
-				}
-
-				var btn = document.getElementById('sms_block_btn_chat');
-				var input = document.getElementById('sms_chat_input');
-				var sendBtn = document.getElementById('sms_send_btn_chat');
-
-				if (btn) {
-					if (is_blocked) {
-						btn.className = 'sms_unblock_btn';
-						btn.setAttribute('title', 'Unblock Number / Remove from DNC');
-						btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 3px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Unblock';
-					} else {
-						btn.className = 'sms_block_btn';
-						btn.setAttribute('title', 'Block Number / Add to DNC');
-						btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 3px;"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>Block';
-					}
-				}
-
-				if (input) {
-					if (is_blocked) {
-						input.disabled = true;
-						input.placeholder = "Number is blocked in DNC (Click Unblock to send)";
-					} else {
-						input.disabled = false;
-						input.placeholder = "Type your message here...";
-					}
-				}
-
-				if (sendBtn) {
-					if (is_blocked) {
-						sendBtn.disabled = true;
-						sendBtn.style.opacity = '0.4';
-						sendBtn.style.cursor = 'not-allowed';
-					} else {
-						sendBtn.disabled = false;
-						sendBtn.style.opacity = '1';
-						sendBtn.style.cursor = 'pointer';
-					}
-				}
-			}
-
 			function selectSMSConversation(contact) {
 				active_sms_contact = contact;
-				current_contact_is_blocked = false;
 				document.getElementById('sms_no_chat_selected').style.display = 'none';
 				document.getElementById('sms_chat_container').style.display = 'flex';
-				renderBlockUI(contact, false);
+				document.getElementById('sms_contact_name').innerText = contact;
 
-				// Highlight in list and immediately clear unread styling
+				// Highlight in list
 				var users = document.querySelectorAll('#sms_user_list .user');
 				users.forEach(function (u) {
 					u.classList.remove('active');
-					if (u.id === 'sms_user_' + contact || (u.getAttribute('onclick') && u.getAttribute('onclick').indexOf(contact) !== -1)) {
+					if (u.getAttribute('onclick').indexOf(contact) !== -1) {
 						u.classList.add('active');
-						u.classList.remove('unread');
-						var b = u.querySelector('.unread-badge');
-						if (b) {
-							var removedCount = parseInt(b.innerText) || 0;
-							b.remove();
-							var mainBadge = document.querySelector('.sms_col_tab .sms_number');
-							if (mainBadge) {
-								var cur = parseInt(mainBadge.innerText) || 0;
-								var next = Math.max(0, cur - removedCount);
-								mainBadge.innerText = next > 0 ? next : '';
-								mainBadge.style.display = next > 0 ? 'inline-block' : 'none';
-							}
-						}
 					}
 				});
-
-				// Mark read via AJAX
-				var ext = (typeof extension !== 'undefined') ? extension : '';
-				var user_login = (typeof user !== 'undefined') ? user : '';
-				var markXhr = new XMLHttpRequest();
-				markXhr.open("POST", "send_sms_ajax.php", true);
-				markXhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-				markXhr.send("ACTION=MARK_READ&receiver_id=" + encodeURIComponent(contact) + "&extension=" + encodeURIComponent(ext) + "&user_login=" + encodeURIComponent(user_login));
 
 				loadSMSHistory(contact);
 			}
@@ -31495,10 +31056,6 @@ ishwari
 							if (data.agent_numbers) {
 								agent_sms_numbers = data.agent_numbers;
 							}
-							if (contact === active_sms_contact) {
-								current_contact_is_blocked = (data.is_blocked === true);
-								renderBlockUI(contact, current_contact_is_blocked);
-							}
 							renderChatMessages(data.messages);
 						} catch (e) {
 							console.error("Error parsing history:", e);
@@ -31508,41 +31065,36 @@ ishwari
 				xhr.send("ACTION=GET_HISTORY&receiver_id=" + encodeURIComponent(contact) + "&extension=" + encodeURIComponent(ext) + "&user_login=" + encodeURIComponent(user_login));
 			}
 
-			function renderChatMessages(messages) {
-				var container = document.getElementById('sms_chat_messages');
-				var html = '';
-				if (messages) {
-					messages.forEach(function (msg) {
-						var msgClass = msg.is_sent ? 'sent' : 'received';
-						var statusIcon = '';
-
-						if (msg.is_sent) {
-							var rawStatus = msg.status ? msg.status.toUpperCase() : '';
-							if (rawStatus === 'DELIVERED' || rawStatus === 'SUCCESS' || rawStatus === 'DELIVERY SUCCESS') {
-								statusIcon = '<span style="color: #3b82f6; font-size: 11px; margin-left: 6px; font-weight: bold;" title="Delivered">&#10004;&#10004;</span>';
-							} else if (rawStatus === 'FAILED' || rawStatus === 'UNDELIVERABLE' || rawStatus === 'REJECTED' || rawStatus === 'ERROR' || rawStatus === 'DELIVERY FAILED' || rawStatus === 'BLOCKED' || rawStatus === 'ORG RATE NOT FOUND') {
-								statusIcon = '<span style="color: #ef4444; font-size: 11px; margin-left: 6px; font-weight: bold;" title="Failed">&#10008;</span>';
-							} else {
-								statusIcon = '<span style="color: #9E9E9E; font-size: 11px; margin-left: 6px; font-weight: bold;" title="Sent">&#10004;</span>';
-							}
+		function renderChatMessages(messages) {
+			var container = document.getElementById('sms_chat_messages');
+			var html = '';
+			if (messages) {
+				messages.forEach(function (msg) {
+					var msgClass = msg.is_sent ? 'sent' : 'received';
+					var statusIcon = '';
+					
+					if (msg.is_sent) {
+						var rawStatus = msg.status ? msg.status.toUpperCase() : '';
+						if (rawStatus === 'DELIVERED' || rawStatus === 'SUCCESS' || rawStatus === 'DELIVERY SUCCESS') {
+							statusIcon = '<span style="color: #3b82f6; font-size: 11px; margin-left: 6px; font-weight: bold;" title="Delivered">&#10004;&#10004;</span>';
+						} else if (rawStatus === 'FAILED' || rawStatus === 'UNDELIVERABLE' || rawStatus === 'REJECTED' || rawStatus === 'ERROR' || rawStatus === 'DELIVERY FAILED' || rawStatus === 'BLOCKED' || rawStatus === 'ORG RATE NOT FOUND') {
+							statusIcon = '<span style="color: #ef4444; font-size: 11px; margin-left: 6px; font-weight: bold;" title="Failed">&#10008;</span>';
+						} else {
+							statusIcon = '<span style="color: #9E9E9E; font-size: 11px; margin-left: 6px; font-weight: bold;" title="Sent">&#10004;</span>';
 						}
+					}
 
-						html += '<div class="message ' + msgClass + '">' +
-							'    <div class="message-content" title="' + (msg.time || '') + '">' + escapeHTML(msg.sms) + statusIcon + '</div>' +
-							'</div>';
-					});
-				}
-				container.innerHTML = html;
-				container.scrollTop = container.scrollHeight;
+					html += '<div class="message ' + msgClass + '">' +
+						'    <div class="message-content" title="' + (msg.time || '') + '">' + escapeHTML(msg.sms) + statusIcon + '</div>' +
+						'</div>';
+				});
 			}
+			container.innerHTML = html;
+			container.scrollTop = container.scrollHeight;
+		}
 
-			var is_sending_sms_lock = false;
+var is_sending_sms_lock = false;
 			function sendChatSMS() {
-				if (current_contact_is_blocked) {
-					alert("Cannot send SMS: This contact is BLOCKED / in the DNC list. Please click Unblock first.");
-					return;
-				}
-
 				var input = document.getElementById('sms_chat_input');
 				var message = input.value.trim();
 				if (!message || !active_sms_contact || !agent_sms_number) return;
@@ -31554,15 +31106,10 @@ ishwari
 				xhr.onreadystatechange = function () {
 					if (this.readyState === 4 && this.status === 200) {
 						input.disabled = false;
-						var resText = this.responseText.trim();
-						if (resText === '1') {
+						if (this.responseText.trim() === '1') {
 							input.value = '';
 							loadSMSHistory(active_sms_contact);
 							loadSMSConversations();
-						} else if (resText === 'DNC_BLOCKED') {
-							alert("Cannot send SMS: This contact number is in the DNC (Do Not Call / Blocked) list!");
-							current_contact_is_blocked = true;
-							renderBlockUI(active_sms_contact, true);
 						} else {
 							alert("Failed to send message");
 						}
@@ -31576,69 +31123,6 @@ ishwari
 					"&sms_message=" + encodeURIComponent(message) +
 					"&extension=" + encodeURIComponent(ext) +
 					"&sender_id=" + encodeURIComponent(agent_sms_number) +
-					"&campaign_id=" + encodeURIComponent(camp);
-				xhr.send(params);
-			}
-
-			function toggleBlockContact() {
-				if (!active_sms_contact) {
-					alert("Please select a conversation first.");
-					return;
-				}
-
-				var isBlocked = current_contact_is_blocked;
-				var action = isBlocked ? 'UNBLOCK_DNC' : 'BLOCK_DNC';
-				var confirmMsg = isBlocked
-					? "Are you sure you want to UNBLOCK " + active_sms_contact + " and allow calls / messages?"
-					: "Are you sure you want to BLOCK " + active_sms_contact + " and add this number to the DNC list? (Calls and messages will be stopped)";
-
-				if (!confirm(confirmMsg)) return;
-
-				var btn = document.getElementById('sms_block_btn_chat');
-				if (btn) {
-					btn.disabled = true;
-					btn.innerText = isBlocked ? 'Unblocking...' : 'Blocking...';
-				}
-
-				var user_login = (typeof user !== 'undefined') ? user : '';
-				var camp = (typeof campaign !== 'undefined') ? campaign : '';
-
-				var xhr = new XMLHttpRequest();
-				xhr.open("POST", "send_sms_ajax.php", true);
-				xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-				xhr.onreadystatechange = function () {
-					if (this.readyState === 4) {
-						if (btn) btn.disabled = false;
-						if (this.status === 200) {
-							try {
-								var res = JSON.parse(this.responseText);
-								if (res.success) {
-									current_contact_is_blocked = !isBlocked;
-									renderBlockUI(active_sms_contact, current_contact_is_blocked);
-									alert(res.message || (isBlocked ? "Number unblocked successfully." : "Number added to DNC / Blocked list."));
-								} else {
-									alert(res.error || "Action failed.");
-									renderBlockUI(active_sms_contact, current_contact_is_blocked);
-								}
-							} catch (e) {
-								current_contact_is_blocked = !isBlocked;
-								renderBlockUI(active_sms_contact, current_contact_is_blocked);
-							}
-						} else {
-							try {
-								var res = JSON.parse(this.responseText);
-								alert(res.error || (this.responseText ? ("Server error: " + this.responseText) : "Failed to communicate with server."));
-							} catch (e) {
-								alert(this.responseText ? ("Server error (" + this.status + "): " + this.responseText) : "Failed to communicate with server.");
-							}
-							renderBlockUI(active_sms_contact, current_contact_is_blocked);
-						}
-					}
-				};
-
-				var params = "ACTION=" + action + "&receiver_id=" + encodeURIComponent(active_sms_contact) +
-					"&phone_number=" + encodeURIComponent(active_sms_contact) +
-					"&user_login=" + encodeURIComponent(user_login) +
 					"&campaign_id=" + encodeURIComponent(camp);
 				xhr.send(params);
 			}
@@ -31918,423 +31402,470 @@ ishwari
 			}
 	</script>
 
-	<!--  Agent Activity Widget: Logout Reason Popup + Daily Stats -->
-	<script src="activity_agent_widget.js?v=3.0"></script>
-
-	<script>
-			// ============================================
-			// VICIDIAL Custom Email Functions
-			// ============================================
-
-			/**
-			 * Populate compose form with current lead info when tab is clicked
-			 */
-			function populateComposeForm() {
-				// Get lead_id from main form if available
-				var leadId = '';
-				if (document.vicidial_form && document.vicidial_form.lead_id) {
-					leadId = document.vicidial_form.lead_id.value;
-				}
-				document.getElementById('compose_lead_id').value = leadId;
-
-				// Auto-fill subject with lead context if lead exists
-				if (leadId && !document.getElementById('subject').value) {
-					var firstName = document.vicidial_form.first_name ? document.vicidial_form.first_name.value : '';
-					var lastName = document.vicidial_form.last_name ? document.vicidial_form.last_name.value : '';
-					if (firstName || lastName) {
-						document.getElementById('subject').value = 'Regarding: ' + firstName + ' ' + lastName;
-					}
-				}
-			}
-
-			/**
-			 * Send custom email via AJAX
-			 * @param {Event} event - Form submit event
-			 */
-			function sendCustomEmail(event) {
-				event.preventDefault();
-
-				// Get form elements
-				var form = document.getElementById('email_compose_form');
-				var toEmail = document.getElementById('to_email').value.trim();
-				var subject = document.getElementById('subject').value.trim();
-				var message = document.getElementById('message').value.trim();
-				var leadId = document.getElementById('compose_lead_id').value;
-
-				// Client-side validation
-				if (!toEmail || !subject || !message) {
-					showEmailStatus('Please fill all required fields', 'danger');
-					return;
-				}
-
-				// Email format validation
-				var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-				if (!emailRegex.test(toEmail)) {
-					showEmailStatus('Invalid email format', 'danger');
-					return;
-				}
-
-				// Show loading state
-				document.getElementById('email_send_btn').disabled = true;
-				document.getElementById('email_loading').style.display = 'inline';
-				document.getElementById('email_send_status').style.display = 'none';
-
-				// Prepare POST data
-				var formData = new FormData(form);
-
-				// Send AJAX request
-				var xhr = new XMLHttpRequest();
-				xhr.open('POST', 'send_custom_email.php', true);
-
-				xhr.onload = function () {
-					document.getElementById('email_send_btn').disabled = false;
-					document.getElementById('email_loading').style.display = 'none';
-
-					if (xhr.status === 200) {
-						var response = xhr.responseText.trim();
-
-						switch (response) {
-							case 'SUCCESS':
-								showEmailStatus('Email sent successfully!', 'success');
-								resetEmailForm();
-								// Refresh inbox if visible
-								if (document.getElementById('email_inbox').classList.contains('active')) {
-									VicidialEmailContentsLoad('YES');
-								}
-								break;
-							case 'AUTH_FAILED':
-								showEmailStatus('Authentication failed. Please re-login.', 'danger');
-								break;
-							case 'MISSING_FIELDS':
-								showEmailStatus('Required fields are missing.', 'warning');
-								break;
-							case 'INVALID_EMAIL':
-								showEmailStatus('Invalid recipient email address.', 'danger');
-								break;
-							case 'SEND_FAILED':
-								showEmailStatus('Failed to send email. Please try again.', 'danger');
-								break;
-							case 'RATE_LIMIT_EXCEEDED':
-								showEmailStatus('Rate limit exceeded. Please wait before sending again.', 'warning');
-								break;
-							default:
-								// Try to parse JSON response
-								try {
-									var jsonResp = JSON.parse(response);
-									if (jsonResp.error) {
-										showEmailStatus('Error: ' + jsonResp.error, 'danger');
-									} else if (jsonResp.success) {
-										showEmailStatus('Email sent successfully!', 'success');
-										resetEmailForm();
-									}
-								} catch (e) {
-									showEmailStatus('Unexpected response: ' + response, 'danger');
-								}
-						}
-					} else {
-						showEmailStatus('Server error: ' + xhr.status, 'danger');
-					}
-				};
-
-				xhr.onerror = function () {
-					document.getElementById('email_send_btn').disabled = false;
-					document.getElementById('email_loading').style.display = 'none';
-					showEmailStatus('Network error. Please check your connection.', 'danger');
-				};
-
-				xhr.send(formData);
-			}
-
-			/**
-			 * Show status message in email form
-			 * @param {string} message - Status message
-			 * @param {string} type - Status type: success/danger/warning
-			 */
-			function showEmailStatus(message, type) {
-				var statusEl = document.getElementById('email_send_status');
-				statusEl.textContent = message;
-				statusEl.className = 'label label-' + type;
-				statusEl.style.display = 'inline';
-
-				// Auto-hide success messages after 3 seconds
-				if (type === 'success') {
-					setTimeout(function () {
-						statusEl.style.display = 'none';
-					}, 3000);
-				}
-			}
-
-			/**
-			 * Reset email compose form
-			 */
-			function resetEmailForm() {
-				var form = document.getElementById('email_compose_form');
-				form.reset();
-
-				// Re-populate hidden fields
-				populateComposeForm();
-
-				// Hide status
-				document.getElementById('email_send_status').style.display = 'none';
-			}
-
-			/**
-			 * Refresh Vicidial Email Inbox iframe
-			 * @param {string} refresh - 'YES' or empty
-			 */
-			function VicidialEmailContentsLoad(refresh) {
-				var iframe = document.getElementById('vcVicidialEmailIFrame');
-				if (iframe) {
-					// Add timestamp to bypass cache
-					var src = iframe.src;
-					src = src.replace(/&t=\d+/, '');
-					src = src + '&t=' + new Date().getTime();
-					iframe.src = src;
-				}
-			}
-
-			/**
-			 * Insert lead info into email message (called from lead info popup)
-			 * @param {string} leadInfo - Formatted lead information string
-			 */
-			function insertLeadInfoToEmail(leadInfo) {
-				var messageEl = document.getElementById('message');
-				if (messageEl) {
-					var currentMsg = messageEl.value;
-					if (currentMsg && !currentMsg.endsWith('\n\n')) {
-						messageEl.value = currentMsg + '\n\n' + leadInfo;
-					} else {
-						messageEl.value = currentMsg + leadInfo;
-					}
-				}
-			}
-
-			// Initialize when DOM is ready
-			document.addEventListener('DOMContentLoaded', function () {
-				// Auto-populate form when compose tab is shown via Bootstrap
-				if (typeof jQuery !== 'undefined') {
-					jQuery('a[href="#email_compose"]').on('shown.bs.tab', function () {
-						populateComposeForm();
-					});
-				}
-			});
-
-
-
-
-
-
-
-
-			function formatMobileOutboundEmailRows() {
-				if (window.KlozerPhoneDevice !== true) return;
-
-				var rows = document.querySelectorAll('#outbound_emails_body tr');
-
-				for (var i = 0; i < rows.length; i++) {
-					var row = rows[i];
-					var cells = row.querySelectorAll('td');
-
-					row.classList.add('klozer-mobile-outbound-row');
-
-					for (var c = 0; c < cells.length; c++) {
-						cells[c].classList.add('klozer-mobile-outbound-cell');
-					}
-
-					/*
-					 * The outbound feed places the recipient/sender in the first column
-					 * and the visible subject in the next column. Keep the full subject
-					 * in title/data attributes, but show only its first two words on
-					 * phones so long subjects do not squeeze the address column.
-					 */
-					if (cells.length >= 2) {
-						var subjectCell = cells[1];
-
-						if (!subjectCell.getAttribute('data-klozer-full-subject')) {
-							var fullSubject = (subjectCell.textContent || '').replace(/\s+/g, ' ').trim();
-
-							if (fullSubject) {
-								subjectCell.setAttribute('data-klozer-full-subject', fullSubject);
-								subjectCell.setAttribute('title', fullSubject);
-							}
-						}
-
-						var originalSubject = subjectCell.getAttribute('data-klozer-full-subject') || '';
-						if (originalSubject) {
-							var words = originalSubject.split(/\s+/);
-							var shortSubject = words.slice(0, 2).join(' ');
-							if (words.length > 2) shortSubject += '';
-
-							/*
-							 * AJAX response rows use simple text in this cell. If a future
-							 * response adds interactive child elements, do not destroy them;
-							 * CSS wrapping still applies.
-							 */
-							if (subjectCell.children.length === 0) {
-								subjectCell.textContent = shortSubject;
-							}
-
-							subjectCell.classList.add('klozer-mobile-email-subject');
-						}
-					}
-				}
-			}
-
-
-			function loadOutboundEmails() {
-				// ??????? ???? ??? ??????? ???? ?????
-				var agent_user = $("#compose_agent").val();
-
-				// ?. ????????? ???????? ???? ????? ??????, ???? ????? ??
-				$("#outbound_emails_body").html('<tr><td colspan="3" style="text-align:center; padding:50px;"><i class="fa fa-spinner fa-spin"></i> Loading Emails...</td></tr>');
-
-				// ?. ??? ???????? ????? ????? (setTimeout) ????? ???? ???? ??? 
-				// ????? ??????? ????? ????? ???? ?? ???????? ??????
-
-				// ?. ?????????????? ???? ??? ???
-				$.ajax({
-					url: 'get_outbound_emails.php',
-					type: 'GET',
-					data: { user: agent_user },
-					success: function (response) {
-						// ???? ??? ??? ???? ????? ????? ??? ???? ??? ????????? ??????
-						$("#outbound_emails_body").html(response);
-
-						// Phone-only compact outbound list formatting.
-						formatMobileOutboundEmailRows();
-					},
-					error: function () {
-						$("#outbound_emails_body").html('<tr><td colspan="3" style="text-align:center; color:red;">Failed to load emails.</td></tr>');
-					}
-				});
-			}
-
-
-
-
-
-
-
-
-
-
-
-			function viewEmailDetails(sender, subject, date, message) {
-				document.getElementById('view_email_from').textContent = sender;
-				document.getElementById('view_email_subject').textContent = subject;
-				document.getElementById('view_email_date').textContent = date;
-
-				if (message) {
-					// ?? ?????? \n ?????? <br> ????? ? ???????? ????
-					var formattedMessage = message.split('\\n').join('<br />');
-					document.getElementById('view_email_body').innerHTML = formattedMessage;
-				} else {
-					document.getElementById('view_email_body').innerHTML = "<em>No content</em>";
-				}
-
-				var modalEl = document.getElementById('emailViewModal');
-
-				/*
-				 * MOBILE FIX:
-				 * VicidialEmailPanel is a mobile stacking context. Bootstrap creates its
-				 * backdrop under BODY, which could place the backdrop ABOVE this nested
-				 * modal and block every tap (including Close). Move only this email modal
-				 * to BODY before opening it so modal/backdrop share the same stacking
-				 * context.
-				 */
-				if (window.KlozerPhoneDevice === true && modalEl && modalEl.parentNode !== document.body) {
-					document.body.appendChild(modalEl);
-				}
-
-				var $emailModal = $('#emailViewModal');
-
-				$emailModal
-					.off('.klozerMobileEmail')
-					.on('shown.bs.modal.klozerMobileEmail', function () {
-						$(this).addClass('klozer-mobile-email-modal');
+<!--  Agent Activity Widget: Logout Reason Popup + Daily Stats -->
+<script src="activity_agent_widget.js?v=3.0"></script>
+
+<script>
+// ============================================
+// VICIDIAL Custom Email Functions
+// ============================================
+
+/**
+ * Populate compose form with current lead info when tab is clicked
+ */
+function populateComposeForm() {
+    // Get lead_id from main form if available
+    var leadId = '';
+    if (document.vicidial_form && document.vicidial_form.lead_id) {
+        leadId = document.vicidial_form.lead_id.value;
+    }
+    document.getElementById('compose_lead_id').value = leadId;
+    
+    // Auto-fill subject with lead context if lead exists
+    if (leadId && !document.getElementById('subject').value) {
+        var firstName = document.vicidial_form.first_name ? document.vicidial_form.first_name.value : '';
+        var lastName = document.vicidial_form.last_name ? document.vicidial_form.last_name.value : '';
+        if (firstName || lastName) {
+            document.getElementById('subject').value = 'Regarding: ' + firstName + ' ' + lastName;
+        }
+    }
+}
+
+/**
+ * Send custom email via AJAX
+ * @param {Event} event - Form submit event
+ */
+function sendCustomEmail(event) {
+    event.preventDefault();
+    
+    // Get form elements
+    var form = document.getElementById('email_compose_form');
+    var toEmail = document.getElementById('to_email').value.trim();
+    var subject = document.getElementById('subject').value.trim();
+    var message = document.getElementById('message').value.trim();
+    var leadId = document.getElementById('compose_lead_id').value;
+    
+    // Client-side validation
+    if (!toEmail || !subject || !message) {
+        showEmailStatus('Please fill all required fields', 'danger');
+        return;
+    }
+    
+    // Email format validation
+    var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(toEmail)) {
+        showEmailStatus('Invalid email format', 'danger');
+        return;
+    }
+    
+    // Show loading state
+    document.getElementById('email_send_btn').disabled = true;
+    document.getElementById('email_loading').style.display = 'inline';
+    document.getElementById('email_send_status').style.display = 'none';
+    
+    // Prepare POST data
+    var formData = new FormData(form);
+    
+    // Send AJAX request
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'send_custom_email.php', true);
+    
+    xhr.onload = function() {
+        document.getElementById('email_send_btn').disabled = false;
+        document.getElementById('email_loading').style.display = 'none';
+        
+        if (xhr.status === 200) {
+            var response = xhr.responseText.trim();
+            
+            switch(response) {
+                case 'SUCCESS':
+                    showEmailStatus('Email sent successfully!', 'success');
+                    resetEmailForm();
+                    // Refresh inbox if visible
+                    if (document.getElementById('email_inbox').classList.contains('active')) {
+                        VicidialEmailContentsLoad('YES');
+                    }
+                    break;
+                case 'AUTH_FAILED':
+                    showEmailStatus('Authentication failed. Please re-login.', 'danger');
+                    break;
+                case 'MISSING_FIELDS':
+                    showEmailStatus('Required fields are missing.', 'warning');
+                    break;
+                case 'INVALID_EMAIL':
+                    showEmailStatus('Invalid recipient email address.', 'danger');
+                    break;
+                case 'SEND_FAILED':
+                    showEmailStatus('Failed to send email. Please try again.', 'danger');
+                    break;
+                case 'RATE_LIMIT_EXCEEDED':
+                    showEmailStatus('Rate limit exceeded. Please wait before sending again.', 'warning');
+                    break;
+                default:
+                    // Try to parse JSON response
+                    try {
+                        var jsonResp = JSON.parse(response);
+                        if (jsonResp.error) {
+                            showEmailStatus('Error: ' + jsonResp.error, 'danger');
+                        } else if (jsonResp.success) {
+                            showEmailStatus('Email sent successfully!', 'success');
+                            resetEmailForm();
+                        }
+                    } catch(e) {
+                        showEmailStatus('Unexpected response: ' + response, 'danger');
+                    }
+            }
+        } else {
+            showEmailStatus('Server error: ' + xhr.status, 'danger');
+        }
+    };
+    
+    xhr.onerror = function() {
+        document.getElementById('email_send_btn').disabled = false;
+        document.getElementById('email_loading').style.display = 'none';
+        showEmailStatus('Network error. Please check your connection.', 'danger');
+    };
+    
+    xhr.send(formData);
+}
+
+/**
+ * Show status message in email form
+ * @param {string} message - Status message
+ * @param {string} type - Status type: success/danger/warning
+ */
+function showEmailStatus(message, type) {
+    var statusEl = document.getElementById('email_send_status');
+    statusEl.textContent = message;
+    statusEl.className = 'label label-' + type;
+    statusEl.style.display = 'inline';
+    
+    // Auto-hide success messages after 3 seconds
+    if (type === 'success') {
+        setTimeout(function() {
+            statusEl.style.display = 'none';
+        }, 3000);
+    }
+}
+
+/**
+ * Reset email compose form
+ */
+function resetEmailForm() {
+    var form = document.getElementById('email_compose_form');
+    form.reset();
+    
+    // Re-populate hidden fields
+    populateComposeForm();
+    
+    // Hide status
+    document.getElementById('email_send_status').style.display = 'none';
+}
+
+/**
+ * Refresh Vicidial Email Inbox iframe
+ * @param {string} refresh - 'YES' or empty
+ */
+function VicidialEmailContentsLoad(refresh) {
+    var iframe = document.getElementById('vcVicidialEmailIFrame');
+    if (iframe) {
+        // Add timestamp to bypass cache
+        var src = iframe.src;
+        src = src.replace(/&t=\d+/, '');
+        src = src + '&t=' + new Date().getTime();
+        iframe.src = src;
+    }
+}
+
+/**
+ * Insert lead info into email message (called from lead info popup)
+ * @param {string} leadInfo - Formatted lead information string
+ */
+function insertLeadInfoToEmail(leadInfo) {
+    var messageEl = document.getElementById('message');
+    if (messageEl) {
+        var currentMsg = messageEl.value;
+        if (currentMsg && !currentMsg.endsWith('\n\n')) {
+            messageEl.value = currentMsg + '\n\n' + leadInfo;
+        } else {
+            messageEl.value = currentMsg + leadInfo;
+        }
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-populate form when compose tab is shown via Bootstrap
+    if (typeof jQuery !== 'undefined') {
+        jQuery('a[href="#email_compose"]').on('shown.bs.tab', function() {
+            populateComposeForm();
+        });
+    }
+});
+
+
+
+
+
+
+
+
+function formatMobileOutboundEmailRows() {
+    if (window.KlozerPhoneDevice !== true) return;
+
+    var rows = document.querySelectorAll('#outbound_emails_body tr');
+
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var cells = row.querySelectorAll('td');
+
+        row.classList.add('klozer-mobile-outbound-row');
+
+        for (var c = 0; c < cells.length; c++) {
+            cells[c].classList.add('klozer-mobile-outbound-cell');
+        }
+
+        /*
+         * The outbound feed places the recipient/sender in the first column
+         * and the visible subject in the next column. Keep the full subject
+         * in title/data attributes, but show only its first two words on
+         * phones so long subjects do not squeeze the address column.
+         */
+        if (cells.length >= 2) {
+            var subjectCell = cells[1];
+
+            if (!subjectCell.getAttribute('data-klozer-full-subject')) {
+                var fullSubject = (subjectCell.textContent || '').replace(/\s+/g, ' ').trim();
+
+                if (fullSubject) {
+                    subjectCell.setAttribute('data-klozer-full-subject', fullSubject);
+                    subjectCell.setAttribute('title', fullSubject);
+                }
+            }
+
+            var originalSubject = subjectCell.getAttribute('data-klozer-full-subject') || '';
+            if (originalSubject) {
+                var words = originalSubject.split(/\s+/);
+                var shortSubject = words.slice(0, 2).join(' ');
+                if (words.length > 2) shortSubject += '…';
+
+                /*
+                 * AJAX response rows use simple text in this cell. If a future
+                 * response adds interactive child elements, do not destroy them;
+                 * CSS wrapping still applies.
+                 */
+                if (subjectCell.children.length === 0) {
+                    subjectCell.textContent = shortSubject;
+                }
+
+                subjectCell.classList.add('klozer-mobile-email-subject');
+            }
+        }
+    }
+}
+
+
+function loadOutboundEmails() {
+    // বর্তমান লগইন করা ইউজারের আইডি নেওয়া
+    var agent_user = $("#compose_agent").val(); 
+
+    // ১. শুধুমাত্র ইনবক্সের ভেতর লোডিং দেখাবে, অন্য কোথাও না
+    $("#outbound_emails_body").html('<tr><td colspan="3" style="text-align:center; padding:50px;"><i class="fa fa-spinner fa-spin"></i> Loading Emails...</td></tr>');
+
+    // ২. কোন অটোমেটিক ট্যাব চেঞ্জ (setTimeout) এখানে রাখা যাবে না। 
+    // ইউজার ইনবক্সে ক্লিক করেছে মানে সে ইনবক্সেই থাকবে।
+
+    // ৩. ব্যাকগ্রাউন্ডে ডাটা লোড করা
+    $.ajax({
+        url: 'get_outbound_emails.php',
+        type: 'GET',
+        data: { user: agent_user },
+        success: function(response) {
+            // ডাটা লোড হয়ে গেলে লোডিং মেসেজ সরে গিয়ে আসল ইমেইলগুলো দেখাবে
+            $("#outbound_emails_body").html(response);
+
+            // Phone-only compact outbound list formatting.
+            formatMobileOutboundEmailRows();
+        },
+        error: function() {
+            $("#outbound_emails_body").html('<tr><td colspan="3" style="text-align:center; color:red;">Failed to load emails.</td></tr>');
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+function viewEmailDetails(sender, subject, date, message) {
+    document.getElementById('view_email_from').textContent = sender;
+    document.getElementById('view_email_subject').textContent = subject;
+    document.getElementById('view_email_date').textContent = date;
+
+    if (message) {
+        // এই লাইনটি \n লেখাকে <br> ট্যাগ এ রূপান্তর করবে
+        var formattedMessage = message.split('\\n').join('<br />');
+        document.getElementById('view_email_body').innerHTML = formattedMessage;
+    } else {
+        document.getElementById('view_email_body').innerHTML = "<em>No content</em>";
+    }
+
+    var modalEl = document.getElementById('emailViewModal');
+
+    /*
+     * MOBILE FIX:
+     * VicidialEmailPanel is a mobile stacking context. Bootstrap creates its
+     * backdrop under BODY, which could place the backdrop ABOVE this nested
+     * modal and block every tap (including Close). Move only this email modal
+     * to BODY before opening it so modal/backdrop share the same stacking
+     * context.
+     */
+    if (window.KlozerPhoneDevice === true && modalEl && modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl);
+    }
+
+    var $emailModal = $('#emailViewModal');
+
+    $emailModal
+        .off('.klozerMobileEmail')
+        .on('shown.bs.modal.klozerMobileEmail', function() {
+            $(this).addClass('klozer-mobile-email-modal');
+
+            var $backdrop = $('.modal-backdrop').last();
+            if ($backdrop.length) {
+                $backdrop.addClass('klozer-mobile-email-backdrop');
+            }
+        })
+        .on('hidden.bs.modal.klozerMobileEmail', function() {
+            $(this).removeClass('klozer-mobile-email-modal');
+            $('.modal-backdrop.klozer-mobile-email-backdrop').remove();
+
+            // Only clear Bootstrap's body lock when no other modal is open.
+            if (!$('.modal.in:visible').length) {
+                $('body').removeClass('modal-open');
+            }
+        });
+
+    $emailModal.modal({
+        backdrop: true,
+        keyboard: true,
+        show: true
+    });
+}
+
+
+
+
+
+
+
+function sendCustomEmail(event) {
+    event.preventDefault();
+
+    // বাটন ডিজাবেল করা এবং লোডার দেখানো
+    $("#email_send_btn").prop('disabled', true);
+    $("#email_loading").show();
+    $("#email_send_status").hide();
+
+    var formData = $("#email_compose_form").serialize();
+
+    $.ajax({
+        url: 'send_custom_email.php',
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            $("#email_loading").hide();
+            $("#email_send_btn").prop('disabled', false);
+            
+            var statusLabel = $("#email_send_status");
+            statusLabel.show();
+
+            if (response.trim() === "SUCCESS") {
+                // সফল হলে মেসেজ
+                statusLabel.removeClass('label-danger').addClass('label-success')
+                           .html('<i class="fa fa-check"></i> Email Sent Successfully!')
+                           .css({"background": "#28a745", "padding": "8px", "border-radius": "4px"});
+                
+                // ফর্ম রিসেট করা এবং ইনবক্স রিফ্রেশ করা
+                $("#email_compose_form")[0].reset();
+                loadOutboundEmails(); 
+            } else {
+                // ব্যর্থ হলে মেসেজ
+                statusLabel.removeClass('label-success').addClass('label-danger')
+                           .html('<i class="fa fa-times"></i> Error: ' + response)
+                           .css({"background": "#dc3545", "padding": "8px", "border-radius": "4px"});
+            }
+
+            // ৩ সেকেন্ড পর মেসেজটি অটো মুছে যাবে
+            setTimeout(function() {
+                statusLabel.fadeOut();
+            }, 4000);
+        },
+        error: function() {
+            $("#email_loading").hide();
+            $("#email_send_btn").prop('disabled', false);
+            $("#email_send_status").show().addClass('label-danger')
+                                   .html('<i class="fa fa-exclamation-triangle"></i> Network Error!')
+                                   .css({"background": "#dc3545", "padding": "8px", "border-radius": "4px"});
+        }
+    });
+}
 
-						var $backdrop = $('.modal-backdrop').last();
-						if ($backdrop.length) {
-							$backdrop.addClass('klozer-mobile-email-backdrop');
-						}
-					})
-					.on('hidden.bs.modal.klozerMobileEmail', function () {
-						$(this).removeClass('klozer-mobile-email-modal');
-						$('.modal-backdrop.klozer-mobile-email-backdrop').remove();
-
-						// Only clear Bootstrap's body lock when no other modal is open.
-						if (!$('.modal.in:visible').length) {
-							$('body').removeClass('modal-open');
-						}
-					});
-
-				$emailModal.modal({
-					backdrop: true,
-					keyboard: true,
-					show: true
-				});
-			}
-
-
-
-
-
-
-
-			function sendCustomEmail(event) {
-				event.preventDefault();
-
-				// ???? ??????? ??? ??? ????? ??????
-				$("#email_send_btn").prop('disabled', true);
-				$("#email_loading").show();
-				$("#email_send_status").hide();
 
-				var formData = $("#email_compose_form").serialize();
 
-				$.ajax({
-					url: 'send_custom_email.php',
-					type: 'POST',
-					data: formData,
-					success: function (response) {
-						$("#email_loading").hide();
-						$("#email_send_btn").prop('disabled', false);
+
+
+
+
+
+
+
+
+
 
-						var statusLabel = $("#email_send_status");
-						statusLabel.show();
 
-						if (response.trim() === "SUCCESS") {
-							// ??? ??? ?????
-							statusLabel.removeClass('label-danger').addClass('label-success')
-								.html('<i class="fa fa-check"></i> Email Sent Successfully!')
-								.css({ "background": "#28a745", "padding": "8px", "border-radius": "4px" });
 
-							// ???? ????? ??? ??? ?????? ??????? ???
-							$("#email_compose_form")[0].reset();
-							loadOutboundEmails();
-						} else {
-							// ?????? ??? ?????
-							statusLabel.removeClass('label-success').addClass('label-danger')
-								.html('<i class="fa fa-times"></i> Error: ' + response)
-								.css({ "background": "#dc3545", "padding": "8px", "border-radius": "4px" });
-						}
 
-						// ? ??????? ?? ??????? ??? ???? ????
-						setTimeout(function () {
-							statusLabel.fadeOut();
-						}, 4000);
-					},
-					error: function () {
-						$("#email_loading").hide();
-						$("#email_send_btn").prop('disabled', false);
-						$("#email_send_status").show().addClass('label-danger')
-							.html('<i class="fa fa-exclamation-triangle"></i> Network Error!')
-							.css({ "background": "#dc3545", "padding": "8px", "border-radius": "4px" });
-					}
-				});
-			}
+function refreshTemplateDropdown() {
+    var camp = "";
+    
+    // ভিসিডায়াল থেকে ক্যাম্পেইন আইডি নেওয়ার সবচেয়ে নিখুঁত উপায়
+    try {
+        // ডায়ালারের ডিফল্ট ভেরিয়েবল চেক করা
+        if (typeof campaign !== 'undefined' && campaign !== "") {
+            camp = campaign;
+        } else if (document.getElementById("campaign_id")) {
+            camp = document.getElementById("campaign_id").value;
+        } else if (typeof document.forms[0].campaign !== 'undefined') {
+            camp = document.forms[0].campaign.value;
+        }
+    } catch(e) {
+        console.log("Campaign ID fetch error: " + e);
+    }
 
+    // যদি ক্যাম্পেইন আইডি না পাওয়া যায় তবে পেজ থেকে রিলেটেড ভ্যালু খোঁজা
+    if(camp == "") {
+        camp = "<?php echo (isset($campaign) ? $campaign : ''); ?>";
+    }
 
+    console.log("Loading templates for campaign: " + camp);
 
+    $.ajax({
+        type: "GET",
+        url: "load_templates_dropdown.php",
+        data: { campaign: camp },
+        cache: false, // ক্যাশ ক্লিয়ার রাখতে
+        success: function(html) {
+            $('#template_loader').html(html);
+        }
+    });
+}
 
 
 
@@ -32348,113 +31879,66 @@ ishwari
 
 
 
-			function refreshTemplateDropdown() {
-				var camp = "";
 
-				// ????????? ???? ?????????? ???? ?????? ?????? ?????? ????
-				try {
-					// ?????????? ?????? ????????? ??? ???
-					if (typeof campaign !== 'undefined' && campaign !== "") {
-						camp = campaign;
-					} else if (document.getElementById("campaign_id")) {
-						camp = document.getElementById("campaign_id").value;
-					} else if (typeof document.forms[0].campaign !== 'undefined') {
-						camp = document.forms[0].campaign.value;
-					}
-				} catch (e) {
-					console.log("Campaign ID fetch error: " + e);
-				}
 
-				// ??? ?????????? ???? ?? ????? ??? ??? ??? ???? ??????? ?????? ?????
-				if (camp == "") {
-					camp = "<?php echo (isset($campaign) ? $campaign : ''); ?>";
-				}
+function fillTemplate() {
+    var selected = $('#template_loader option:selected');
+    var subject = selected.data('sub'); 
+    var message = selected.data('msg'); 
 
-				console.log("Loading templates for campaign: " + camp);
+    if (message) {
+        // স্ক্রিনশটের ব্যাকস্ল্যাশ (\) দূর করার জন্য এই রিপ্লেস লজিক
+        var decodedMessage = message.toString()
+            .replace(/\\n/g, '\n')
+            .replace(/\\'/g, "'")
+            .replace(/\\"/g, '"')
+            .replace(/\\/g, ''); // বাড়তি ব্যাকস্ল্যাশ রিমুভ
+        
+        $('#message').val(decodedMessage);
+        if($('#subject').length) $('#subject').val(subject);
+    }
+}
 
-				$.ajax({
-					type: "GET",
-					url: "load_templates_dropdown.php",
-					data: { campaign: camp },
-					cache: false, // ????? ??????? ?????
-					success: function (html) {
-						$('#template_loader').html(html);
-					}
-				});
-			}
+// পেজ লোড হওয়ার পর এবং ডায়লার রেডি হলে কল করা
+$(document).ready(function() {
+    refreshTemplateDropdown();
+});
 
 
 
 
 
 
+$(document).ready(function() {
 
+    // ১. কাস্টমার ট্যাবে টাইপ করার সময় ইমেইল সাথে সাথে আপডেট হবে
+    $(document).on('input', '#email', function() {
+        $('#to_email').val($(this).val());
+    });
 
+    // ২. ইমেইল ট্যাবে ক্লিক করলে কাস্টমার ট্যাব থেকে ইমেইল টেনে আনবে
+    $(document).on('click', 'a[href="#email_compose"], [data-target="#email_compose"]', function() {
+        var customerEmail = $('#email').val();
+        // যদি টু ফিল্ডটি খালি থাকে তবেই কাস্টমারের ইমেইলটি বসবে
+        if(customerEmail && $('#to_email').val() == "") {
+            $('#to_email').val(customerEmail);
+        }
+    });
 
+});
 
 
 
-
-
-
-			function fillTemplate() {
-				var selected = $('#template_loader option:selected');
-				var subject = selected.data('sub');
-				var message = selected.data('msg');
-
-				if (message) {
-					// ??????????? ???????????? (\) ??? ???? ???? ?? ??????? ????
-					var decodedMessage = message.toString()
-						.replace(/\\n/g, '\n')
-						.replace(/\\'/g, "'")
-						.replace(/\\"/g, '"')
-						.replace(/\\/g, ''); // ????? ???????????? ?????
-
-					$('#message').val(decodedMessage);
-					if ($('#subject').length) $('#subject').val(subject);
-				}
-			}
-
-			// ??? ??? ????? ?? ??? ??????? ???? ??? ?? ???
-			$(document).ready(function () {
-				refreshTemplateDropdown();
-			});
-
-
-
-
-
-
-			$(document).ready(function () {
-
-				// ?. ???????? ?????? ???? ???? ??? ????? ???? ???? ????? ???
-				$(document).on('input', '#email', function () {
-					$('#to_email').val($(this).val());
-				});
-
-				// ?. ????? ?????? ????? ???? ???????? ????? ???? ????? ???? ????
-				$(document).on('click', 'a[href="#email_compose"], [data-target="#email_compose"]', function () {
-					var customerEmail = $('#email').val();
-					// ??? ?? ??????? ???? ???? ???? ?????????? ??????? ????
-					if (customerEmail && $('#to_email').val() == "") {
-						$('#to_email').val(customerEmail);
-					}
-				});
-
-			});
-
-
-
-			$(document).ready(function () {
+$(document).ready(function () {
 				// CC Field Toggle
 				$(document).on('click', '#toggle_cc', function () {
 					var container = $('#cc_container');
 					if (container.is(':hidden')) {
 						container.slideDown(200);
-						$(this).css({ 'background': '#00d1b2', 'color': '#000' }); // Active State ?????
+						$(this).css({ 'background': '#00d1b2', 'color': '#000' }); // Active State কালার
 					} else {
 						container.slideUp(200);
-						$('#email_cc').val(''); // ???? ??? ????? ????????
+						$('#email_cc').val(''); // হাইড হলে ইনপুট ক্লিয়ার
 						$(this).css({ 'background': '#1b3542', 'color': '#00d1b2' });
 					}
 				});
@@ -32467,7 +31951,7 @@ ishwari
 						$(this).css({ 'background': '#00d1b2', 'color': '#000' });
 					} else {
 						container.slideUp(200);
-						$('#email_bcc').val(''); // ???? ??? ????? ????????
+						$('#email_bcc').val(''); // হাইড হলে ইনপুট ক্লিয়ার
 						$(this).css({ 'background': '#1b3542', 'color': '#00d1b2' });
 					}
 				});
@@ -32475,7 +31959,7 @@ ishwari
 
 
 			$(document).ready(function () {
-				// CC ??? BCC ?? ???? ????? ????? ???
+				// CC এবং BCC এর জন্য ট্যাগ সেটআপ করা
 				setupEmailTags('#cc_tag_container', '#email_cc_input', '#email_cc');
 				setupEmailTags('#bcc_tag_container', '#email_bcc_input', '#email_bcc');
 
@@ -32485,22 +31969,22 @@ ishwari
 					var $hidden = $(hiddenInputId);
 					var emails = [];
 
-					// ??????????? ?????? ?????? ????? ???? ????? ????? ????? ???
+					// কন্টেইনারের যেকোনো জায়গায় ক্লিক করলে ইনপুট বক্সে ফোকাস হবে
 					$container.on('click', function (e) {
 						if (e.target === this || $(e.target).hasClass('email-tag-container')) {
 							$input.focus();
 						}
 					});
 
-					// ??????? ?????? ????????? ??? (Comma, Enter, Space)
+					// কিবোর্ড ইভেন্ট হ্যান্ডেল করা (Comma, Enter, Space)
 					$input.on('keydown keyup', function (e) {
 						var val = $input.val().trim();
 
-						// ???, ?????? ?? ????? ????? (Key codes: Comma=188/44, Enter=13, Space=32)
+						// কমা, এন্টার বা স্পেস চাপলে (Key codes: Comma=188/44, Enter=13, Space=32)
 						if (e.type === 'keydown' && (e.which === 13 || e.which === 188 || e.which === 32 || e.key === ',')) {
-							e.preventDefault(); // ?????? ??????? ??
+							e.preventDefault(); // ডিফল্ট অ্যাকশন অফ
 
-							// ??? ????? ??? ????? ????? ?????
+							// কমা রিমুভ করে ক্লিন ইমেইল নেওয়া
 							var cleanEmail = val.replace(/,/g, '').trim();
 							if (validateEmail(cleanEmail)) {
 								addChip(cleanEmail);
@@ -32508,17 +31992,17 @@ ishwari
 							}
 						}
 
-						// ?????????? ????? ??? ????? ???? ????? ????? ??????? ????? ???
+						// ব্যাকস্পেস চাপলে এবং ইনপুট খালি থাকলে শেষের ট্যাগটি ডিলিট হবে
 						if (e.type === 'keydown' && e.which === 8 && val === '' && emails.length > 0) {
 							removeChip(emails.length - 1);
 						}
 					});
 
-					// ?? ????? (Paste) ?????? ????????? ??? (?????? ???? ???? ????? ???? ??? ?? ????? ??? ???)
+					// 📋 পেস্ট (Paste) ইভেন্ট হ্যান্ডেল করা (একসাথে অনেক মেইল পেস্ট করলে যেন সব ট্যাগ হয়ে যায়)
 					$input.on('paste', function (e) {
 						e.preventDefault();
 						var pastedData = (e.originalEvent || e).clipboardData.getData('text');
-						// ???, ????? ?? ??????? ???? ???????? ????? ???
+						// কমা, স্পেস বা নিউলাইন দিয়ে মেইলগুলো আলাদা করা
 						var splitEmails = pastedData.split(/[\s,\n\r]+/);
 
 						splitEmails.forEach(function (item) {
@@ -32530,9 +32014,9 @@ ishwari
 						$input.val('');
 					});
 
-					// ??? ??? ???? ?????
+					// চিপ যোগ করার ফাংশন
 					function addChip(email) {
-						if (emails.indexOf(email) === -1) { // ????????? ???
+						if (emails.indexOf(email) === -1) { // ডুপ্লিকেট চেক
 							emails.push(email);
 							var chipHtml = '<span class="email-chip" data-email="' + email + '">' + email + '<span class="close-chip">&times;</span></span>';
 							$input.before(chipHtml);
@@ -32540,38 +32024,38 @@ ishwari
 						}
 					}
 
-					// ??? ????? ???? ?????
+					// চিপ রিমুভ করার ফাংশন
 					function removeChip(index) {
 						$container.find('.email-chip').eq(index).remove();
 						emails.splice(index, 1);
 						updateHiddenInput();
 					}
 
-					// ?????-???? (x) ????? ????? ??? ????? ???
+					// ক্রিস-ক্রস (x) বাটনে ক্লিক করে ডিলিট করা
 					$container.on('click', '.close-chip', function () {
 						var $chip = $(this).parent();
 						var idx = $container.find('.email-chip').index($chip);
 						removeChip(idx);
 					});
 
-					// ????? ????? ????? ????? (?? ????????? ????????? ??? ???? ???? ??????)
+					// হিডেন ইনপুট ফিল্ড আপডেট (যা ব্যাকএন্ড পিএইচপিতে কমা দিয়ে ডাটা পাঠাবে)
 					function updateHiddenInput() {
 						$hidden.val(emails.join(', '));
 					}
 
-					// ?????? ????? ??????????
+					// সিম্পল ইমেইল ভ্যালিডেশন
 					function validateEmail(email) {
 						var re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 						return re.test(email);
 					}
 				}
 
-				// ????? ???? ????? ????? ?? ???????? ?????? ???? ??? ??????? ???? ???????????
+				// তোমার আগের রিসেট ফাংশন বা ক্লিয়ার বাটনের সাথে চিপ ক্লিয়ার লজিক ইন্টিগ্রেশন
 				window.resetEmailForm = function () {
 					var form = document.getElementById('email_compose_form');
 					if (form) form.reset();
 
-					// ?? ?????????? ??? ???? ????
+					// সব এক্সিস্টিং চিপ মুছে ফেলা
 					$('.email-chip').remove();
 					$('#email_cc').val('');
 					$('#email_bcc').val('');
@@ -32590,5043 +32074,5025 @@ ishwari
 
 
 
-			function VicidialEmailPanelToFront(x) {
-				// ?. ?? ??????? ???? active ??? in ????? ????? ??? (???? ?????????????)
-				$('#main_section1, #ScriptPanel, #FormPanel, #EmailPanel, #VicidialEmailPanel, #InternalChatPanel, #CustomerChatPanel').removeClass('active in'); //
-
-				// ?. ???? ????? ???????? active ????? ??? ???? ??? ?? ????
-				$('#VicidialEmailPanel').addClass('active in').show(); //
-
-				// ?. Vicidial ?? ????????????? ???? ????????? ?? ????
-				hideDivVisible('main_section1'); //
-				hideDiv('ScriptPanel'); //
-				hideDiv('FormPanel'); //
-				hideDiv('EmailPanel'); // ??? ????? SMS ????????? ???? ????
-
-				// ?. ????????? ??? ???????? ????? ??????? ???? ???? ??????
-				hideDiv('InternalChatPanel'); //
-				hideDiv('CustomerChatPanel'); //
-				hideDiv('CustomerChatRefresH'); // ????? ??????? ???????? ????? ????? ???? ???
-			}
-
-
-
-
-
-			// ============================================
-			// EMAIL SOUND FIX - Prevent email from muting call audio
-			// ============================================
-
-			// Override the function that sets email/chat status
-			var original_email_chat_status = currently_in_email_or_chat;
-
-			Object.defineProperty(window, 'currently_in_email_or_chat', {
-				get: function () {
-					return 0;  // ALWAYS return 0 (not in email/chat)
-				},
-				set: function (value) {
-					// Ignore any email/chat status changes during calls
-					if ((VD_live_customer_call == 1) || (MD_channel_look == 1)) {
-						console.log('Blocked email/chat status change during call');
-						return;
-					}
-					original_email_chat_status = value;
-				}
-			});
-
-
-			// ============================================
-			// SIMPLE EMAIL SOUND FIX
-			// ============================================
-
-			// Lock the variable so email never affects calls
-			setInterval(function () {
-				currently_in_email_or_chat = 0;
-
-				// Also ensure audio context stays active
-				if (typeof AudioContext !== 'undefined') {
-					try {
-						var ctx = new AudioContext();
-						if (ctx.state === 'suspended') {
-							ctx.resume();
-						}
-					} catch (e) { }
-				}
-			}, 500);  // Check every 500ms
-
-
-			// ============================================
-			// EMAIL SOUND FIX - Implementation
-			// ============================================
-
-			if (EMAIL_SOUND_FIX == 1) {
-
-				// Function 1: Block email from muting calls
-				function preventEmailAudioMute() {
-					// Always keep email/chat status at 0 during calls
-					if ((VD_live_customer_call == 1) || (MD_channel_look == 1) || (XD_live_customer_call == 1)) {
-						currently_in_email_or_chat = 0;
-					}
-				}
-
-				// Function 2: Force audio context active
-				function keepAudioAlive() {
-					try {
-						// For WebRTC/WebPhone
-						if (window.webphone && typeof window.webphone.dialButton === 'function') {
-							// WebPhone active, ensure audio
-						}
-
-						// For HTML5 Audio
-						var audioElements = document.querySelectorAll('audio');
-						for (var i = 0; i < audioElements.length; i++) {
-							if (audioElements[i].paused && audioElements[i].readyState > 0) {
-								audioElements[i].play().catch(function (e) { });
-							}
-						}
-					} catch (e) { }
-				}
-
-				// Run both functions every second
-				setInterval(function () {
-					preventEmailAudioMute();
-					keepAudioAlive();
-				}, 1000);
-
-				console.log('Email Sound Fix: ENABLED');
-			}
-
-
-
-
-	</script>
-
-	<!-- Klozer mobile application navigation V8.64 DAILY-ACTIVITY-OBSERVER-FIX
-	 The mobile shell selects the real VICIdial panels and restores their native active tab state.
-	 WebPhone/call-control functions are not wrapped or redefined. -->
-	<script>
-			(function () {
-				'use strict';
-
-				var isPhone = (window.KlozerPhoneDevice === true);
-				var nav = null;
-				var moreSheet = null;
-				var homeActivitySection = null;
-				var homeIdentitySection = null;
-				var dailyActivityWidget = null;
-				var activityObserver = null;
-				var closerObserver = null;
-				var logoutObserver = null;
-				var overlayObserver = null;
-				var callLogObserver = null;
-				var callLogFormatting = false;
-				var logoutTimer = null;
-				var initialized = false;
-				var closerWasVisible = false;
-				var overlayReturnView = 'dialer';
-				var overlayReturnPanelId = null;
-
-				/*
-				 * Notes History needs the lead_id. VICIdial writes lead_id programmatically
-				 * when a lead/call is loaded. On some mobile flows that hidden field can be
-				 * cleared/replaced before the History popup request is made, while the
-				 * visible Customer record is still on screen.
-				 *
-				 * Keep the last real non-empty lead ID seen for the currently displayed
-				 * Customer record. This is mobile-only and does not change native call logic.
-				 */
-				var lastMobileCustomerLeadId = '';
-				var leadIdCaptureTimer = null;
-				var mobileCustomerQuickSmsActive = false;
-				var mobileCustomerQuickSmsToken = 0;
-				var mobileCustomerQuickSmsRecipient = '';
-				var mobileCustomerSmsDelegatedBound = false;
-				var mobileSmsSenderCache = [];
-				var mobileSmsSenderPreloadStarted = false;
-				var mobileSmsSenderLastPreload = 0;
-
-				var smsEnabledForAgent = <?php echo (($allow_sms == 'yes') && ($agentcall_sms > 0)) ? 'true' : 'false'; ?>;
-				var emailEnabledForAgent = <?php echo ($email_enabled > 0) ? 'true' : 'false'; ?>;
-				var chatEnabledForAgent = <?php echo ($chat_enabled > 0) ? 'true' : 'false'; ?>;
-				var customerChatEnabledForAgent = <?php echo (($chat_enabled > 0) && ($campaign_chat_enabled == 'Y')) ? 'true' : 'false'; ?>;
-				var secondScriptEnabledForAgent = <?php echo ($SSenable_second_script > 0) ? 'true' : 'false'; ?>;
-
-				/*
-				 * Session identity shown on Home.
-				 * These are the same live values already used by the dialer header/details:
-				 * campaign = $VD_campaign, agent = $VD_login, phone = $SIP_user.
-				 */
-				var mobileHomeIdentity = {
-					campaign: <?php echo json_encode((string) $VD_campaign); ?>,
-						agentId: <?php echo json_encode((string) $VD_login); ?>,
-							phoneId: <?php echo json_encode((string) $SIP_user); ?>
-	};
-
-			/*
-			 * IMPORTANT:
-			 * In this dialer source Customer is inside #MainPanelCustInfo .tab-content,
-			 * but the real Script/Notepad/Email/SMS/Chat/Queue panels are elsewhere
-			 * in the legacy document. Never route those features through Customer's
-			 * tab-content again.
-			 */
-			var standardPanelIds = [
-				'ScriptPanel',
-				'Script2Panel',
-				'FormPanel',
-				'VicidialEmailPanel',
-				'EmailPanel',
-				'InternalChatPanel',
-				'CustomerChatPanel',
-				'callsinqueuedisplay'
-			];
-
-			var overlayPanelIds = [
-				'SearcHForMDisplaYBox',
-				'CalLLoGDisplaYBox',
-				'AgentViewSpan'
-			];
-
-			function closestElement(target, selector) {
-				if (!target) return null;
-				if (typeof target.closest === 'function') return target.closest(selector);
-
-				while (target && target.nodeType === 1) {
-					if (target.matches && target.matches(selector)) return target;
-					target = target.parentElement;
-				}
-				return null;
-			}
-
-			function callOriginal(name, args) {
-				var fn = window[name];
-				if (typeof fn !== 'function') return false;
-
-				try {
-					fn.apply(window, args || []);
-					return true;
-				} catch (error) {
-					if (window.console && console.error) {
-						console.error('Klozer mobile UI could not call existing VICidial function:', name, error);
-					}
-					return false;
-				}
-			}
-
-			function getCurrentView() {
-				if (!document.body) return 'dialer';
-				return document.body.getAttribute('data-mobile-view') || 'dialer';
-			}
-
-			function isLoggedOut() {
-				if (!document.body) return false;
-
-				try {
-					if (typeof logout_stop_timeouts !== 'undefined' && Number(logout_stop_timeouts) === 1) {
-						return true;
-					}
-				} catch (e) { }
-
-				var box = document.getElementById('LogouTBox');
-				if (!box) return false;
-
-				var style = window.getComputedStyle ? window.getComputedStyle(box) : box.style;
-				return style.display !== 'none' &&
-					style.visibility !== 'hidden' &&
-					style.opacity !== '0' &&
-					box.getClientRects().length > 0;
-			}
-
-			function disableMobileShellForLogout() {
-				if (!document.body) return;
-
-				clearMobilePanelSelection();
-				document.body.classList.add('klozer-mobile-logged-out');
-				document.body.classList.remove('mobile-app-ready');
-				document.body.removeAttribute('data-mobile-view');
-
-				closeMoreSheet();
-
-				if (nav) nav.style.setProperty('display', 'none', 'important');
-				if (moreSheet) moreSheet.style.setProperty('display', 'none', 'important');
-				if (homeActivitySection) homeActivitySection.style.setProperty('display', 'none', 'important');
-				if (homeIdentitySection) homeIdentitySection.style.setProperty('display', 'none', 'important');
-			}
-
-			function syncLogoutState() {
-				if (!isPhone || !document.body) return;
-				if (isLoggedOut()) disableMobileShellForLogout();
-			}
-
-			function updateActiveNavigation(view) {
-				if (!nav) return;
-
-				var buttons = nav.querySelectorAll('[data-mobile-view-button]');
-				for (var i = 0; i < buttons.length; i++) {
-					var active = buttons[i].getAttribute('data-mobile-view-button') === view;
-					buttons[i].classList.toggle('is-active', active);
-					buttons[i].setAttribute('aria-current', active ? 'page' : 'false');
-				}
-
-				var moreButton = nav.querySelector('[data-mobile-more-button]');
-				if (moreButton) {
-					moreButton.classList.toggle('is-active', view === 'panel' || view === 'overlay');
-				}
-			}
-
-			function setUiView(view, scrollTop) {
-				if (!isPhone || !document.body || isLoggedOut()) return;
-
-				var allowed = ['dashboard', 'customer', 'dialer', 'messages', 'panel', 'overlay'];
-				if (allowed.indexOf(view) === -1) view = 'dialer';
-				if (view === 'messages' && !smsEnabledForAgent) view = 'dashboard';
-
-				/*
-				 * Search Results belong only to the Lead Search overlay.
-				 * If the user leaves that overlay, close the native results box too.
-				 */
-				if ((view !== 'overlay' ||
-					document.body.getAttribute('data-mobile-overlay') !== 'SearcHForMDisplaYBox') &&
-					document.body.classList.contains('klozer-lead-results-open')) {
-					closeMobileLeadSearchResults();
-				}
-
-				if (view !== 'customer' &&
-					document.body.classList.contains('klozer-notes-history-open')) {
-					callOriginal('hideDivVisible', ['CalLNotesDisplaYBox']);
-					clearMobileNotesHistoryModal();
-				}
-
-				document.body.classList.add('klozer-phone-ui', 'mobile-app-ready');
-				document.body.setAttribute('data-mobile-view', view);
-
-				if (view !== 'overlay') {
-					document.body.removeAttribute('data-mobile-overlay');
-				}
-
-				updateActiveNavigation(view);
-
-				if (scrollTop !== false) {
-					window.scrollTo(0, 0);
-				}
-
-				mountDailyActivityWidget();
-			}
-
-			function clearMobilePanelSelection() {
-				for (var i = 0; i < standardPanelIds.length; i++) {
-					var panel = document.getElementById(standardPanelIds[i]);
-					if (!panel) continue;
-
-					panel.classList.remove('klozer-mobile-selected-panel', 'active', 'in');
-					panel.removeAttribute('data-klozer-mobile-active');
-				}
-
-				if (document.body) {
-					document.body.removeAttribute('data-mobile-panel');
-				}
-			}
-
-			function closeStandardMobilePanelsExcept(exceptId) {
-				for (var i = 0; i < standardPanelIds.length; i++) {
-					var id = standardPanelIds[i];
-					var panel = document.getElementById(id);
-					if (!panel || id === exceptId) continue;
-
-					/*
-					 * Close the PREVIOUS feature using VICIdial's own hide helper.
-					 * This removes stale inline display:block state as well as the
-					 * mobile selected/Bootstrap state.
-					 */
-					callOriginal('hideDiv', [id]);
-					panel.classList.remove('klozer-mobile-selected-panel', 'active', 'in');
-					panel.removeAttribute('data-klozer-mobile-active');
-				}
-			}
-
-			function closeNativeMobileOverlaysExcept(exceptId) {
-				/* Lead Search and Call Log are generic More overlays. */
-				var visibilityOverlays = [
-					'SearcHForMDisplaYBox',
-					'CalLLoGDisplaYBox'
-				];
-
-				for (var i = 0; i < visibilityOverlays.length; i++) {
-					var id = visibilityOverlays[i];
-					var overlay = document.getElementById(id);
-					if (id === exceptId || !overlay) continue;
-
-					callOriginal('hideDivVisible', [id]);
-					callOriginal('hideDiv', [id]);
-					overlay.classList.remove('klozer-mobile-selected-overlay');
-				}
-
-				/* Agents View has its own native open/close state. */
-				var agentView = document.getElementById('AgentViewSpan');
-				if (exceptId !== 'AgentViewSpan' && agentView) {
-					if (nativeOverlayIsOpen('AgentViewSpan')) {
-						callOriginal('AgentsViewOpen', ['AgentViewSpan', 'close']);
-					} else {
-						callOriginal('hideDiv', ['AgentViewSpan']);
-					}
-					agentView.classList.remove('klozer-mobile-selected-overlay');
-				}
-
-				clearMobileOverlaySelection(exceptId);
-			}
-
-			function closePreviousMobileFeatures(exceptId) {
-				closeStandardMobilePanelsExcept(exceptId);
-				closeNativeMobileOverlaysExcept(exceptId);
-			}
-
-			function selectMobilePanel(panelId, view) {
-				var panel = document.getElementById(panelId);
-				if (!panel || !document.body) return false;
-
-				/*
-				 * Close every previously opened More screen BEFORE promoting this one.
-				 * This is the key V8.2 single-screen rule.
-				 */
-				closePreviousMobileFeatures(panelId);
-				clearMobilePanelSelection();
-
-				/*
-				 * Several original VICidial panel functions use showDiv()/hideDiv()
-				 * but do not add Bootstrap's active/in classes. Email happens to add
-				 * them itself, which is why Email worked while Script/Notepad/Chat
-				 * stayed hidden. Give the one selected mobile panel the same active
-				 * state as the original tab system.
-				 */
-				panel.classList.add('klozer-mobile-selected-panel', 'active', 'in');
-				panel.setAttribute('data-klozer-mobile-active', 'true');
-				document.body.setAttribute('data-mobile-panel', panelId);
-
-				setUiView(view || 'panel', true);
-
-				try {
-					panel.scrollTop = 0;
-				} catch (e) { }
-
-				/*
-				 * Bootstrap/native code can update tab classes at the end of the same
-				 * click. Reassert only the currently selected panel after that cycle.
-				 */
-				window.setTimeout(function () {
-					if (!document.body ||
-						document.body.getAttribute('data-mobile-panel') !== panelId) {
-						return;
-					}
-
-					var currentPanel = document.getElementById(panelId);
-					if (!currentPanel) return;
-
-					currentPanel.classList.add('klozer-mobile-selected-panel', 'active', 'in');
-					currentPanel.setAttribute('data-klozer-mobile-active', 'true');
-				}, 40);
-
-				return true;
-			}
-
-			function findOriginalFeatureTab(panelId) {
-				return document.querySelector(
-					'a[data-toggle="tab"][href="#' + panelId + '"]'
-				);
-			}
-
-			function openOriginalFeatureTab(panelId, fallbackFunction, fallbackArgs) {
-				var anchor = findOriginalFeatureTab(panelId);
-
-				if (anchor) {
-					/*
-					 * Use the exact original VICidial tab link. This runs its existing
-					 * onclick handler AND Bootstrap's tab activation, matching the
-					 * normal desktop/default dialer behavior.
-					 */
-					anchor.click();
-				} else {
-					callOriginal(fallbackFunction, fallbackArgs || []);
-				}
-
-				selectMobilePanel(panelId, 'panel');
-			}
-
-			function hideStandardPanelsNative() {
-				for (var i = 0; i < standardPanelIds.length; i++) {
-					if (document.getElementById(standardPanelIds[i])) {
-						callOriginal('hideDiv', [standardPanelIds[i]]);
-					}
-				}
-
-				clearMobilePanelSelection();
-			}
-
-			function showCustomer() {
-				hideStandardPanelsNative();
-				closeNativeMobileOverlaysExcept(null);
-				callOriginal('MainPanelToFront', ['NO', 'YES']);
-				setUiView('customer', true);
-			}
-
-			function closeNotesHistoryIfOpen() {
-				if (!document.body ||
-					!document.body.classList.contains('klozer-notes-history-open')) {
-					return;
-				}
-
-				callOriginal('hideDivVisible', ['CalLNotesDisplaYBox']);
-				clearMobileNotesHistoryModal();
-			}
-
-			function showDialer() {
-				hideStandardPanelsNative();
-				closeNativeMobileOverlaysExcept(null);
-				setUiView('dialer', true);
-			}
-
-			function forceSmsListMode() {
-				/*
-				 * If Customer -> SMS shortcut is actively opening Quick SMS, do not
-				 * let an older/default Messages timer switch it back to SMS List.
-				 */
-				if (mobileCustomerQuickSmsActive) return;
-
-				var panel = document.getElementById('EmailPanel');
-
-				if (panel) {
-					panel.classList.remove('mobile-quick-sms');
-					panel.classList.add('mobile-sms-list');
-				}
-
-				if (window.jQuery) {
-					window.jQuery('#EmailPanel .chat-app-container').show();
-					window.jQuery('#EmailPanel .form_inner_sms').hide();
-					window.jQuery('#EmailPanel .chat_list').addClass('active');
-					window.jQuery('#EmailPanel .quick_sms').removeClass('active');
-				} else {
-					var chatContainer = document.querySelector('#EmailPanel .chat-app-container');
-					var formSms = document.querySelector('#EmailPanel .form_inner_sms');
-					if (chatContainer) chatContainer.style.display = 'flex';
-					if (formSms) formSms.style.display = 'none';
-				}
-			}
-
-			function forceMobileQuickSmsMode(recipient, focusMessage) {
-				var panel = document.getElementById('EmailPanel');
-				if (!panel) return false;
-
-				panel.classList.remove('mobile-sms-list');
-				panel.classList.add('mobile-quick-sms');
-
-				if (window.jQuery) {
-					window.jQuery('#EmailPanel .chat-app-container').hide();
-					window.jQuery('#EmailPanel .form_inner_sms').show();
-					window.jQuery('#EmailPanel .quick_sms').addClass('active');
-					window.jQuery('#EmailPanel .chat_list').removeClass('active');
-				} else {
-					var chatContainer = document.querySelector('#EmailPanel .chat-app-container');
-					var formSms = document.querySelector('#EmailPanel .form_inner_sms');
-					var quickTab = document.querySelector('#EmailPanel .quick_sms');
-					var listTab = document.querySelector('#EmailPanel .chat_list');
-
-					if (chatContainer) chatContainer.style.display = 'none';
-					if (formSms) formSms.style.display = 'block';
-					if (quickTab) quickTab.classList.add('active');
-					if (listTab) listTab.classList.remove('active');
-				}
-
-				var receiver = document.getElementById('quick_sms_phone_number');
-				if (receiver) {
-					var cleanRecipient = String(recipient || '').trim();
-					receiver.value = cleanRecipient;
-					receiver.defaultValue = cleanRecipient;
-					receiver.setAttribute('value', cleanRecipient);
-					receiver.setAttribute('data-klozer-recipient', cleanRecipient);
-
-					try {
-						receiver.dispatchEvent(new Event('input', { bubbles: true }));
-						receiver.dispatchEvent(new Event('change', { bubbles: true }));
-					} catch (e) { }
-				}
-
-				if (focusMessage) {
-					var message = document.getElementById('quick_sms_message');
-					if (message && typeof message.focus === 'function') {
-						message.focus();
-					}
-				}
-
-				return true;
-			}
-
-			function normalizeMobileSmsSenderPhone(value) {
-				var raw =
-					String(value || '').trim();
-
-				if (!raw) return '';
-
-				/*
-				 * Accept normal phone/DID formatting, but reject labels, usernames,
-				 * and short agent/extension IDs such as "KLOZER" or "102".
-				 */
-				if (!/^\+?[\d\s().-]+$/.test(raw)) {
-					return '';
-				}
-
-				var digits =
-					raw.replace(/\D/g, '');
-
-				/*
-				 * Sender DIDs used here must look like real telephone numbers.
-				 * 8-16 digits safely excludes VICIdial agent/extension IDs.
-				 */
-				if (digits.length < 8 ||
-					digits.length > 16) {
-					return '';
-				}
-
-				/*
-				 * Preserve a leading + if the server supplied one; otherwise use
-				 * clean digits so the dropdown contains only the actual number.
-				 */
-				return raw.charAt(0) === '+' ?
-					'+' + digits :
-					digits;
-			}
-
-			function populateMobileQuickSmsSenderOptions(numbers) {
-				var select =
-					document.getElementById(
-						'quick_sms_client'
-					);
-
-				if (!select ||
-					!numbers ||
-					!numbers.length) {
-					return false;
-				}
-
-				var lastValid = '';
-
-				/*
-				 * Keep ONLY the last valid telephone-like sender.
-				 * This intentionally ignores labels such as KLOZER and short
-				 * VICIdial agent/extension IDs such as 102.
-				 */
-				for (var i = 0; i < numbers.length; i++) {
-					var candidate =
-						normalizeMobileSmsSenderPhone(
-							numbers[i]
-						);
-
-					if (candidate) {
-						lastValid = candidate;
-					}
-				}
-
-				if (!lastValid) {
-					return false;
-				}
-
-				select.innerHTML = '';
-
-				var option =
-					document.createElement(
-						'option'
-					);
-
-				option.value =
-					lastValid;
-
-				option.textContent =
-					lastValid;
-
-				select.appendChild(
-					option
-				);
-
-				select.value =
-					lastValid;
-
-				return true;
-			}
-
-
-			function getKnownMobileSmsSenderNumbers() {
-				var numbers = [];
-
-				try {
-					if (typeof agent_sms_numbers !== 'undefined' &&
-						Array.isArray(agent_sms_numbers)) {
-						numbers = agent_sms_numbers.slice(0);
-					}
-				} catch (e) { }
-
-				if (!numbers.length) {
-					try {
-						if (typeof agent_sms_number !== 'undefined' && agent_sms_number) {
-							numbers = [agent_sms_number];
-						}
-					} catch (e) { }
-				}
-
-				return numbers;
-			}
-
-			function mergeMobileSmsSenderCache(numbers) {
-				if (!numbers ||
-					!numbers.length) {
-					return false;
-				}
-
-				var lastValid = '';
-
-				/*
-				 * Existing cache may contain a previously-resolved phone DID.
-				 */
-				for (var c = 0; c < mobileSmsSenderCache.length; c++) {
-					var cached =
-						normalizeMobileSmsSenderPhone(
-							mobileSmsSenderCache[c]
-						);
-
-					if (cached) {
-						lastValid = cached;
-					}
-				}
-
-				/*
-				 * New server values win, and the LAST valid phone/DID wins.
-				 */
-				for (var i = 0; i < numbers.length; i++) {
-					var number =
-						normalizeMobileSmsSenderPhone(
-							numbers[i]
-						);
-
-					if (number) {
-						lastValid = number;
-					}
-				}
-
-				mobileSmsSenderCache =
-					lastValid ?
-						[lastValid] :
-						[];
-
-				return mobileSmsSenderCache.length > 0;
-			}
-
-
-			function applyMobileSmsSenderCacheToQuickSms() {
-				/*
-				 * Also pull in the sender data the normal desktop SMS List already
-				 * resolved, if available.
-				 */
-				mergeMobileSmsSenderCache(
-					getKnownMobileSmsSenderNumbers()
-				);
-
-				if (!mobileSmsSenderCache.length) {
-					return false;
-				}
-
-				return populateMobileQuickSmsSenderOptions(
-					mobileSmsSenderCache
-				);
-			}
-
-			function preloadMobileSmsSenderCache(forceReload) {
-				if (!isPhone) return;
-
-				var now = Date.now();
-
-				/*
-				 * Avoid duplicate request storms. A forced click-time refresh is
-				 * still allowed after a short interval.
-				 */
-				if (!forceReload &&
-					mobileSmsSenderPreloadStarted &&
-					(now - mobileSmsSenderLastPreload) < 5000) {
-					applyMobileSmsSenderCacheToQuickSms();
-					return;
-				}
-
-				mobileSmsSenderPreloadStarted = true;
-				mobileSmsSenderLastPreload = now;
-
-				/*
-				 * First consume anything the desktop SMS List already knows.
-				 */
-				if (applyMobileSmsSenderCacheToQuickSms()) {
-					/*
-					 * We still refresh in the background below so changes in sender
-					 * assignment can be picked up.
-					 */
-				}
-
-				var ext = '';
-				var userLogin = '';
-
-				try {
-					ext =
-						(typeof extension !== 'undefined') ?
-							String(extension || '').trim() :
-							'';
-				} catch (e) { }
-
-				try {
-					userLogin =
-						(typeof user !== 'undefined') ?
-							String(user || '').trim() :
-							'';
-				} catch (e) { }
-
-				/*
-				 * DESKTOP REFERENCE REQUEST:
-				 * This is the exact endpoint/action used by openQuickSmsModal().
-				 */
-				var senderXhr = new XMLHttpRequest();
-
-				senderXhr.open(
-					'POST',
-					'send_sms_ajax.php',
-					true
-				);
-
-				senderXhr.setRequestHeader(
-					'Content-Type',
-					'application/x-www-form-urlencoded'
-				);
-
-				senderXhr.onreadystatechange = function () {
-					if (this.readyState !== 4) return;
-
-					if (this.status === 200) {
-						try {
-							var data =
-								JSON.parse(this.responseText);
-
-							if (data && data.sender_id) {
-								mergeMobileSmsSenderCache(
-									[data.sender_id]
-								);
-
-								applyMobileSmsSenderCacheToQuickSms();
-							}
-						} catch (e) { }
-					}
-				};
-
-				senderXhr.send(
-					'ACTION=GET_SENDER_ID&extension=' +
-					encodeURIComponent(ext)
-				);
-
-				/*
-				 * DESKTOP SMS LIST REFERENCE:
-				 * loadSMSConversations() uses this same request and receives
-				 * agent_number / agent_numbers. Fetch it in parallel so the sender
-				 * can be ready before the user ever taps the Customer envelope.
-				 */
-				var conversationsXhr =
-					new XMLHttpRequest();
-
-				conversationsXhr.open(
-					'POST',
-					'send_sms_ajax.php',
-					true
-				);
-
-				conversationsXhr.setRequestHeader(
-					'Content-Type',
-					'application/x-www-form-urlencoded'
-				);
-
-				conversationsXhr.onreadystatechange = function () {
-					if (this.readyState !== 4) return;
-
-					if (this.status === 200) {
-						try {
-							var data =
-								JSON.parse(this.responseText);
-
-							var numbers = [];
-
-							if (Array.isArray(
-								data.agent_numbers
-							)) {
-								numbers =
-									data.agent_numbers.slice(0);
-							}
-
-							if (!numbers.length &&
-								data.agent_number) {
-								numbers =
-									[data.agent_number];
-							}
-
-							if (data.agent_number) {
-								try {
-									agent_sms_number =
-										data.agent_number;
-								} catch (e) { }
-							}
-
-							if (numbers.length) {
-								try {
-									agent_sms_numbers =
-										numbers.slice(0);
-								} catch (e) { }
-
-								mergeMobileSmsSenderCache(
-									numbers
-								);
-
-								applyMobileSmsSenderCacheToQuickSms();
-							}
-						} catch (e) { }
-					}
-				};
-
-				conversationsXhr.send(
-					'ACTION=GET_CONVERSATIONS' +
-					'&extension=' +
-					encodeURIComponent(ext) +
-					'&user_login=' +
-					encodeURIComponent(userLogin)
-				);
-			}
-
-			function refreshMobileQuickSmsSender(token) {
-				if (!mobileCustomerQuickSmsActive ||
-					token !== mobileCustomerQuickSmsToken) {
-					return;
-				}
-
-				var select =
-					document.getElementById('quick_sms_client');
-
-				if (!select) return;
-
-				var resolvedOnce = false;
-
-				function applyNumbers(numbers) {
-					if (!mobileCustomerQuickSmsActive ||
-						token !== mobileCustomerQuickSmsToken) {
-						return false;
-					}
-
-					var applied =
-						populateMobileQuickSmsSenderOptions(
-							numbers || []
-						);
-
-					if (applied) {
-						resolvedOnce = true;
-					}
-
-					return applied;
-				}
-
-				function applyPayload(data) {
-					if (!data) return false;
-
-					var numbers = [];
-
-					if (Array.isArray(data.agent_numbers)) {
-						numbers =
-							data.agent_numbers.slice(0);
-					}
-
-					if (!numbers.length &&
-						data.sender_id) {
-						numbers = [data.sender_id];
-					}
-
-					if (!numbers.length &&
-						data.agent_number) {
-						numbers = [data.agent_number];
-					}
-
-					return applyNumbers(numbers);
-				}
-
-				/*
-				 * First use sender numbers already resolved by the normal SMS screen.
-				 */
-				if (!applyNumbers(
-					getKnownMobileSmsSenderNumbers()
-				)) {
-					select.innerHTML =
-						'<option value="">Fetching...</option>';
-				}
-
-				var ext = '';
-				var userLogin = '';
-
-				try {
-					ext = (typeof extension !== 'undefined') ?
-						extension :
-						'';
-				} catch (e) { }
-
-				try {
-					userLogin = (typeof user !== 'undefined') ?
-						user :
-						'';
-				} catch (e) { }
-
-				/*
-				 * Keep the normal desktop/SMS-list loader running too.
-				 */
-				try {
-					if (typeof loadSMSConversations === 'function') {
-						loadSMSConversations();
-					}
-				} catch (e) { }
-
-				/*
-				 * Request 1: exact desktop Quick SMS sender endpoint.
-				 */
-				var senderXhr = new XMLHttpRequest();
-
-				senderXhr.open(
-					'POST',
-					'send_sms_ajax.php',
-					true
-				);
-
-				senderXhr.setRequestHeader(
-					'Content-Type',
-					'application/x-www-form-urlencoded'
-				);
-
-				senderXhr.onreadystatechange = function () {
-					if (this.readyState !== 4 ||
-						!mobileCustomerQuickSmsActive ||
-						token !== mobileCustomerQuickSmsToken) {
-						return;
-					}
-
-					if (this.status === 200) {
-						try {
-							applyPayload(
-								JSON.parse(this.responseText)
-							);
-						} catch (e) { }
-					}
-				};
-
-				senderXhr.send(
-					'ACTION=GET_SENDER_ID&extension=' +
-					encodeURIComponent(ext)
-				);
-
-				/*
-				 * Request 2: same endpoint used by SMS List.
-				 * This response is known to contain agent_number/agent_numbers.
-				 */
-				var conversationsXhr =
-					new XMLHttpRequest();
-
-				conversationsXhr.open(
-					'POST',
-					'send_sms_ajax.php',
-					true
-				);
-
-				conversationsXhr.setRequestHeader(
-					'Content-Type',
-					'application/x-www-form-urlencoded'
-				);
-
-				conversationsXhr.onreadystatechange = function () {
-					if (this.readyState !== 4 ||
-						!mobileCustomerQuickSmsActive ||
-						token !== mobileCustomerQuickSmsToken) {
-						return;
-					}
-
-					if (this.status === 200) {
-						try {
-							var data =
-								JSON.parse(this.responseText);
-
-							if (data.agent_number) {
-								agent_sms_number =
-									data.agent_number;
-							}
-
-							if (Array.isArray(
-								data.agent_numbers
-							)) {
-								agent_sms_numbers =
-									data.agent_numbers.slice(0);
-							} else if (
-								data.agent_number
-							) {
-								agent_sms_numbers =
-									[data.agent_number];
-							}
-
-							applyPayload(data);
-						} catch (e) { }
-					}
-				};
-
-				conversationsXhr.send(
-					'ACTION=GET_CONVERSATIONS' +
-					'&extension=' +
-					encodeURIComponent(ext) +
-					'&user_login=' +
-					encodeURIComponent(userLogin)
-				);
-
-				/*
-				 * Re-read globals after either native request resolves.
-				 */
-				[120, 300, 650, 1200, 2200, 3500].forEach(
-					function (delay) {
-						window.setTimeout(
-							function () {
-								if (!mobileCustomerQuickSmsActive ||
-									token !== mobileCustomerQuickSmsToken) {
-									return;
-								}
-
-								applyNumbers(
-									getKnownMobileSmsSenderNumbers()
-								);
-							},
-							delay
-						);
-					}
-				);
-
-				/*
-				 * Never leave the UI stuck on "Fetching..." forever.
-				 */
-				window.setTimeout(
-					function () {
-						if (!mobileCustomerQuickSmsActive ||
-							token !== mobileCustomerQuickSmsToken) {
-							return;
-						}
-
-						if (!resolvedOnce &&
-							!applyNumbers(
-								getKnownMobileSmsSenderNumbers()
-							)) {
-							var currentText =
-								String(
-									select.textContent || ''
-								);
-
-							if (/Fetching/i.test(
-								currentText
-							)) {
-								select.innerHTML =
-									'<option value="">Unknown Sender</option>';
-							}
-						}
-					},
-					5000
-				);
-			}
-
-
-			function showMessages() {
-				if (!smsEnabledForAgent) return;
-
-				/*
-				 * Explicit Messages bottom-nav click always opens the normal SMS List.
-				 */
-				mobileCustomerQuickSmsActive = false;
-				mobileCustomerQuickSmsToken++;
-				mobileCustomerQuickSmsRecipient = '';
-
-				callOriginal('EmailPanelToFront', ['YES']);
-				selectMobilePanel('EmailPanel', 'messages');
-
-				forceSmsListMode();
-				window.setTimeout(forceSmsListMode, 40);
-			}
-
-			/*
-			 * Customer Phone / Alt Phone SMS shortcut.
-			 *
-			 * This is intentionally a separate mobile path from showMessages():
-			 * - show the real #EmailPanel in Messages
-			 * - open Quick SMS immediately
-			 * - copy the Customer phone into Enter Phone Number
-			 * - resolve the agent/sender SMS number
-			 * - leave only message text for the agent to type
-			 */
-			window.KlozerOpenCustomerQuickSms = function (recipient) {
-				if (!smsEnabledForAgent || !document.body) return false;
-
-				var cleanRecipient = String(recipient || '').trim();
-				if (!cleanRecipient) return false;
-
-				mobileCustomerQuickSmsActive = true;
-				mobileCustomerQuickSmsToken++;
-				var token = mobileCustomerQuickSmsToken;
-
-				/* Run VICIdial's real SMS panel function first. */
-				callOriginal('EmailPanelToFront', ['YES']);
-
-				if (selectMobilePanel('EmailPanel', 'messages') !== true) {
-					mobileCustomerQuickSmsActive = false;
-					return false;
-				}
-
-				forceMobileQuickSmsMode(cleanRecipient, false);
-				refreshMobileQuickSmsSender(token);
-
-				/*
-				 * Bootstrap/native class updates can finish later in the same click.
-				 * Reassert the requested QUICK SMS state and recipient a few times.
-				 */
-				[40, 120, 280].forEach(function (delay) {
-					window.setTimeout(function () {
-						if (!mobileCustomerQuickSmsActive ||
-							token !== mobileCustomerQuickSmsToken) {
-							return;
-						}
-
-						forceMobileQuickSmsMode(
-							cleanRecipient,
-							delay === 280
-						);
-					}, delay);
-				});
-
-				return true;
-			};
-
-			/*
-			 * Backward-compatible helper retained for any older Customer shortcut
-			 * code that still promotes an already-open SMS panel.
-			 */
-			window.KlozerPromoteOpenedSmsToMessages = function () {
-				if (!smsEnabledForAgent || !document.body) return false;
-
-				/*
-				 * Presentation only.
-				 * The restored desktop openQuickSmsModal() owns recipient and sender.
-				 */
-				mobileCustomerQuickSmsActive = true;
-
-				if (selectMobilePanel('EmailPanel', 'messages') !== true) {
-					return false;
-				}
-
-				var panel =
-					document.getElementById('EmailPanel');
-
-				if (panel) {
-					panel.classList.remove(
-						'mobile-sms-list'
-					);
-					panel.classList.add(
-						'mobile-quick-sms'
-					);
-				}
-
-				if (window.jQuery) {
-					window.jQuery(
-						'#EmailPanel .chat-app-container'
-					).hide();
-
-					window.jQuery(
-						'#EmailPanel .form_inner_sms'
-					).show();
-
-					window.jQuery(
-						'#EmailPanel .quick_sms'
-					).addClass('active');
-
-					window.jQuery(
-						'#EmailPanel .chat_list'
-					).removeClass('active');
-				}
-
-				return true;
-			};
-
-
-			function showStandardPanel(panelId, originalFunction, originalArgs) {
-				/*
-				 * Run the original VICIdial function first. It owns data loading,
-				 * iframe refreshes and native feature logic. The mobile shell only
-				 * chooses which REAL panel is visible afterwards.
-				 */
-				callOriginal(originalFunction, originalArgs || []);
-				selectMobilePanel(panelId, 'panel');
-			}
-
-			function elementIsVisible(id) {
-				var el = document.getElementById(id);
-				if (!el) return false;
-
-				var style = window.getComputedStyle ? window.getComputedStyle(el) : el.style;
-				return style.display !== 'none' &&
-					style.visibility !== 'hidden' &&
-					style.opacity !== '0' &&
-					el.getClientRects().length > 0;
-			}
-
-			function nativeOverlayIsOpen(overlayId) {
-				var el = document.getElementById(overlayId);
-				if (!el) return false;
-
-				/*
-				 * Lead Search and Call Log are opened by showDivVisible(), which
-				 * writes visibility:visible and display:block directly on the element.
-				 * Read THAT native inline state, not computed CSS, because the mobile
-				 * shell may deliberately hide the element until it is selected.
-				 */
-				if (overlayId === 'SearcHForMDisplaYBox' ||
-					overlayId === 'CalLLoGDisplaYBox') {
-					return el.style.visibility === 'visible' &&
-						el.style.display !== 'none';
-				}
-
-				/*
-				 * Agents View uses AgentsViewOpen(), which owns this native state flag.
-				 * Its markup can start with display:block, so display alone is not a
-				 * reliable open/closed signal.
-				 */
-				if (overlayId === 'AgentViewSpan') {
-					try {
-						if (typeof agent_status_view_active !== 'undefined') {
-							return Number(agent_status_view_active) === 1;
-						}
-					} catch (e) { }
-
-					return el.style.display === 'block' &&
-						el.classList.contains('klozer-mobile-selected-overlay');
-				}
-
-				return false;
-			}
-
-			function anyNativeOverlayVisible() {
-				return nativeOverlayIsOpen('SearcHForMDisplaYBox') ||
-					nativeOverlayIsOpen('CalLLoGDisplaYBox') ||
-					nativeOverlayIsOpen('AgentViewSpan');
-			}
-
-			function clearMobileOverlaySelection(exceptId) {
-				for (var i = 0; i < overlayPanelIds.length; i++) {
-					var id = overlayPanelIds[i];
-					if (id === exceptId) continue;
-
-					var overlay = document.getElementById(id);
-					if (overlay) overlay.classList.remove('klozer-mobile-selected-overlay');
-				}
-
-				if (document.body &&
-					document.body.getAttribute('data-mobile-overlay') !== exceptId) {
-					document.body.removeAttribute('data-mobile-overlay');
-				}
-			}
-
-			function restorePreviousScreen(previousView, previousPanelId) {
-				if (!document.body || isLoggedOut()) return;
-
-				clearMobileOverlaySelection(null);
-				document.body.removeAttribute('data-mobile-overlay');
-
-				if (previousView === 'panel' &&
-					previousPanelId &&
-					standardPanelIds.indexOf(previousPanelId) !== -1) {
-					selectMobilePanel(previousPanelId, 'panel');
-				} else if (previousView === 'messages' && smsEnabledForAgent) {
-					showMessages();
-				} else if (previousView === 'customer') {
-					showCustomer();
-				} else if (previousView === 'dashboard') {
-					hideStandardPanelsNative();
-					closeNativeMobileOverlaysExcept(null);
-					setUiView('dashboard', true);
-				} else {
-					showDialer();
-				}
-			}
-
-			function cleanMobileLeadId(value) {
-				var lead = String(value || '').trim();
-
-				if (!lead || lead === '0') return '';
-
-				/*
-				 * VICIdial lead IDs are numeric in the normal agent flow.
-				 * Keep this conservative so an unrelated field cannot become lead_id.
-				 */
-				if (!/^\d+$/.test(lead)) return '';
-
-				return lead;
-			}
-
-			function currentCustomerRecordLooksLoaded() {
-				if (!document.vicidial_form) return false;
-
-				var fieldNames = [
-					'phone_number',
-					'alt_phone',
-					'first_name',
-					'last_name',
-					'email',
-					'address1',
-					'comments',
-					'call_notes'
-				];
-
-				for (var i = 0; i < fieldNames.length; i++) {
-					var field = document.vicidial_form[fieldNames[i]];
-
-					if (field &&
-						String(field.value || '').trim().length > 0) {
-						return true;
-					}
-				}
-
-				return false;
-			}
-
-			function captureCurrentCustomerLeadId() {
-				if (!document.vicidial_form) return '';
-
-				var lead = '';
-
-				if (document.vicidial_form.lead_id) {
-					lead = cleanMobileLeadId(
-						document.vicidial_form.lead_id.value
-					);
-				}
-
-				/*
-				 * Manual/preview dial paths may temporarily retain the same lead in
-				 * MDLeadID even if the main hidden lead_id has not settled yet.
-				 */
-				if (!lead && document.vicidial_form.MDLeadID) {
-					lead = cleanMobileLeadId(
-						document.vicidial_form.MDLeadID.value
-					);
-				}
-
-				if (lead) {
-					lastMobileCustomerLeadId = lead;
-				}
-
-				return lead;
-			}
-
-			function resolveCustomerNotesLeadId() {
-				var lead = captureCurrentCustomerLeadId();
-
-				if (lead) return lead;
-
-				/*
-				 * Use the cached lead only while the Customer form still visibly
-				 * contains a record. After disposition VICIdial clears the Customer
-				 * fields as well, so stale history is not shown on a blank Customer.
-				 */
-				if (currentCustomerRecordLooksLoaded()) {
-					return cleanMobileLeadId(lastMobileCustomerLeadId);
-				}
-
-				return '';
-			}
-
-			function installCustomerLeadIdCapture() {
-				if (!isPhone || leadIdCaptureTimer) return;
-
-				captureCurrentCustomerLeadId();
-
-				/*
-				 * Programmatic .value assignments do not emit input/change events.
-				 * A very small polling read is the reliable way to catch VICIdial's
-				 * native lead_id updates without wrapping/redefining those functions.
-				 */
-				leadIdCaptureTimer = window.setInterval(function () {
-					if (!document.body || isLoggedOut()) return;
-					captureCurrentCustomerLeadId();
-				}, 400);
-			}
-
-
-			function openNativeOverlay(functionName, args, overlayId) {
-				if (overlayId !== 'SearcHForMDisplaYBox' &&
-					document.body &&
-					document.body.classList.contains('klozer-lead-results-open')) {
-					closeMobileLeadSearchResults();
-				}
-
-				var previousView = getCurrentView();
-				var previousPanelId = document.body ? document.body.getAttribute('data-mobile-panel') : null;
-
-				if (previousView !== 'overlay') {
-					overlayReturnView = previousView;
-					overlayReturnPanelId = previousPanelId;
-				}
-
-				/* Close only OTHER native overlays first. */
-				closeNativeMobileOverlaysExcept(overlayId);
-
-				/*
-				 * IMPORTANT V8.4 FIX:
-				 * Run the untouched VICidial function while the current screen is
-				 * still intact. Lead Search / Call Log keep their native pause/live
-				 * call checks; Agents View keeps its native state handling.
-				 */
-				callOriginal(functionName, args || []);
-
-				var promoted = false;
-
-				function promoteIfNativeOpened() {
-					if (promoted || isLoggedOut() || !nativeOverlayIsOpen(overlayId)) {
-						return false;
-					}
-
-					promoted = true;
-
-					/*
-					 * Now that native VICidial confirmed the feature is open, remove
-					 * every previous More panel and make THIS overlay the only mobile
-					 * feature on screen.
-					 */
-					closeStandardMobilePanelsExcept(null);
-					clearMobilePanelSelection();
-					closeNativeMobileOverlaysExcept(overlayId);
-					clearMobileOverlaySelection(overlayId);
-
-					var overlay = document.getElementById(overlayId);
-					if (overlay) {
-						overlay.classList.add('klozer-mobile-selected-overlay');
-					}
-
-					if (document.body) {
-						document.body.setAttribute('data-mobile-overlay', overlayId);
-					}
-
-					setUiView('overlay', false);
-					return true;
-				}
-
-				/* Native open operations here are synchronous, but retry once after
-				   the click cycle for browser/DOM timing differences. */
-				promoteIfNativeOpened();
-				window.setTimeout(promoteIfNativeOpened, 60);
-
-				/*
-				 * If VICidial refused Lead Search / Call Log because the agent was not
-				 * in an allowed state, do nothing to the current screen. The native
-				 * alert remains authoritative and no blank mobile view is created.
-				 */
-			}
-
-			/*
-			 * Customer -> Notes -> History:
-			 * call the untouched VICidial VieWNotesLoG() through the same overlay
-			 * manager already used by Lead Search / Call Log / Agents View.
-			 */
-			var notesHistoryModalObserver = null;
-			var notesHistoryOriginalParent = null;
-			var notesHistoryOriginalNextSibling = null;
-
-			function portalNotesHistoryToBody() {
-				var box = document.getElementById('CalLNotesDisplaYBox');
-				if (!box || !document.body) return null;
-
-				/*
-				 * ROOT FIX:
-				 * In the original VICIdial markup this box is nested inside
-				 * .right-sidebar.sidenav. On mobile that sidebar is intentionally moved
-				 * off-screen when Customer is selected. Move the SAME native box to
-				 * <body> so it can actually overlay Customer immediately.
-				 */
-				if (box.parentNode !== document.body) {
-					if (!notesHistoryOriginalParent) {
-						notesHistoryOriginalParent = box.parentNode;
-						notesHistoryOriginalNextSibling = box.nextSibling;
-					}
-
-					document.body.appendChild(box);
-				}
-
-				return box;
-			}
-
-			function notesHistoryNativeOpen() {
-				var box = document.getElementById('CalLNotesDisplaYBox');
-				if (!box) return false;
-
-				/*
-				 * Native showDivVisible() writes inline visibility/display.
-				 * Read those values directly instead of computed CSS.
-				 */
-				return box.style.visibility === 'visible' &&
-					box.style.display !== 'none';
-			}
-
-			function fitNotesHistoryModalToViewport() {
-				var box = document.getElementById('CalLNotesDisplaYBox');
-				if (!box || !document.body) return;
-
-				var viewportWidth =
-					document.documentElement.clientWidth ||
-					window.innerWidth ||
-					360;
-
-				var sideGap = viewportWidth <= 340 ? 8 : 12;
-				var cardWidth = Math.max(
-					260,
-					Math.min(410, viewportWidth - (sideGap * 2))
-				);
-
-				/*
-				 * HARD OUTER BOUNDS
-				 * -----------------
-				 * Use left + right + width:auto so the modal always fills the actual
-				 * mobile viewport. Inline !important beats old Bootstrap/mobile rules
-				 * that were leaving CalLNotesDisplaYBox at roughly half-screen width.
-				 */
-				box.style.setProperty('position', 'fixed', 'important');
-				box.style.setProperty('float', 'none', 'important');
-				box.style.setProperty('left', '0px', 'important');
-				box.style.setProperty('right', '0px', 'important');
-				box.style.setProperty('width', 'auto', 'important');
-				box.style.setProperty('max-width', 'none', 'important');
-				box.style.setProperty('min-width', '0', 'important');
-				box.style.setProperty('margin', '0', 'important');
-				box.style.setProperty('padding-left', sideGap + 'px', 'important');
-				box.style.setProperty('padding-right', sideGap + 'px', 'important');
-				box.style.setProperty('transform', 'none', 'important');
-				box.style.setProperty('box-sizing', 'border-box', 'important');
-				box.style.setProperty('overflow-x', 'hidden', 'important');
-
-				/*
-				 * HARD CARD BOUNDS
-				 * ----------------
-				 * Normalize the legacy nesting that used to inherit desktop widths,
-				 * negative Bootstrap row margins and left offsets.
-				 */
-				var clMcont = box.querySelector('.cl-mcont');
-				var row = box.querySelector('.row');
-				var sideSpace = box.querySelector('.side_space1');
-				var card = box.querySelector('.block-flat');
-
-				var fullWidthNodes = [clMcont, row, sideSpace];
-
-				for (var i = 0; i < fullWidthNodes.length; i++) {
-					var node = fullWidthNodes[i];
-					if (!node) continue;
-
-					node.style.setProperty('position', 'relative', 'important');
-					node.style.setProperty('float', 'none', 'important');
-					node.style.setProperty('left', 'auto', 'important');
-					node.style.setProperty('right', 'auto', 'important');
-					node.style.setProperty('top', 'auto', 'important');
-					node.style.setProperty('width', '100%', 'important');
-					node.style.setProperty('max-width', '100%', 'important');
-					node.style.setProperty('min-width', '0', 'important');
-					node.style.setProperty('margin-left', '0', 'important');
-					node.style.setProperty('margin-right', '0', 'important');
-					node.style.setProperty('padding-left', '0', 'important');
-					node.style.setProperty('padding-right', '0', 'important');
-					node.style.setProperty('transform', 'none', 'important');
-					node.style.setProperty('box-sizing', 'border-box', 'important');
-				}
-
-				if (clMcont) {
-					clMcont.style.setProperty(
-						'width',
-						cardWidth + 'px',
-						'important'
-					);
-					clMcont.style.setProperty(
-						'max-width',
-						'calc(100vw - ' + (sideGap * 2) + 'px)',
-						'important'
-					);
-					clMcont.style.setProperty(
-						'margin',
-						'0 auto',
-						'important'
-					);
-				}
-
-				if (card) {
-					card.style.setProperty('width', '100%', 'important');
-					card.style.setProperty('max-width', '100%', 'important');
-					card.style.setProperty('min-width', '0', 'important');
-					card.style.setProperty('margin', '0', 'important');
-					card.style.setProperty('transform', 'none', 'important');
-					card.style.setProperty('box-sizing', 'border-box', 'important');
-				}
-
-				/*
-				 * Prevent any AJAX-loaded history table/content from increasing the
-				 * modal card width. Horizontal scrolling stays inside CallNotesSpan.
-				 */
-				var notesSpan = document.getElementById('CallNotesSpan');
-
-				if (notesSpan) {
-					notesSpan.style.setProperty('width', '100%', 'important');
-					notesSpan.style.setProperty('max-width', '100%', 'important');
-					notesSpan.style.setProperty('min-width', '0', 'important');
-					notesSpan.style.setProperty('box-sizing', 'border-box', 'important');
-				}
-			}
-
-
-			function measureNotesHistoryModalTop() {
-				var header =
-					document.querySelector('.navbar.navbar-top') ||
-					document.querySelector('.navbar-top');
-
-				var modalTop = 88;
-
-				if (header && header.getBoundingClientRect) {
-					var rect = header.getBoundingClientRect();
-
-					if (rect &&
-						isFinite(rect.bottom) &&
-						rect.bottom > 0) {
-						modalTop = Math.ceil(rect.bottom) + 10;
-					}
-				}
-
-				if (document.body) {
-					document.body.style.setProperty(
-						'--klozer-notes-modal-top',
-						modalTop + 'px'
-					);
-				}
-			}
-
-			function clearMobileNotesHistoryModal() {
-				var box = document.getElementById('CalLNotesDisplaYBox');
-
-				if (document.body) {
-					document.body.classList.remove('klozer-notes-history-open');
-				}
-
-				if (box) {
-					box.classList.remove(
-						'klozer-mobile-selected-overlay',
-						'klozer-mobile-notes-history-modal'
-					);
-				}
-			}
-
-			function prepareMobileNotesHistoryModal() {
-				if (!document.body) return null;
-
-				var box = portalNotesHistoryToBody();
-				if (!box) return null;
-
-				/*
-				 * Keep Customer active. This must never become a More/overlay screen.
-				 */
-				if (getCurrentView() !== 'customer') {
-					setUiView('customer', false);
-				}
-
-				measureNotesHistoryModalTop();
-
-				document.body.classList.add('klozer-notes-history-open');
-				box.classList.remove('klozer-mobile-selected-overlay');
-				box.classList.add('klozer-mobile-notes-history-modal');
-
-				/*
-				 * Geometry must be normalized AFTER the class is added because legacy
-				 * Bootstrap/mobile selectors can otherwise re-apply their old widths.
-				 */
-				fitNotesHistoryModalToViewport();
-
-				return box;
-			}
-
-			function syncMobileNotesHistoryModal() {
-				if (!document.body) return;
-
-				var box = document.getElementById('CalLNotesDisplaYBox');
-				if (!box) return;
-
-				if (!notesHistoryNativeOpen()) {
-					clearMobileNotesHistoryModal();
-					return;
-				}
-
-				prepareMobileNotesHistoryModal();
-			}
-
-			function installNotesHistoryModalObserver() {
-				if (notesHistoryModalObserver) return;
-
-				var box = portalNotesHistoryToBody();
-				if (!box || !window.MutationObserver) return;
-
-				notesHistoryModalObserver = new MutationObserver(function () {
-					/*
-					 * When native X / Close Info Box sets visibility:hidden, remove the
-					 * modal shell immediately. When native opens it, keep it portaled.
-					 */
-					window.setTimeout(syncMobileNotesHistoryModal, 0);
-				});
-
-				notesHistoryModalObserver.observe(box, {
-					attributes: true,
-					attributeFilter: ['style']
-				});
-			}
-
-			function setNotesHistoryLoadingState() {
-				var span = document.getElementById('CallNotesSpan');
-				if (!span) return;
-
-				span.innerHTML =
-					'<div class="klozer-notes-loading">' +
-					'<div class="klozer-notes-loading-title">Loading call notes</div>' +
-					'<div class="klozer-notes-loading-subtitle">' +
-					"Fetching this customer's note history" +
-					'</div>' +
-					'</div>';
-			}
-
-			window.KlozerOpenMobileNotesHistory = function (logframe) {
-				var form = document.vicidial_form;
-				var resolvedLeadId = resolveCustomerNotesLeadId();
-				var originalLeadId = '';
-
-				/*
-				 * Prepare/portal FIRST, before native VieWNotesLoG() runs.
-				 * The popup shell therefore exists over Customer during the same click.
-				 */
-				var box = prepareMobileNotesHistoryModal();
-				if (!box) return false;
-
-				setNotesHistoryLoadingState();
-
-				if (form && form.lead_id) {
-					originalLeadId = String(form.lead_id.value || '');
-
-					if (resolvedLeadId &&
-						cleanMobileLeadId(originalLeadId) !== resolvedLeadId) {
-						form.lead_id.value = resolvedLeadId;
-					}
-				}
-
-				/*
-				 * Call untouched native VICIdial Notes History.
-				 * It sets visibility:visible and loads CallNotesSpan through AJAX.
-				 */
-				callOriginal('VieWNotesLoG', [logframe]);
-
-				/*
-				 * Native show is synchronous. Reassert modal geometry immediately.
-				 */
-				prepareMobileNotesHistoryModal();
-
-				window.setTimeout(function () {
-					syncMobileNotesHistoryModal();
-					fitNotesHistoryModalToViewport();
-				}, 0);
-
-				window.setTimeout(function () {
-					syncMobileNotesHistoryModal();
-					fitNotesHistoryModalToViewport();
-				}, 60);
-
-				window.setTimeout(fitNotesHistoryModalToViewport, 220);
-				window.setTimeout(fitNotesHistoryModalToViewport, 500);
-
-				if (form && form.lead_id &&
-					originalLeadId !== form.lead_id.value) {
-					form.lead_id.value = originalLeadId;
-				}
-
-				/*
-				 * If the current lead truly cannot be resolved, keep the modal visible
-				 * and replace the raw VICIdial error with a polished empty state.
-				 */
-				if (!resolvedLeadId) {
-					window.setTimeout(function () {
-						var span = document.getElementById('CallNotesSpan');
-
-						if (span &&
-							/ERROR:\s*no\s*Lead\s*ID/i.test(
-								span.textContent || span.innerText || ''
-							)) {
-							span.innerHTML =
-								'<div class="klozer-notes-empty">' +
-								'<div class="klozer-notes-empty-title">' +
-								'No note history available' +
-								'</div>' +
-								'<div class="klozer-notes-empty-text">' +
-								'No customer lead is currently selected.' +
-								'</div>' +
-								'</div>';
-						}
-					}, 250);
-				}
-
-				return true;
-			};
-
-
-			function restoreAfterOverlayClose() {
-				if (!document.body ||
-					document.body.getAttribute('data-mobile-view') !== 'overlay' ||
-					anyNativeOverlayVisible()) {
-					return;
-				}
-
-				clearMobileOverlaySelection(null);
-
-				var next = overlayReturnView || 'dialer';
-				if (next === 'overlay') next = 'dialer';
-
-				if (next === 'customer') {
-					showCustomer();
-				} else if (next === 'messages' && smsEnabledForAgent) {
-					showMessages();
-				} else if (next === 'panel' && overlayReturnPanelId &&
-					standardPanelIds.indexOf(overlayReturnPanelId) !== -1) {
-					selectMobilePanel(overlayReturnPanelId, 'panel');
-				} else {
-					setUiView(next, true);
-				}
-
-				overlayReturnPanelId = null;
-			}
-
-			function installOverlayObserver() {
-				if (!window.MutationObserver || overlayObserver) return;
-
-				var ids = [
-					'SearcHForMDisplaYBox',
-					'CalLLoGDisplaYBox',
-					'AgentViewSpan'
-				];
-				var observed = [];
-
-				overlayObserver = new MutationObserver(function () {
-					window.setTimeout(restoreAfterOverlayClose, 0);
-				});
-
-				for (var i = 0; i < ids.length; i++) {
-					var el = document.getElementById(ids[i]);
-					if (!el) continue;
-
-					overlayObserver.observe(el, {
-						attributes: true,
-						attributeFilter: ['style', 'class']
-					});
-					observed.push(el);
-				}
-
-				if (!observed.length) overlayObserver = null;
-			}
-
-
-			var leadSearchResultsObserver = null;
-			var leadSearchResultsContentObserver = null;
-
-			function portalLeadSearchResultsToBody() {
-				var box = document.getElementById('SearcHResultSDisplaYBox');
-
-				if (!box || !document.body) return null;
-
-				/*
-				 * Move the SAME native result box to <body>.
-				 * No clone is created, so:
-				 * - native LeadSearchSubmit() still opens this exact element
-				 * - AJAX still writes into #SearcHResultSSpan
-				 * - native X still calls hideDivVisible() on the same element
-				 */
-				if (box.parentNode !== document.body) {
-					document.body.appendChild(box);
-				}
-
-				return box;
-			}
-
-			function leadSearchResultsNativeOpen() {
-				var box = document.getElementById('SearcHResultSDisplaYBox');
-				if (!box) return false;
-
-				/*
-				 * showDivVisible() writes visibility:visible and display:block.
-				 * Read native inline state so native close remains authoritative.
-				 */
-				return box.style.visibility === 'visible' &&
-					box.style.display !== 'none';
-			}
-
-			function clearMobileLeadSearchResults() {
-				var box = document.getElementById('SearcHResultSDisplaYBox');
-
-				if (document.body) {
-					document.body.classList.remove('klozer-lead-results-open');
-				}
-
-				if (box) {
-					box.classList.remove('klozer-mobile-lead-results-modal');
-				}
-			}
-
-			function prepareMobileLeadSearchResults() {
-				if (!document.body) return null;
-
-				var box = portalLeadSearchResultsToBody();
-				if (!box) return null;
-
-				/*
-				 * Keep the Lead Search form as the active More feature underneath.
-				 * Results are a child popup of Lead Search, not a separate More screen.
-				 */
-				if (getCurrentView() !== 'overlay' ||
-					document.body.getAttribute('data-mobile-overlay') !== 'SearcHForMDisplaYBox') {
-					document.body.setAttribute(
-						'data-mobile-overlay',
-						'SearcHForMDisplaYBox'
-					);
-					setUiView('overlay', false);
-				}
-
-				document.body.classList.add('klozer-lead-results-open');
-				box.classList.add('klozer-mobile-lead-results-modal');
-
-				return box;
-			}
-
-			function syncMobileLeadSearchResults() {
-				if (!document.body) return;
-
-				if (!leadSearchResultsNativeOpen()) {
-					clearMobileLeadSearchResults();
-					return;
-				}
-
-				prepareMobileLeadSearchResults();
-			}
-
-			function closeMobileLeadSearchResults() {
-				if (!leadSearchResultsNativeOpen()) {
-					clearMobileLeadSearchResults();
-					return;
-				}
-
-				callOriginal(
-					'hideDivVisible',
-					['SearcHResultSDisplaYBox']
-				);
-
-				clearMobileLeadSearchResults();
-			}
-
-			function installLeadSearchResultsObserver() {
-				var box = portalLeadSearchResultsToBody();
-
-				if (!box) return;
-
-				if (window.MutationObserver && !leadSearchResultsObserver) {
-					leadSearchResultsObserver = new MutationObserver(function () {
-						window.setTimeout(syncMobileLeadSearchResults, 0);
-					});
-
-					leadSearchResultsObserver.observe(box, {
-						attributes: true,
-						attributeFilter: ['style']
-					});
-				}
-
-				/*
-				 * The AJAX response replaces #SearcHResultSSpan contents.
-				 * Keep the popup class/layout stable when result HTML arrives.
-				 */
-				var span = document.getElementById('SearcHResultSSpan');
-
-				if (window.MutationObserver &&
-					span &&
-					!leadSearchResultsContentObserver) {
-					leadSearchResultsContentObserver = new MutationObserver(function () {
-						if (leadSearchResultsNativeOpen()) {
-							prepareMobileLeadSearchResults();
-						}
-					});
-
-					leadSearchResultsContentObserver.observe(span, {
-						childList: true,
-						subtree: true
-					});
-				}
-
-				syncMobileLeadSearchResults();
-			}
-
-
-			function formatMobileCallLog() {
-				var root = document.getElementById('CallLogSpan');
-				if (!root || callLogFormatting) return;
-
-				callLogFormatting = true;
-
-				try {
-
-					/*
-					 * ------------------------------------------------------------
-					 * 1. Stable mobile top close control
-					 * ------------------------------------------------------------
-					 * Put the close X on its own top line. The heading is inserted below
-					 * it, exactly as requested. The native CalLLoGVieWClose() function is
-					 * still used.
-					 */
-					var topbar = root.querySelector(
-						':scope > .klozer-mobile-calllog-topbar'
-					);
-
-					if (!topbar) {
-						topbar = document.createElement('div');
-						topbar.className = 'klozer-mobile-calllog-topbar';
-
-						var topClose = document.createElement('button');
-						topClose.type = 'button';
-						topClose.className = 'klozer-mobile-calllog-top-close';
-						topClose.setAttribute('aria-label', 'Close Call Log');
-						topClose.innerHTML =
-							'<i class="fa fa-times" aria-hidden="true"></i>';
-
-						topClose.addEventListener('click', function (event) {
-							event.preventDefault();
-							event.stopPropagation();
-							callOriginal('CalLLoGVieWClose', []);
-						});
-
-						topbar.appendChild(topClose);
-						root.insertBefore(topbar, root.firstChild);
-					} else if (root.firstChild !== topbar) {
-						root.insertBefore(topbar, root.firstChild);
-					}
-
-					/*
-					 * ------------------------------------------------------------
-					 * 2. Dedicated heading BELOW the X
-					 * ------------------------------------------------------------
-					 */
-					var heading = root.querySelector(
-						':scope > .klozer-mobile-calllog-heading'
-					);
-
-					if (!heading) {
-						heading = document.createElement('div');
-						heading.className = 'klozer-mobile-calllog-heading';
-						heading.textContent = 'Agent Call Log:';
-					}
-
-					if (topbar.nextSibling !== heading) {
-						root.insertBefore(heading, topbar.nextSibling);
-					}
-
-					/*
-					 * Remove any duplicate native/server "Agent Call Log:" text while
-					 * keeping our dedicated heading untouched.
-					 */
-					if (document.createTreeWalker && window.NodeFilter) {
-						var walker = document.createTreeWalker(
-							root,
-							NodeFilter.SHOW_TEXT,
-							null
-						);
-
-						var textNodes = [];
-						var textNode;
-
-						while ((textNode = walker.nextNode())) {
-							if (heading.contains(textNode)) continue;
-							textNodes.push(textNode);
-						}
-
-						for (var tn = 0; tn < textNodes.length; tn++) {
-							var node = textNodes[tn];
-							var value = String(node.nodeValue || '');
-
-							if (/Agent\s*Call\s*Log\s*:/i.test(value)) {
-								node.nodeValue = value.replace(
-									/Agent\s*Call\s*Log\s*:/ig,
-									''
-								);
-							}
-						}
-					}
-
-					/*
-					 * Hide any server-generated X/close-only control, but keep the native
-					 * bottom "Close Call Log" button. Our top X is now the mobile X.
-					 */
-					var nativeCloseControls = root.querySelectorAll(
-						'[onclick*="CalLLoGVieWClose"]'
-					);
-
-					for (var xc = 0; xc < nativeCloseControls.length; xc++) {
-						var nativeClose = nativeCloseControls[xc];
-						var closeLabel = String(
-							nativeClose.textContent ||
-							nativeClose.innerText ||
-							nativeClose.value ||
-							''
-						).trim();
-
-						if (!/Close\s*Call\s*Log/i.test(closeLabel)) {
-							nativeClose.classList.add(
-								'klozer-mobile-calllog-native-x-hidden'
-							);
-						}
-					}
-
-					/*
-					 * ------------------------------------------------------------
-					 * 3. Find the real native result table
-					 * ------------------------------------------------------------
-					 */
-					var tables = root.getElementsByTagName('table');
-					var resultTable = null;
-
-					for (var i = 0; i < tables.length; i++) {
-						tables[i].classList.remove('klozer-mobile-calllog-table');
-
-						var rows = tables[i].rows;
-						if (!rows || !rows.length) continue;
-
-						var firstRow = rows[0];
-
-						if (firstRow &&
-							firstRow.cells &&
-							firstRow.cells.length >= 12) {
-							resultTable = tables[i];
-							resultTable.classList.add(
-								'klozer-mobile-calllog-table'
-							);
-							break;
-						}
-					}
-
-					/*
-					 * ------------------------------------------------------------
-					 * 3B. Mobile Dial-column -> Dialer navigation bridge
-					 * ------------------------------------------------------------
-					 *
-					 * The native Call Log DIAL action stays completely untouched.
-					 * We only listen for a click in the original 12th table column.
-					 * After the native inline onclick has had the current event turn to
-					 * execute, switch the bottom navigation to Dialer.
-					 */
-					if (!root.__klozerCallLogDialRedirectBound) {
-						root.__klozerCallLogDialRedirectBound = true;
-
-						root.addEventListener('click', function (event) {
-							if (!window.KlozerPhoneDevice) return;
-
-							var target = event.target;
-							if (!target || !target.closest) return;
-
-							var cell = target.closest('td');
-							if (!cell) return;
-
-							var table = cell.closest('table');
-							if (!table ||
-								!table.classList.contains(
-									'klozer-mobile-calllog-table'
-								)) {
-								return;
-							}
-
-							/*
-							 * Original DIAL is column 12 => zero-based cellIndex 11.
-							 */
-							if (cell.cellIndex !== 11) return;
-
-							/*
-							 * Only react to an actual clickable Dial control/icon.
-							 */
-							var clickable = target.closest(
-								'a, button, input, [onclick], [role="button"]'
-							);
-
-							if (!clickable || !cell.contains(clickable)) return;
-
-							/*
-							 * Do not preventDefault / stopPropagation.
-							 * Native VICidial DIAL runs first. Then reveal Dialer.
-							 */
-							window.setTimeout(function () {
-								showDialer();
-							}, 0);
-						}, true);
-					}
-
-					/*
-					 * ------------------------------------------------------------
-					 * 4. Build the mobile toolbar with ORIGINAL native controls
-					 * ------------------------------------------------------------
-					 */
-					var shell = root.querySelector(
-						':scope > .klozer-mobile-calllog-filter-shell'
-					);
-
-					if (!shell) {
-						shell = document.createElement('div');
-						shell.className = 'klozer-mobile-calllog-filter-shell';
-
-						var navRowCreate = document.createElement('div');
-						navRowCreate.className = 'klozer-mobile-calllog-nav-row';
-
-						var searchRowCreate = document.createElement('div');
-						searchRowCreate.className = 'klozer-mobile-calllog-search-row';
-
-						shell.appendChild(navRowCreate);
-						shell.appendChild(searchRowCreate);
-
-						if (heading.nextSibling) {
-							root.insertBefore(shell, heading.nextSibling);
-						} else {
-							root.appendChild(shell);
-						}
-					} else if (heading.nextSibling !== shell) {
-						root.insertBefore(shell, heading.nextSibling);
-					}
-
-					var navRow = shell.querySelector(
-						'.klozer-mobile-calllog-nav-row'
-					);
-					var searchRow = shell.querySelector(
-						'.klozer-mobile-calllog-search-row'
-					);
-
-					/*
-					 * Collect controls BEFORE any row synchronization so formatter reruns
-					 * cannot lose native controls.
-					 */
-					var candidates = Array.prototype.slice.call(
-						root.querySelectorAll('a, input, button, select')
-					);
-
-					var navControls = [];
-					var searchField = null;
-					var goControl = null;
-
-					/*
-					 * Resolve VICIdial's REAL Call Log search/current-date field first.
-					 * VieWCalLLoG('...', 'form') itself reads:
-					 *     document.vicidial_form.calllogdate.value
-					 *
-					 * Using the exact native field name makes it available immediately,
-					 * even before the user focuses or types in it.
-					 */
-					var namedSearchField = root.querySelector(
-						'input[name="calllogdate"], input#calllogdate'
-					);
-
-					if (!namedSearchField &&
-						document.vicidial_form &&
-						document.vicidial_form.calllogdate &&
-						document.vicidial_form.calllogdate.nodeType === 1 &&
-						root.contains(document.vicidial_form.calllogdate)) {
-						namedSearchField = document.vicidial_form.calllogdate;
-					}
-
-					if (namedSearchField) {
-						searchField = namedSearchField;
-					}
-
-					for (var c = 0; c < candidates.length; c++) {
-						var el = candidates[c];
-
-						if (topbar.contains(el)) continue;
-						if (resultTable && resultTable.contains(el)) continue;
-
-						var onclick = String(
-							el.getAttribute('onclick') || ''
-						);
-
-						if (/CalLLoGVieWClose/i.test(onclick)) continue;
-
-						var type = String(
-							el.getAttribute('type') || ''
-						).toLowerCase();
-
-						if (type === 'hidden') continue;
-
-						var label = String(
-							el.value ||
-							el.textContent ||
-							el.innerText ||
-							''
-						).trim();
-
-						var isTextualInput =
-							el.tagName === 'INPUT' &&
-							(type === 'text' ||
-								type === 'date' ||
-								type === 'search' ||
-								type === '');
-
-						/*
-						 * The exact native calllogdate field can NEVER be a navigation
-						 * button, even though its value is also YYYY-MM-DD.
-						 */
-						if (searchField && el === searchField) {
-							continue;
-						}
-
-						/*
-						 * Fallback search-field detection comes BEFORE nav detection.
-						 * This prevents a plain YYYY-MM-DD text input being mistaken for a
-						 * date-navigation button.
-						 */
-						if (!searchField && isTextualInput) {
-							var fieldIdentity =
-								String(el.name || '') + ' ' + String(el.id || '');
-
-							if (/calllogdate|date|log/i.test(fieldIdentity) ||
-								/^\d{4}-\d{2}-\d{2}$/.test(
-									String(el.value || '').trim()
-								)) {
-								searchField = el;
-								continue;
-							}
-						}
-
-						/*
-						 * Native date-navigation controls.
-						 * Only NON-textual controls may enter the nav row.
-						 */
-						if (!isTextualInput &&
-							(/^\s*<{0,2}\s*\d{4}-\d{2}-\d{2}/.test(label) ||
-								/^\s*>{0,2}\s*\d{4}-\d{2}-\d{2}/.test(label))) {
-							if (navControls.indexOf(el) < 0) {
-								navControls.push(el);
-							}
-							continue;
-						}
-
-						/*
-						 * GO action.
-						 */
-						if (!goControl && /^GO$/i.test(label)) {
-							goControl = el;
-							continue;
-						}
-					}
-
-					/*
-					 * Synchronize a row only when its children really differ.
-					 * This avoids self-triggered MutationObserver layout churn.
-					 */
-					function syncCallLogControlRow(row, desiredControls) {
-						var currentControls = Array.prototype.slice.call(
-							row.children
-						);
-
-						var same =
-							currentControls.length === desiredControls.length;
-
-						if (same) {
-							for (var s = 0; s < desiredControls.length; s++) {
-								if (currentControls[s] !== desiredControls[s]) {
-									same = false;
-									break;
-								}
-							}
-						}
-
-						if (same) return;
-
-						while (row.firstChild) {
-							row.removeChild(row.firstChild);
-						}
-
-						for (var d = 0; d < desiredControls.length; d++) {
-							row.appendChild(desiredControls[d]);
-						}
-					}
-
-					/*
-					 * If two or three date-navigation buttons are returned, keep ALL of
-					 * them on one single first row.
-					 */
-					var navCount = Math.min(navControls.length, 3);
-					var desiredNavControls = [];
-
-					navRow.setAttribute(
-						'data-klozer-calllog-nav-count',
-						String(navCount)
-					);
-
-					if (navCount > 0) {
-						navRow.style.setProperty(
-							'grid-template-columns',
-							'repeat(' + navCount + ', minmax(0, 1fr))',
-							'important'
-						);
-					}
-
-					for (var n = 0; n < navCount; n++) {
-						navControls[n].classList.add(
-							'klozer-mobile-calllog-nav-control'
-						);
-						desiredNavControls.push(navControls[n]);
-					}
-
-					syncCallLogControlRow(
-						navRow,
-						desiredNavControls
-					);
-
-					/*
-					 * Search/current-date + GO are ALWAYS the second row from first paint.
-					 */
-					var desiredSearchControls = [];
-
-					if (searchField) {
-						searchField.classList.add(
-							'klozer-mobile-calllog-search-control'
-						);
-						desiredSearchControls.push(searchField);
-					}
-
-					if (goControl) {
-						goControl.classList.add(
-							'klozer-mobile-calllog-go-control'
-						);
-						desiredSearchControls.push(goControl);
-					}
-
-					syncCallLogControlRow(
-						searchRow,
-						desiredSearchControls
-					);
-
-					/*
-					 * Hide old native toolbar wrappers after the native controls have been
-					 * moved into the mobile shell.
-					 */
-					var centers = root.getElementsByTagName('center');
-
-					for (var cc = 0; cc < centers.length; cc++) {
-						var center = centers[cc];
-
-						if (!center.contains(resultTable) &&
-							!center.contains(shell)) {
-							center.classList.add(
-								'klozer-mobile-calllog-legacy-toolbar'
-							);
-						}
-					}
-
-					var legacyWrappers = root.querySelectorAll('font, b');
-
-					for (var w = 0; w < legacyWrappers.length; w++) {
-						var wrapper = legacyWrappers[w];
-
-						if (shell.contains(wrapper) ||
-							(resultTable && resultTable.contains(wrapper))) {
-							continue;
-						}
-
-						if (!wrapper.querySelector('a, input, button, select') &&
-							String(wrapper.textContent || '').trim() === '') {
-							wrapper.classList.add(
-								'klozer-mobile-calllog-empty-legacy'
-							);
-						}
-					}
-				}
-				finally {
-					callLogFormatting = false;
-				}
-
-			}
-			function installCallLogObserver() {
-				var root = document.getElementById('CallLogSpan');
-				if (!root) return;
-
-				formatMobileCallLog();
-
-				if (!window.MutationObserver || callLogObserver) return;
-
-				callLogObserver = new MutationObserver(function () {
-					/*
-					 * IMPORTANT:
-					 * Do NOT defer with setTimeout(0).
-					 *
-					 * vdc_db_query.php replaces CallLogSpan.innerHTML with the native
-					 * desktop Call Log response. MutationObserver callbacks run in the
-					 * microtask checkpoint before the browser's next paint.
-					 *
-					 * Formatting synchronously here means the raw desktop controls are
-					 * rearranged into the mobile rows BEFORE they can flash on screen.
-					 */
-					formatMobileCallLog();
-				});
-
-				callLogObserver.observe(root, {
-					childList: true,
-					subtree: true
-				});
-			}
-
-			var callsQueueOriginalParent = null;
-			var callsQueueOriginalNextSibling = null;
-
-			function portalCallsInQueueToBody() {
-				var panel = document.getElementById('callsinqueuedisplay');
-
-				if (!panel || !document.body) return null;
-
-				/*
-				 * ROOT FIX:
-				 * #callsinqueuedisplay is originally a tab-pane inside
-				 * #MainPanelCustInfo alongside Customer (#main_section1).
-				 *
-				 * On mobile, keep the SAME native queue panel but move it out of the
-				 * Customer/tab-content tree so legacy Customer .tab-pane rules cannot
-				 * appear with it.
-				 */
-				if (panel.parentNode !== document.body) {
-					if (!callsQueueOriginalParent) {
-						callsQueueOriginalParent = panel.parentNode;
-						callsQueueOriginalNextSibling = panel.nextSibling;
-					}
-
-					document.body.appendChild(panel);
-				}
-
-				return panel;
-			}
-
-			function showCallsInQueue() {
-				var panel = portalCallsInQueueToBody();
-				if (!panel) return;
-
-				/*
-				 * Run untouched VICidial queue logic after the panel has been removed
-				 * from the Customer tree. show_calls_in_queue() continues updating the
-				 * same #callsinqueuedisplay and #callsinqueuelist IDs.
-				 */
-				callOriginal('showdiv', []);
-				callOriginal('show_calls_in_queue', ['SHOW']);
-
-				selectMobilePanel('callsinqueuedisplay', 'panel');
-			}
-
-			function openMoreSheet() {
-				if (!moreSheet || !isPhone || isLoggedOut()) return;
-
-				moreSheet.classList.add('is-open');
-				moreSheet.setAttribute('aria-hidden', 'false');
-
-				var closeButton = moreSheet.querySelector('.mobile-more-sheet__close');
-				if (closeButton) closeButton.focus();
-			}
-
-			function closeMoreSheet() {
-				if (!moreSheet) return;
-				moreSheet.classList.remove('is-open');
-				moreSheet.setAttribute('aria-hidden', 'true');
-			}
-
-			function runFeatureAction(action) {
-				closeMoreSheet();
-
-				switch (action) {
-					case 'script':
-						openOriginalFeatureTab('ScriptPanel', 'ScriptPanelToFront', ['YES']);
-						break;
-
-					case 'script-two':
-						openOriginalFeatureTab('Script2Panel', 'ScriptPanel2ToFront', ['YES']);
-						break;
-
-					case 'notepad':
-						openOriginalFeatureTab('FormPanel', 'FormPanelToFront', ['YES']);
-						break;
-
-					case 'email':
-						// Email is already working correctly; preserve its V8 route.
-						showStandardPanel('VicidialEmailPanel', 'VicidialEmailPanelToFront', ['YES']);
-						break;
-
-					case 'internal-chat':
-						openOriginalFeatureTab('InternalChatPanel', 'InternalChatContentsLoad', ['YES']);
-						window.setTimeout(installInternalChatMobileResponsive, 40);
-						window.setTimeout(installInternalChatMobileResponsive, 250);
-						window.setTimeout(installInternalChatMobileResponsive, 900);
-						break;
-
-					case 'customer-chat':
-						openOriginalFeatureTab('CustomerChatPanel', 'CustomerChatPanelToFront', ['1', 'YES']);
-						window.setTimeout(installCustomerChatMobileResponsive, 40);
-						window.setTimeout(installCustomerChatMobileResponsive, 250);
-						break;
-
-					case 'lead-search':
-						openNativeOverlay('OpeNSearcHForMDisplaYBox', [], 'SearcHForMDisplaYBox');
-						break;
-
-					case 'call-log':
-						openNativeOverlay('VieWCalLLoG', [], 'CalLLoGDisplaYBox');
-						break;
-
-					case 'queue':
-						showCallsInQueue();
-						break;
-
-					case 'agents':
-						openNativeOverlay(
-							'AgentsViewOpen',
-							['AgentViewSpan', 'open'],
-							'AgentViewSpan'
-						);
-						break;
-
-					case 'missed-calls':
-						window.KlozerOpenMissedCalls();
-						break;
-				}
-			}
-
-			function featureButton(action, icon, label) {
-				return '<button type="button" class="mobile-feature-button" data-mobile-feature="' + action + '">' +
-					'<i class="fa ' + icon + '" aria-hidden="true"></i>' +
-					'<span>' + label + '</span>' +
-					'</button>';
-			}
-
-			/*
-			 * MOBILE MORE MENU EMAIL TOGGLE
-			 * false = hide Email from More on phones
-			 * true  = show Email again later
-			 *
-			 * Desktop Email is NOT affected by this setting.
-			 */
-			var showEmailInMobileMore = false;
-
-			function buildMoreFeatures() {
-				var html = '';
-
-				html += featureButton('script', 'fa-file-text-o', 'Script');
-
-				if (secondScriptEnabledForAgent) {
-					html += featureButton('script-two', 'fa-files-o', 'Script 2');
-				}
-
-				html += featureButton('notepad', 'fa-sticky-note-o', 'Notepad');
-
-				if (emailEnabledForAgent && showEmailInMobileMore) {
-					html += featureButton('email', 'fa-envelope-o', 'Email');
-				}
-
-				if (chatEnabledForAgent) {
-					html += featureButton('internal-chat', 'fa-users', 'Internal Chat');
-				}
-
-				if (customerChatEnabledForAgent) {
-					html += featureButton('customer-chat', 'fa-commenting-o', 'Customer Chat');
-				}
-
-				html += featureButton('lead-search', 'fa-search', 'Lead Search');
-				html += featureButton('call-log', 'fa-history', 'Call Log');
-				html += featureButton('queue', 'fa-phone-square', 'Calls in Queue');
-				html += featureButton('agents', 'fa-eye', 'Agents View');
-				html += featureButton('missed-calls', 'fa-phone', 'Missed Calls');
-
-
-				return html;
-			}
-
-			function buildInterface() {
-				if (!isPhone || !document.body || nav) return;
-
-				document.body.classList.add('klozer-phone-ui');
-
-				nav = document.createElement('nav');
-				nav.id = 'mobileAppNav';
-				nav.className = 'mobile-app-nav';
-				nav.setAttribute('aria-label', 'Agent mobile navigation');
-
-				var html =
-					'<button type="button" class="mobile-app-nav__item" data-mobile-view-button="dashboard" aria-label="Home">' +
-					'<i class="fa fa-home" aria-hidden="true"></i><span>Home</span></button>' +
-					'<button type="button" class="mobile-app-nav__item" data-mobile-view-button="customer" aria-label="Customer">' +
-					'<i class="fa fa-user" aria-hidden="true"></i><span>Customer</span></button>' +
-					'<button type="button" class="mobile-app-nav__item" data-mobile-view-button="dialer" aria-label="Dialer">' +
-					'<i class="fa fa-th" aria-hidden="true"></i><span>Dialer</span></button>';
-
-				if (smsEnabledForAgent) {
-					html +=
-						'<button type="button" class="mobile-app-nav__item" data-mobile-view-button="messages" aria-label="Messages">' +
-						'<i class="fa fa-comment" aria-hidden="true"></i><span>Messages</span></button>';
-				}
-
-				html +=
-					'<button type="button" class="mobile-app-nav__item" data-mobile-more-button="true" aria-label="More">' +
-					'<i class="fa fa-ellipsis-h" aria-hidden="true"></i><span>More</span></button>';
-
-				nav.innerHTML = html;
-				nav.style.setProperty('--mobile-app-nav-items', smsEnabledForAgent ? '5' : '4');
-
-				moreSheet = document.createElement('div');
-				moreSheet.id = 'mobileMoreSheet';
-				moreSheet.className = 'mobile-more-sheet';
-				moreSheet.setAttribute('aria-hidden', 'true');
-				moreSheet.innerHTML =
-					'<div class="mobile-more-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="mobileMoreTitle">' +
-					'<div class="mobile-more-sheet__handle"></div>' +
-					'<div class="mobile-more-sheet__header">' +
-					'<h2 class="mobile-more-sheet__title" id="mobileMoreTitle">Tools &amp; Features</h2>' +
-					'<button type="button" class="mobile-more-sheet__close" aria-label="Close tools">' +
-					'<i class="fa fa-times" aria-hidden="true"></i>' +
-					'</button>' +
-					'</div>' +
-					'<div class="mobile-more-sheet__grid">' + buildMoreFeatures() + '</div>' +
-					'</div>';
-
-				document.body.appendChild(nav);
-				document.body.appendChild(moreSheet);
-
-				nav.addEventListener('click', function (event) {
-					var viewButton = closestElement(event.target, '[data-mobile-view-button]');
-
-					if (viewButton) {
-						var view = viewButton.getAttribute('data-mobile-view-button');
-
-						if (view === 'dashboard') {
-							hideStandardPanelsNative();
-							closeNativeMobileOverlaysExcept(null);
-							setUiView('dashboard', true);
-						}
-						else if (view === 'customer') showCustomer();
-						else if (view === 'dialer') showDialer();
-						else if (view === 'messages') showMessages();
-
-						return;
-					}
-
-					if (closestElement(event.target, '[data-mobile-more-button]')) {
-						openMoreSheet();
-					}
-				});
-
-				moreSheet.addEventListener('click', function (event) {
-					if (event.target === moreSheet ||
-						closestElement(event.target, '.mobile-more-sheet__close')) {
-						closeMoreSheet();
-						return;
-					}
-
-					var feature = closestElement(event.target, '[data-mobile-feature]');
-					if (feature) {
-						runFeatureAction(feature.getAttribute('data-mobile-feature'));
-					}
-				});
-
-				document.addEventListener('keydown', function (event) {
-					if (event.key === 'Escape') closeMoreSheet();
-				});
-			}
-
-			function findDailyActivityWidget() {
-				/*
-				 * If we already found the real widget and it still exists, reuse it.
-				 * This prevents rescanning the whole VICIdial DOM on every status update.
-				 */
-				if (dailyActivityWidget &&
-					document.body &&
-					document.body.contains(dailyActivityWidget)) {
-					return dailyActivityWidget;
-				}
-
-				dailyActivityWidget = null;
-
-				function isSafeActivityCandidate(node) {
-					if (!node ||
-						node === homeActivitySection ||
-						node.id === 'mobileMoreSheet' ||
-						node.id === 'mobileAppNav') {
-						return false;
-					}
-
-					/*
-					 * CRITICAL:
-					 * Reject BOTH directions of containment.
-					 *
-					 * - homeActivitySection.contains(node): node is already inside our
-					 *   mobile activity container.
-					 * - node.contains(homeActivitySection): node is an ancestor of our
-					 *   container (for example .left-sidebar.sidenav).
-					 *
-					 * The second guard fixes the mobile-only HierarchyRequestError where
-					 * the dashboard was selected and then appendChild() tried to move the
-					 * dashboard inside its own descendant.
-					 */
-					if (homeActivitySection &&
-						(homeActivitySection.contains(node) ||
-							node.contains(homeActivitySection))) {
-						return false;
-					}
-
-					return true;
-				}
-
-				var knownIds = [
-					'dailyActivityStats',
-					'daily_activity_stats',
-					'agentDailyStats',
-					'agentActivityStats',
-					'activityStatsWidget',
-					'dailyStatsWidget',
-					'agentActivityWidget',
-					'daily-activity-stats'
-				];
-
-				for (var i = 0; i < knownIds.length; i++) {
-					var known = document.getElementById(knownIds[i]);
-
-					if (isSafeActivityCandidate(known)) {
-						dailyActivityWidget = known;
-						return known;
-					}
-				}
-
-				var nodes = document.querySelectorAll('div, section, aside');
-				var best = null;
-				var bestLength = Infinity;
-
-				for (var j = 0; j < nodes.length; j++) {
-					var node = nodes[j];
-
-					if (!isSafeActivityCandidate(node)) {
-						continue;
-					}
-
-					var text = (node.innerText || node.textContent || '')
-						.replace(/\s+/g, ' ')
-						.trim()
-						.toLowerCase();
-
-					if (text.indexOf('daily activity stats') === -1 ||
-						text.indexOf('login time') === -1 ||
-						text.indexOf('pause time') === -1) {
-						continue;
-					}
-
-					if (text.length < bestLength) {
-						best = node;
-						bestLength = text.length;
-					}
-				}
-
-				dailyActivityWidget = best;
-				return best;
-			}
-
-
-			function createHomeIdentityItem(label, value) {
-				var item = document.createElement('div');
-				item.className = 'mobile-home-identity__item';
-
-				var labelNode = document.createElement('span');
-				labelNode.className = 'mobile-home-identity__label';
-				labelNode.textContent = label;
-
-				var valueNode = document.createElement('strong');
-				valueNode.className = 'mobile-home-identity__value';
-				valueNode.textContent = (value === null || typeof value === 'undefined' || value === '') ? '-' : String(value);
-
-				item.appendChild(labelNode);
-				item.appendChild(valueNode);
-				return item;
-			}
-
-			function ensureHomeIdentitySection() {
-				if (homeIdentitySection && document.body.contains(homeIdentitySection)) {
-					return homeIdentitySection;
-				}
-
-				var dashboard = document.querySelector('.left-sidebar.sidenav');
-				if (!dashboard) return null;
-
-				homeIdentitySection = document.createElement('section');
-				homeIdentitySection.id = 'mobileHomeIdentitySection';
-				homeIdentitySection.className = 'mobile-home-identity-section';
-				homeIdentitySection.setAttribute('aria-label', 'Current agent session');
-
-				homeIdentitySection.appendChild(
-					createHomeIdentityItem('Camp', mobileHomeIdentity.campaign)
-				);
-				homeIdentitySection.appendChild(
-					createHomeIdentityItem('Agent ID', mobileHomeIdentity.agentId)
-				);
-				homeIdentitySection.appendChild(
-					createHomeIdentityItem('Phone ID', mobileHomeIdentity.phoneId)
-				);
-
-				if (homeActivitySection && homeActivitySection.parentNode === dashboard) {
-					dashboard.insertBefore(homeIdentitySection, homeActivitySection);
-				} else {
-					dashboard.appendChild(homeIdentitySection);
-				}
-				var rankCard = document.getElementById('mobileRankCard');
-
-				if (!rankCard) {
-					rankCard = document.createElement('div');
-					rankCard.id = 'mobileRankCard';
-					rankCard.className = 'mobile-rank-card';
-
-					var rankLabel = document.createElement('span');
-					rankLabel.textContent = 'My Rank';
-
-					var rankValue = document.createElement('strong');
-					rankValue.id = 'myLeaderboardRankMobile';
-
-					// Copy any result received before the mobile layout was created.
-					var desktopBadge = document.getElementById('myLeaderboardRank');
-					var match = desktopBadge &&
-						desktopBadge.textContent.match(/#\d+/);
-
-					rankValue.textContent = match ? match[0] : '';
-
-					rankCard.appendChild(rankLabel);
-					rankCard.appendChild(rankValue);
-				}
-
-				dashboard.insertBefore(rankCard, homeIdentitySection.nextSibling);
-
-				return homeIdentitySection;
-			}
-
-			function ensureHomeActivitySection() {
-				if (homeActivitySection && document.body.contains(homeActivitySection)) {
-					return homeActivitySection;
-				}
-
-				var dashboard = document.querySelector('.left-sidebar.sidenav');
-				if (!dashboard) return null;
-
-				ensureHomeIdentitySection();
-
-				homeActivitySection = document.createElement('section');
-				homeActivitySection.id = 'mobileHomeActivitySection';
-				homeActivitySection.className = 'mobile-home-activity-section';
-				homeActivitySection.setAttribute('aria-label', 'Daily activity statistics');
-				dashboard.appendChild(homeActivitySection);
-
-				return homeActivitySection;
-			}
-
-			function mountDailyActivityWidget() {
-				if (!isPhone || !document.body || isLoggedOut()) return;
-
-				var section = ensureHomeActivitySection();
-				if (!section) return;
-
-				var widget = findDailyActivityWidget();
-				if (!widget || widget === section) return;
-
-				/*
-				 * Never allow appendChild() to create a DOM cycle.
-				 * This is a final safety guard even if a future finder change returns
-				 * an ancestor by mistake.
-				 */
-				if (widget.contains && widget.contains(section)) {
-					return;
-				}
-
-				widget.classList.add('mobile-daily-activity-widget');
-				widget.setAttribute('data-klozer-mobile-activity', 'true');
-
-				if (section.contains(widget)) {
-					dailyActivityWidget = widget;
-					return;
-				}
-
-				section.appendChild(widget);
-				dailyActivityWidget = widget;
-			}
-
-			function installActivityObserver() {
-				if (!window.MutationObserver || activityObserver || !document.body) return;
-
-				activityObserver = new MutationObserver(function () {
-					/*
-					 * VICIdial updates the DOM constantly while the agent is logged in.
-					 * Once the real widget is already mounted, do nothing. This prevents
-					 * needless full-DOM scans and avoids observer churn on mobile.
-					 */
-					if (homeActivitySection &&
-						dailyActivityWidget &&
-						document.body.contains(dailyActivityWidget) &&
-						homeActivitySection.contains(dailyActivityWidget)) {
-						return;
-					}
-
-					mountDailyActivityWidget();
-				});
-
-				activityObserver.observe(document.body, {
-					childList: true,
-					subtree: true
-				});
-
-				window.setTimeout(mountDailyActivityWidget, 250);
-				window.setTimeout(mountDailyActivityWidget, 1000);
-				window.setTimeout(mountDailyActivityWidget, 3000);
-			}
-
-
-			function closerSelectionIsVisible() {
-				var box = document.getElementById('CloserSelectBox');
-				if (!box) return false;
-
-				var style = window.getComputedStyle ? window.getComputedStyle(box) : box.style;
-				return style.display !== 'none' &&
-					style.visibility !== 'hidden' &&
-					style.opacity !== '0' &&
-					box.getClientRects().length > 0;
-			}
-
-			function syncCloserSelection() {
-				if (!isPhone || !document.body || isLoggedOut()) return;
-
-				var visible = closerSelectionIsVisible();
-
-				if (visible) {
-					clearMobilePanelSelection();
-					document.body.classList.add('klozer-inbound-groups-open');
-					closerWasVisible = true;
-					closeMoreSheet();
-				} else {
-					document.body.classList.remove('klozer-inbound-groups-open');
-
-					if (closerWasVisible) {
-						closerWasVisible = false;
-						hideStandardPanelsNative();
-						setUiView('dashboard', true);
-					}
-				}
-			}
-
-			function installCloserObserver() {
-				var box = document.getElementById('CloserSelectBox');
-
-				if (!box || !window.MutationObserver || closerObserver) {
-					syncCloserSelection();
-					return;
-				}
-
-				closerObserver = new MutationObserver(function () {
-					window.setTimeout(syncCloserSelection, 0);
-				});
-
-				closerObserver.observe(box, {
-					attributes: true,
-					childList: true,
-					subtree: true,
-					attributeFilter: ['style', 'class']
-				});
-
-				syncCloserSelection();
-				window.setTimeout(syncCloserSelection, 300);
-				window.setTimeout(syncCloserSelection, 1200);
-			}
-
-			function installLogoutObserver() {
-				var box = document.getElementById('LogouTBox');
-
-				if (box && window.MutationObserver && !logoutObserver) {
-					logoutObserver = new MutationObserver(function () {
-						window.setTimeout(syncLogoutState, 0);
-					});
-
-					logoutObserver.observe(box, {
-						attributes: true,
-						childList: true,
-						subtree: true,
-						attributeFilter: ['style', 'class']
-					});
-				}
-
-				/*
-				 * Passive state check only.
-				 * No VICidial logout function is replaced.
-				 */
-				logoutTimer = window.setInterval(function () {
-					syncLogoutState();
-
-					if (document.body &&
-						document.body.classList.contains('klozer-mobile-logged-out')) {
-						window.clearInterval(logoutTimer);
-						logoutTimer = null;
-					}
-				}, 500);
-			}
-
-
-			function applyCustomerChatMobileResponsive() {
-				if (!isPhone) return;
-
-				var frame = document.getElementById('CustomerChatIFrame');
-				if (!frame) return;
-
-				try {
-					var frameDoc = frame.contentDocument ||
-						(frame.contentWindow ? frame.contentWindow.document : null);
-
-					if (!frameDoc || !frameDoc.documentElement || !frameDoc.body) return;
-
-					/*
-					 * vdc_chat_display.php may not include a mobile viewport meta tag.
-					 * Without it, an iframe can keep a desktop layout viewport even
-					 * though the visible iframe is phone-width, which is why controls
-					 * can still extend beyond the right edge.
-					 */
-					var viewportMeta = frameDoc.querySelector('meta[name="viewport"]');
-					if (!viewportMeta) {
-						viewportMeta = frameDoc.createElement('meta');
-						viewportMeta.setAttribute('name', 'viewport');
-						(frameDoc.head || frameDoc.documentElement).appendChild(viewportMeta);
-					}
-					viewportMeta.setAttribute(
-						'content',
-						'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover'
-					);
-
-					/*
-					 * Parent CSS cannot style the contents of vdc_chat_display.php.
-					 * Inject one phone-only stylesheet into the same-origin iframe.
-					 */
-					var styleId = 'klozer-mobile-customer-chat-responsive';
-
-					if (!frameDoc.getElementById(styleId)) {
-						var style = frameDoc.createElement('style');
-						style.id = styleId;
-						style.type = 'text/css';
-						style.textContent = [
-							'html, body {',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 0 !important;',
-							'  padding: 0 !important;',
-							'  overflow-x: hidden !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen {',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 0 !important;',
-							'  padding: 12px !important;',
-							'  overflow-x: hidden !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen *,',
-							'body.klozer-mobile-live-agent-screen *::before,',
-							'body.klozer-mobile-live-agent-screen *::after {',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen form,',
-							'body.klozer-mobile-live-agent-screen table,',
-							'body.klozer-mobile-live-agent-screen tbody,',
-							'body.klozer-mobile-live-agent-screen tr,',
-							'body.klozer-mobile-live-agent-screen td {',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen form {',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 0 !important;',
-							'  padding: 0 !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen table {',
-							'  display: block !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 0 !important;',
-							'  table-layout: fixed !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen tbody,',
-							'body.klozer-mobile-live-agent-screen tr {',
-							'  display: block !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen td {',
-							'  display: block !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  padding-left: 0 !important;',
-							'  padding-right: 0 !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen select,',
-							'body.klozer-mobile-live-agent-screen textarea,',
-							'body.klozer-mobile-live-agent-screen input[type="text"],',
-							'body.klozer-mobile-live-agent-screen input[type="email"],',
-							'body.klozer-mobile-live-agent-screen input[type="search"],',
-							'body.klozer-mobile-live-agent-screen input[type="tel"] {',
-							'  display: block !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin-left: 0 !important;',
-							'  margin-right: 0 !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen textarea {',
-							'  min-height: 180px !important;',
-							'  height: min(42dvh, 340px) !important;',
-							'  max-height: 46dvh !important;',
-							'  resize: vertical !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen button,',
-							'body.klozer-mobile-live-agent-screen input[type="button"],',
-							'body.klozer-mobile-live-agent-screen input[type="submit"],',
-							'body.klozer-mobile-live-agent-screen a {',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen .klozer-mobile-live-agent-actions {',
-							'  display: flex !important;',
-							'  flex-direction: column !important;',
-							'  flex-wrap: nowrap !important;',
-							'  align-items: stretch !important;',
-							'  justify-content: flex-start !important;',
-							'  gap: 10px !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 12px 0 0 !important;',
-							'  padding: 0 !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-live-agent-screen .klozer-mobile-live-agent-actions > * {',
-							'  flex: 0 0 auto !important;',
-							'  display: block !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 0 !important;',
-							'  padding-left: 10px !important;',
-							'  padding-right: 10px !important;',
-							'  white-space: normal !important;',
-							'  text-align: center !important;',
-							'  overflow-wrap: anywhere !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'@media (max-width: 360px) {',
-							'  body.klozer-mobile-live-agent-screen {',
-							'    padding: 9px !important;',
-							'  }',
-							'}'
-						].join('\n');
-
-						(frameDoc.head || frameDoc.documentElement).appendChild(style);
-					}
-
-					function normalizeText(value) {
-						return (value || '')
-							.replace(/\s+/g, ' ')
-							.trim()
-							.toUpperCase();
-					}
-
-					function findControlByText(needle) {
-						var controls = frameDoc.querySelectorAll(
-							'button, input[type="button"], input[type="submit"], a'
-						);
-
-						for (var i = 0; i < controls.length; i++) {
-							var control = controls[i];
-							var text = '';
-
-							if (control.tagName === 'INPUT') {
-								text = control.value || '';
-							} else {
-								text = control.textContent || '';
-							}
-
-							if (normalizeText(text).indexOf(needle) !== -1) {
-								return control;
-							}
-						}
-
-						return null;
-					}
-
-					function findCommonContainer(a, b) {
-						if (!a || !b) return null;
-
-						var node = a.parentElement;
-						var guard = 0;
-
-						while (node && node !== frameDoc.body && guard < 7) {
-							if (node.contains(b)) return node;
-							node = node.parentElement;
-							guard++;
-						}
-
-						return (a.parentElement === b.parentElement) ?
-							a.parentElement :
-							null;
-					}
-
-					function syncLiveAgentScreen() {
-						if (!frameDoc.body) return;
-
-						var bodyText = normalizeText(frameDoc.body.innerText || frameDoc.body.textContent);
-						var isLiveAgentScreen =
-							bodyText.indexOf('SELECT A LIVE AGENT') !== -1 ||
-							(
-								bodyText.indexOf('AVAILABLE AGENTS') !== -1 &&
-								bodyText.indexOf('START CHAT') !== -1
-							);
-
-						frameDoc.body.classList.toggle(
-							'klozer-mobile-live-agent-screen',
-							isLiveAgentScreen
-						);
-
-						if (!isLiveAgentScreen) return;
-
-						/*
-						 * Remove old fixed/oversized inline geometry only from elements
-						 * that are actually wider than the iframe viewport.
-						 */
-						var viewportWidth = frameDoc.documentElement.clientWidth ||
-							frameDoc.body.clientWidth ||
-							0;
-
-						if (viewportWidth > 0) {
-							var candidates = frameDoc.querySelectorAll(
-								'form, table, div, section, fieldset, select, textarea, input'
-							);
-
-							for (var c = 0; c < candidates.length; c++) {
-								var el = candidates[c];
-								var rect = el.getBoundingClientRect ?
-									el.getBoundingClientRect() :
-									null;
-
-								if (rect && rect.width > viewportWidth + 8) {
-									el.style.setProperty('max-width', '100%', 'important');
-									el.style.setProperty('min-width', '0', 'important');
-									el.style.setProperty('box-sizing', 'border-box', 'important');
-
-									if (el.tagName === 'FORM' ||
-										el.tagName === 'SELECT' ||
-										el.tagName === 'TEXTAREA' ||
-										el.tagName === 'INPUT') {
-										el.style.setProperty('width', '100%', 'important');
-									}
-								}
-							}
-						}
-
-						/*
-						 * Make the two live-agent actions wrap instead of extending
-						 * beyond the right edge of the phone.
-						 */
-						var backButton = findControlByText('BACK TO CHAT SCREEN');
-						var startButton = findControlByText('START CHAT');
-						var actionContainer = findCommonContainer(backButton, startButton);
-
-						if (actionContainer) {
-							actionContainer.classList.add(
-								'klozer-mobile-live-agent-actions'
-							);
-						}
-
-						/*
-						 * Some vdc_chat_display.php versions render the two controls
-						 * in separate table cells/containers, so there may be no useful
-						 * common wrapper to style. Apply the mobile sizing DIRECTLY to
-						 * both controls and their nearest wrappers as a guaranteed
-						 * fallback.
-						 */
-						var liveAgentButtons = [backButton, startButton];
-
-						for (var b = 0; b < liveAgentButtons.length; b++) {
-							var liveButton = liveAgentButtons[b];
-							if (!liveButton) continue;
-
-							liveButton.style.setProperty('display', 'block', 'important');
-							liveButton.style.setProperty('width', '100%', 'important');
-							liveButton.style.setProperty('max-width', '100%', 'important');
-							liveButton.style.setProperty('min-width', '0', 'important');
-							liveButton.style.setProperty('margin', '8px 0 0', 'important');
-							liveButton.style.setProperty('box-sizing', 'border-box', 'important');
-							liveButton.style.setProperty('white-space', 'normal', 'important');
-							liveButton.style.setProperty('overflow-wrap', 'anywhere', 'important');
-							liveButton.style.setProperty('text-align', 'center', 'important');
-
-							var buttonParent = liveButton.parentElement;
-							var parentGuard = 0;
-
-							while (buttonParent &&
-								buttonParent !== frameDoc.body &&
-								parentGuard < 3) {
-								buttonParent.style.setProperty('display', 'block', 'important');
-								buttonParent.style.setProperty('width', '100%', 'important');
-								buttonParent.style.setProperty('max-width', '100%', 'important');
-								buttonParent.style.setProperty('min-width', '0', 'important');
-								buttonParent.style.setProperty('margin-left', '0', 'important');
-								buttonParent.style.setProperty('margin-right', '0', 'important');
-								buttonParent.style.setProperty('box-sizing', 'border-box', 'important');
-								buttonParent = buttonParent.parentElement;
-								parentGuard++;
-							}
-						}
-					}
-
-					syncLiveAgentScreen();
-
-					/*
-					 * "Chat with Live Agent" can change the iframe DOM without causing
-					 * a new page load. Observe only content changes, not attributes, so
-					 * our own class/style updates do not create an observer loop.
-					 */
-					if (!frameDoc.documentElement.getAttribute('data-klozer-live-agent-observer')) {
-						frameDoc.documentElement.setAttribute(
-							'data-klozer-live-agent-observer',
-							'1'
-						);
-
-						var FrameMutationObserver =
-							(frame.contentWindow && frame.contentWindow.MutationObserver) ||
-							window.MutationObserver;
-
-						if (FrameMutationObserver) {
-							var observer = new FrameMutationObserver(function () {
-								window.setTimeout(syncLiveAgentScreen, 0);
-							});
-
-							observer.observe(frameDoc.body, {
-								childList: true,
-								subtree: true,
-								characterData: true
-							});
-
-							frameDoc.__klozerMobileLiveAgentObserver = observer;
-						}
-					}
-
-					window.setTimeout(syncLiveAgentScreen, 80);
-					window.setTimeout(syncLiveAgentScreen, 300);
-
-				} catch (error) {
-					/*
-					 * Customer chat normally uses a same-origin relative URL.
-					 * If a deployment changes it to a cross-origin URL, leave native
-					 * chat untouched instead of breaking the panel.
-					 */
-					if (window.console && console.warn) {
-						console.warn(
-							'Klozer mobile Customer Chat responsive styling was skipped:',
-							error
-						);
-					}
-				}
-			}
-
-			function installCustomerChatMobileResponsive() {
-				if (!isPhone) return;
-
-				var frame = document.getElementById('CustomerChatIFrame');
-				if (!frame) return;
-
-				if (frame.getAttribute('data-klozer-mobile-responsive-bound') !== '1') {
-					frame.setAttribute('data-klozer-mobile-responsive-bound', '1');
-
-					frame.addEventListener('load', function () {
-						window.setTimeout(applyCustomerChatMobileResponsive, 0);
-						window.setTimeout(applyCustomerChatMobileResponsive, 120);
-					});
-				}
-
-				applyCustomerChatMobileResponsive();
-				window.setTimeout(applyCustomerChatMobileResponsive, 250);
-				window.setTimeout(applyCustomerChatMobileResponsive, 1000);
-			}
-
-
-
-			function applyInternalChatMobileResponsive() {
-				if (!isPhone) return;
-
-				var frame = document.getElementById('InternalChatIFrame');
-				if (!frame) return;
-
-				try {
-					var frameDoc = frame.contentDocument ||
-						(frame.contentWindow ? frame.contentWindow.document : null);
-
-					if (!frameDoc || !frameDoc.documentElement || !frameDoc.body) return;
-
-					/* The live-agent page is inside agc_agent_manager_chat_interface.php.
-					   Give THAT iframe document a true phone viewport. */
-					var viewportMeta = frameDoc.querySelector('meta[name="viewport"]');
-					if (!viewportMeta) {
-						viewportMeta = frameDoc.createElement('meta');
-						viewportMeta.setAttribute('name', 'viewport');
-						(frameDoc.head || frameDoc.documentElement).appendChild(viewportMeta);
-					}
-					viewportMeta.setAttribute(
-						'content',
-						'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover'
-					);
-
-					var styleId = 'klozer-mobile-internal-live-agent-responsive';
-
-					if (!frameDoc.getElementById(styleId)) {
-						var style = frameDoc.createElement('style');
-						style.id = styleId;
-						style.type = 'text/css';
-						style.textContent = [
-							'html, body {',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 0 !important;',
-							'  padding: 0 !important;',
-							'  overflow-x: hidden !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent {',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 0 !important;',
-							'  padding: 12px !important;',
-							'  overflow-x: hidden !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent *,',
-							'body.klozer-mobile-internal-live-agent *::before,',
-							'body.klozer-mobile-internal-live-agent *::after {',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent form,',
-							'body.klozer-mobile-internal-live-agent fieldset,',
-							'body.klozer-mobile-internal-live-agent table,',
-							'body.klozer-mobile-internal-live-agent tbody,',
-							'body.klozer-mobile-internal-live-agent tr,',
-							'body.klozer-mobile-internal-live-agent td {',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin-left: 0 !important;',
-							'  margin-right: 0 !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent table,',
-							'body.klozer-mobile-internal-live-agent tbody,',
-							'body.klozer-mobile-internal-live-agent tr,',
-							'body.klozer-mobile-internal-live-agent td {',
-							'  display: block !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent td {',
-							'  padding-left: 0 !important;',
-							'  padding-right: 0 !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent select,',
-							'body.klozer-mobile-internal-live-agent textarea,',
-							'body.klozer-mobile-internal-live-agent input[type="text"],',
-							'body.klozer-mobile-internal-live-agent input[type="email"],',
-							'body.klozer-mobile-internal-live-agent input[type="search"],',
-							'body.klozer-mobile-internal-live-agent input[type="tel"] {',
-							'  display: block !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin-left: 0 !important;',
-							'  margin-right: 0 !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent textarea {',
-							'  height: min(38dvh, 300px) !important;',
-							'  min-height: 170px !important;',
-							'  max-height: 42dvh !important;',
-							'  resize: vertical !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent .klozer-mobile-internal-actions {',
-							'  display: grid !important;',
-							'  grid-template-columns: 1fr !important;',
-							'  gap: 10px !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 12px 0 0 !important;',
-							'  padding: 0 !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'body.klozer-mobile-internal-live-agent .klozer-mobile-internal-action {',
-							'  display: block !important;',
-							'  width: 100% !important;',
-							'  max-width: 100% !important;',
-							'  min-width: 0 !important;',
-							'  margin: 0 !important;',
-							'  padding-left: 10px !important;',
-							'  padding-right: 10px !important;',
-							'  white-space: normal !important;',
-							'  overflow-wrap: anywhere !important;',
-							'  text-align: center !important;',
-							'  box-sizing: border-box !important;',
-							'}',
-							'',
-							'@media (max-width: 360px) {',
-							'  body.klozer-mobile-internal-live-agent {',
-							'    padding: 9px !important;',
-							'  }',
-							'}'
-						].join('\n');
-
-						(frameDoc.head || frameDoc.documentElement).appendChild(style);
-					}
-
-					function normalizeInternalChatText(value) {
-						return (value || '')
-							.replace(/\s+/g, ' ')
-							.trim()
-							.toUpperCase();
-					}
-
-					function findInternalChatControl(needle) {
-						/*
-						 * First search real controls. V8.15 also searched every
-						 * [onclick] element in the same pass, so an outer legacy table
-						 * wrapper could be selected before the actual button.
-						 */
-						var primaryControls = frameDoc.querySelectorAll(
-							'button, input[type="button"], input[type="submit"], a'
-						);
-
-						for (var i = 0; i < primaryControls.length; i++) {
-							var primary = primaryControls[i];
-							var primaryText = primary.tagName === 'INPUT' ?
-								(primary.value || '') :
-								(primary.textContent || '');
-
-							if (normalizeInternalChatText(primaryText).indexOf(needle) !== -1) {
-								return primary;
-							}
-						}
-
-						var fallbackControls = frameDoc.querySelectorAll('[onclick]');
-
-						for (var f = 0; f < fallbackControls.length; f++) {
-							var fallback = fallbackControls[f];
-							var fallbackText = fallback.tagName === 'INPUT' ?
-								(fallback.value || '') :
-								(fallback.textContent || '');
-
-							if (normalizeInternalChatText(fallbackText).indexOf(needle) !== -1) {
-								return fallback;
-							}
-						}
-
-						return null;
-					}
-
-					function getSmallestCommonInternalParent(a, b) {
-						if (!a || !b) return null;
-
-						var node = a.parentElement;
-						var guard = 0;
-
-						while (node && node !== frameDoc.body && guard < 10) {
-							if (node.contains(b)) return node;
-							node = node.parentElement;
-							guard++;
-						}
-
-						return null;
-					}
-
-					function normalizeInternalLiveAgentScreen() {
-						if (!frameDoc.body) return;
-
-						var bodyText = normalizeInternalChatText(
-							frameDoc.body.innerText || frameDoc.body.textContent
-						);
-
-						var isLiveAgentScreen =
-							bodyText.indexOf('SELECT A LIVE AGENT') !== -1 ||
-							(
-								bodyText.indexOf('AVAILABLE AGENTS') !== -1 &&
-								bodyText.indexOf('START CHAT') !== -1
-							);
-
-						frameDoc.body.classList.toggle(
-							'klozer-mobile-internal-live-agent',
-							isLiveAgentScreen
-						);
-
-						if (!isLiveAgentScreen) return;
-
-						/* Hard-stop horizontal page scrolling in the iframe. */
-						frameDoc.documentElement.style.setProperty('width', '100%', 'important');
-						frameDoc.documentElement.style.setProperty('max-width', '100%', 'important');
-						frameDoc.documentElement.style.setProperty('overflow-x', 'hidden', 'important');
-						frameDoc.body.style.setProperty('width', '100%', 'important');
-						frameDoc.body.style.setProperty('max-width', '100%', 'important');
-						frameDoc.body.style.setProperty('min-width', '0', 'important');
-						frameDoc.body.style.setProperty('overflow-x', 'hidden', 'important');
-
-						/* Remove legacy fixed widths from oversized wrappers. */
-						var viewportWidth = frame.clientWidth ||
-							frameDoc.documentElement.clientWidth ||
-							0;
-
-						var candidates = frameDoc.querySelectorAll(
-							'form, fieldset, table, tbody, tr, td, div, section, select, textarea, input'
-						);
-
-						for (var c = 0; c < candidates.length; c++) {
-							var el = candidates[c];
-
-							el.style.setProperty('max-width', '100%', 'important');
-							el.style.setProperty('min-width', '0', 'important');
-							el.style.setProperty('box-sizing', 'border-box', 'important');
-
-							var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
-							if (viewportWidth > 0 && rect && rect.width > viewportWidth + 2) {
-								el.style.setProperty('width', '100%', 'important');
-								el.style.setProperty('margin-left', '0', 'important');
-								el.style.setProperty('margin-right', '0', 'important');
-								el.style.setProperty('left', 'auto', 'important');
-								el.style.setProperty('right', 'auto', 'important');
-							}
-						}
-
-						var backButton = findInternalChatControl('BACK TO CHAT SCREEN');
-						var startButton = findInternalChatControl('START CHAT');
-						var actionContainer = getSmallestCommonInternalParent(
-							backButton,
-							startButton
-						);
-
-						if (actionContainer) {
-							actionContainer.classList.add(
-								'klozer-mobile-internal-actions'
-							);
-						}
-
-						var buttons = [backButton, startButton];
-
-						for (var b = 0; b < buttons.length; b++) {
-							var button = buttons[b];
-							if (!button) continue;
-
-							button.classList.add('klozer-mobile-internal-action');
-							button.style.setProperty('display', 'block', 'important');
-							button.style.setProperty('width', '100%', 'important');
-							button.style.setProperty('max-width', '100%', 'important');
-							button.style.setProperty('min-width', '0', 'important');
-							button.style.setProperty('margin', '0', 'important');
-							button.style.setProperty('box-sizing', 'border-box', 'important');
-							button.style.setProperty('white-space', 'normal', 'important');
-
-							/*
-							 * Legacy chat markup may put each action in its own table
-							 * cell/wrapper. Normalize that chain so no desktop-width
-							 * cell can push START CHAT off the right side.
-							 */
-							var parent = button.parentElement;
-							var parentGuard = 0;
-
-							while (parent && parent !== frameDoc.body && parentGuard < 5) {
-								parent.style.setProperty('display', 'block', 'important');
-								parent.style.setProperty('width', '100%', 'important');
-								parent.style.setProperty('max-width', '100%', 'important');
-								parent.style.setProperty('min-width', '0', 'important');
-								parent.style.setProperty('margin-left', '0', 'important');
-								parent.style.setProperty('margin-right', '0', 'important');
-								parent.style.setProperty('padding-left', '0', 'important');
-								parent.style.setProperty('padding-right', '0', 'important');
-								parent.style.setProperty('box-sizing', 'border-box', 'important');
-								parent = parent.parentElement;
-								parentGuard++;
-							}
-						}
-
-						/*
-						 * FINAL V8.16 FIT-TO-WIDTH PASS
-						 * --------------------------------
-						 * Some old agent-chat builds still have fixed desktop widths
-						 * buried in nested markup. Instead of only hiding horizontal
-						 * overflow, measure the ACTUAL visible content width and scale
-						 * the complete live-agent form down just enough to fit the
-						 * iframe viewport.
-						 *
-						 * Example:
-						 * iframe = 380px, old visible form = 455px
-						 * scale = 380 / 455 = 0.835
-						 *
-						 * The compensated body width keeps normal 100%-wide controls
-						 * filling the phone after zooming.
-						 */
-						function fitInternalLiveAgentToViewport() {
-							if (!frameDoc.body) return;
-
-							var availableWidth = frame.clientWidth ||
-								frameDoc.documentElement.clientWidth ||
-								0;
-
-							if (!availableWidth || availableWidth < 200) return;
-
-							/* Reset previous fit before measuring the current DOM. */
-							frameDoc.body.style.removeProperty('zoom');
-							frameDoc.body.style.removeProperty('transform');
-							frameDoc.body.style.removeProperty('transform-origin');
-							frameDoc.body.style.setProperty('width', '100%', 'important');
-							frameDoc.body.style.setProperty('max-width', '100%', 'important');
-
-							var bodyRect = frameDoc.body.getBoundingClientRect();
-							var originLeft = bodyRect.left;
-							var maxRight = availableWidth;
-
-							var visibleCandidates = frameDoc.querySelectorAll(
-								'form, fieldset, table, tbody, tr, td, div, section, ' +
-								'select, textarea, button, input, a'
-							);
-
-							for (var v = 0; v < visibleCandidates.length; v++) {
-								var visibleEl = visibleCandidates[v];
-								var visibleStyle = frame.contentWindow &&
-									frame.contentWindow.getComputedStyle ?
-									frame.contentWindow.getComputedStyle(visibleEl) :
-									null;
-
-								if (visibleStyle &&
-									(
-										visibleStyle.display === 'none' ||
-										visibleStyle.visibility === 'hidden'
-									)) {
-									continue;
-								}
-
-								var visibleRect = visibleEl.getBoundingClientRect ?
-									visibleEl.getBoundingClientRect() :
-									null;
-
-								if (!visibleRect ||
-									visibleRect.width <= 0 ||
-									visibleRect.height <= 0) {
-									continue;
-								}
-
-								maxRight = Math.max(
-									maxRight,
-									visibleRect.right - originLeft
-								);
-							}
-
-							var naturalWidth = Math.ceil(maxRight);
-							var safeWidth = Math.max(220, availableWidth - 4);
-							var scale = 1;
-
-							if (naturalWidth > safeWidth + 2) {
-								scale = safeWidth / naturalWidth;
-							}
-
-							/* Do not make the interface unusably tiny if an unrelated
-							   hidden/legacy node reports an extreme width. */
-							scale = Math.max(0.68, Math.min(1, scale));
-
-							if (scale < 0.995) {
-								var compensatedWidth = (100 / scale).toFixed(3) + '%';
-
-								if (typeof frameDoc.body.style.zoom !== 'undefined') {
-									frameDoc.body.style.setProperty(
-										'zoom',
-										String(scale),
-										'important'
-									);
-									frameDoc.body.style.setProperty(
-										'width',
-										compensatedWidth,
-										'important'
-									);
-									frameDoc.body.style.setProperty(
-										'max-width',
-										compensatedWidth,
-										'important'
-									);
-								} else {
-									frameDoc.body.style.setProperty(
-										'transform',
-										'scale(' + scale + ')',
-										'important'
-									);
-									frameDoc.body.style.setProperty(
-										'transform-origin',
-										'top left',
-										'important'
-									);
-									frameDoc.body.style.setProperty(
-										'width',
-										compensatedWidth,
-										'important'
-									);
-									frameDoc.body.style.setProperty(
-										'max-width',
-										compensatedWidth,
-										'important'
-									);
-								}
-
-								frameDoc.body.setAttribute(
-									'data-klozer-mobile-fit-scale',
-									scale.toFixed(4)
-								);
-							} else {
-								frameDoc.body.removeAttribute(
-									'data-klozer-mobile-fit-scale'
-								);
-							}
-
-							/* Keep the viewport anchored to the left after fitting. */
-							frameDoc.documentElement.scrollLeft = 0;
-							frameDoc.body.scrollLeft = 0;
-						}
-
-						fitInternalLiveAgentToViewport();
-						window.setTimeout(fitInternalLiveAgentToViewport, 80);
-						window.setTimeout(fitInternalLiveAgentToViewport, 260);
-
-						/* Final overflow guard after layout changes. */
-						frameDoc.documentElement.style.setProperty(
-							'overflow-x',
-							'hidden',
-							'important'
-						);
-						frameDoc.body.style.setProperty(
-							'overflow-x',
-							'hidden',
-							'important'
-						);
-						frameDoc.documentElement.scrollLeft = 0;
-						frameDoc.body.scrollLeft = 0;
-					}
-
-					normalizeInternalLiveAgentScreen();
-
-					/* The Chat with Live Agent action can update the iframe DOM without
-					   navigating to a new URL, so watch content changes too. */
-					if (!frameDoc.documentElement.getAttribute('data-klozer-internal-live-observer')) {
-						frameDoc.documentElement.setAttribute(
-							'data-klozer-internal-live-observer',
-							'1'
-						);
-
-						var FrameMutationObserver =
-							(frame.contentWindow && frame.contentWindow.MutationObserver) ||
-							window.MutationObserver;
-
-						if (FrameMutationObserver) {
-							var observer = new FrameMutationObserver(function () {
-								window.setTimeout(normalizeInternalLiveAgentScreen, 0);
-							});
-
-							observer.observe(frameDoc.body, {
-								childList: true,
-								subtree: true,
-								characterData: true
-							});
-
-							frameDoc.__klozerInternalLiveAgentObserver = observer;
-						}
-					}
-
-					window.setTimeout(normalizeInternalLiveAgentScreen, 60);
-					window.setTimeout(normalizeInternalLiveAgentScreen, 220);
-					window.setTimeout(normalizeInternalLiveAgentScreen, 700);
-
-				} catch (error) {
-					if (window.console && console.warn) {
-						console.warn(
-							'Klozer mobile Internal Chat responsive styling was skipped:',
-							error
-						);
-					}
-				}
-			}
-
-			function installInternalChatMobileResponsive() {
-				if (!isPhone) return;
-
-				var frame = document.getElementById('InternalChatIFrame');
-				if (!frame) return;
-
-				if (frame.getAttribute('data-klozer-internal-responsive-bound') !== '1') {
-					frame.setAttribute('data-klozer-internal-responsive-bound', '1');
-
-					frame.addEventListener('load', function () {
-						window.setTimeout(applyInternalChatMobileResponsive, 0);
-						window.setTimeout(applyInternalChatMobileResponsive, 100);
-						window.setTimeout(applyInternalChatMobileResponsive, 350);
-					});
-				}
-
-				applyInternalChatMobileResponsive();
-				window.setTimeout(applyInternalChatMobileResponsive, 200);
-				window.setTimeout(applyInternalChatMobileResponsive, 900);
-			}
-
-
-			function resolveMobileCustomerSmsRecipient(button, fieldId) {
-				var values = [];
-
-				function addValue(value) {
-					value = String(value || '')
-						.replace(/\u00a0/g, ' ')
-						.trim();
-
-					if (value && values.indexOf(value) === -1) {
-						values.push(value);
-					}
-				}
-
-				/*
-				 * FIRST: read the input physically beside the envelope button.
-				 * This is the exact field the agent can see/type into, so it avoids
-				 * stale hidden/duplicate VICIdial fields with the same id/name.
-				 */
-				if (button) {
-					var row = button.parentElement;
-					if (row) {
-						var nearby = row.querySelectorAll(
-							'input, textarea, [id$="DISP"], span'
-						);
-
-						for (var n = 0; n < nearby.length; n++) {
-							var el = nearby[n];
-							if (el === button) continue;
-
-							if (typeof el.value !== 'undefined') {
-								addValue(el.value);
-							}
-
-							addValue(el.textContent || el.innerText || '');
-						}
-					}
-				}
-
-				/* Then try the named VICIdial form control. */
-				try {
-					if (document.vicidial_form &&
-						document.vicidial_form.elements &&
-						document.vicidial_form.elements[fieldId]) {
-						var formField = document.vicidial_form.elements[fieldId];
-
-						if (formField.length && !formField.tagName) {
-							for (var f = 0; f < formField.length; f++) {
-								addValue(formField[f].value);
-							}
-						} else {
-							addValue(formField.value);
-						}
-					}
-				} catch (e) { }
-
-				/* Finally inspect every matching id/name and prefer non-empty content. */
-				var selectors = [
-					'[name="' + fieldId + '"]',
-					'#' + fieldId,
-					'#' + fieldId + 'DISP'
-				];
-
-				for (var s = 0; s < selectors.length; s++) {
-					var matches = document.querySelectorAll(selectors[s]);
-
-					for (var m = 0; m < matches.length; m++) {
-						var match = matches[m];
-						if (typeof match.value !== 'undefined') addValue(match.value);
-						addValue(match.textContent || match.innerText || '');
-					}
-				}
-
-				return values.length ? values[0] : '';
-			}
-
-			function syncCustomerSmsFieldValue(fieldId, value) {
-				var cleanValue = String(value || '').trim();
-				if (!cleanValue) return false;
-
-				var candidates = document.querySelectorAll(
-					'[name="' + fieldId + '"], #' + fieldId
-				);
-
-				for (var i = 0; i < candidates.length; i++) {
-					var field = candidates[i];
-
-					if (field &&
-						typeof field.value !== 'undefined') {
-						field.value = cleanValue;
-					}
-				}
-
-				try {
-					if (document.vicidial_form &&
-						document.vicidial_form.elements &&
-						document.vicidial_form.elements[fieldId]) {
-						var formField =
-							document.vicidial_form.elements[fieldId];
-
-						if (formField.length && !formField.tagName) {
-							for (var f = 0; f < formField.length; f++) {
-								if (typeof formField[f].value !== 'undefined') {
-									formField[f].value = cleanValue;
-								}
-							}
-						} else if (typeof formField.value !== 'undefined') {
-							formField.value = cleanValue;
-						}
-					}
-				} catch (e) { }
-
-				return true;
-			}
-
-			function refreshQuickSmsSenderDesktopStyle() {
-				var clientSelect =
-					document.getElementById('quick_sms_client');
-
-				if (!clientSelect) return;
-
-				var currentText = String(
-					clientSelect.textContent || ''
-				).trim();
-
-				var currentValue = String(
-					clientSelect.value || ''
-				).trim();
-
-				if (currentValue &&
-					!/Fetching/i.test(currentText)) {
-					return;
-				}
-
-				var ext = '';
-
-				try {
-					ext = (typeof extension !== 'undefined') ?
-						extension :
-						'';
-				} catch (e) { }
-
-				var sxhr = new XMLHttpRequest();
-				sxhr.open(
-					'POST',
-					'send_sms_ajax.php',
-					true
-				);
-				sxhr.setRequestHeader(
-					'Content-Type',
-					'application/x-www-form-urlencoded'
-				);
-
-				sxhr.onreadystatechange = function () {
-					if (this.readyState !== 4) return;
-
-					if (this.status === 200) {
-						try {
-							var data = JSON.parse(this.responseText);
-
-							if (data && data.sender_id) {
-								clientSelect.innerHTML =
-									'<option value="' +
-									String(data.sender_id).replace(/"/g, '&quot;') +
-									'">' +
-									String(data.sender_id) +
-									'</option>';
-								return;
-							}
-						} catch (e) { }
-					}
-
-					var fallback = [];
-
-					try {
-						if (typeof agent_sms_numbers !== 'undefined' &&
-							Array.isArray(agent_sms_numbers)) {
-							fallback =
-								agent_sms_numbers.slice(0);
-						}
-					} catch (e) { }
-
-					if (!fallback.length) {
-						try {
-							if (typeof agent_sms_number !== 'undefined' &&
-								agent_sms_number) {
-								fallback = [agent_sms_number];
-							}
-						} catch (e) { }
-					}
-
-					if (fallback.length) {
-						var seen = {};
-						var html = '';
-
-						for (var n = 0; n < fallback.length; n++) {
-							var number =
-								String(fallback[n] || '').trim();
-
-							if (!number || seen[number]) continue;
-							seen[number] = true;
-
-							html +=
-								'<option value="' +
-								number.replace(/"/g, '&quot;') +
-								'">' +
-								number +
-								'</option>';
-						}
-
-						if (html) {
-							clientSelect.innerHTML = html;
-							return;
-						}
-					}
-
-					clientSelect.innerHTML =
-						'<option value="">Unknown Sender</option>';
-				};
-
-				sxhr.send(
-					'ACTION=GET_SENDER_ID&extension=' +
-					encodeURIComponent(ext)
-				);
-			}
-
-			function keepCustomerQuickSmsMobileState(recipient) {
-				if (!isPhone || !document.body) return;
-
-				mobileCustomerQuickSmsActive = true;
-
-				if (typeof window.KlozerPromoteOpenedSmsToMessages === 'function') {
-					window.KlozerPromoteOpenedSmsToMessages();
-				}
-
-				var panel =
-					document.getElementById('EmailPanel');
-
-				if (panel) {
-					panel.classList.remove('mobile-sms-list');
-					panel.classList.add('mobile-quick-sms');
-				}
-
-				if (window.jQuery) {
-					window.jQuery('#EmailPanel .chat-app-container').hide();
-					window.jQuery('#EmailPanel .form_inner_sms').show();
-					window.jQuery('#EmailPanel .quick_sms').addClass('active');
-					window.jQuery('#EmailPanel .chat_list').removeClass('active');
-				}
-
-				var receiver =
-					document.getElementById('quick_sms_phone_number');
-
-				if (receiver && recipient) {
-					receiver.value =
-						String(recipient).trim();
-				}
-			}
-
-			function startMobileCustomerQuickSms(
-				button,
-				fieldId
-			) {
-				if (!isPhone ||
-					!smsEnabledForAgent ||
-					!document.body) {
-					return false;
-				}
-
-				var recipient =
-					resolveMobileCustomerSmsRecipient(
-						button,
-						fieldId
-					);
-
-				recipient =
-					String(recipient || '').trim();
-
-				if (!recipient) {
-					alert(
-						'Please enter a phone number first.'
-					);
-					return false;
-				}
-
-				mobileCustomerQuickSmsActive = true;
-				mobileCustomerQuickSmsToken++;
-				mobileCustomerQuickSmsRecipient =
-					recipient;
-
-				var token =
-					mobileCustomerQuickSmsToken;
-
-				/*
-				 * Make the exact visible Customer number the value that the original
-				 * desktop openQuickSmsModal() reads.
-				 */
-				syncCustomerSmsFieldValue(
-					fieldId,
-					recipient
-				);
-
-				/*
-				 * Run the proven desktop workflow.
-				 */
-				openQuickSmsModal(fieldId);
-
-				/*
-				 * Immediately move the real SMS panel to Messages and directly fill
-				 * the Quick SMS recipient. Do not wait for Bootstrap/tab timing.
-				 */
-				window.KlozerPromoteOpenedSmsToMessages();
-				forceMobileQuickSmsMode(
-					recipient,
-					true
-				);
-
-				/*
-				 * Resolve sender using BOTH desktop GET_SENDER_ID and SMS List
-				 * GET_CONVERSATIONS sources.
-				 */
-				refreshMobileQuickSmsSender(
-					token
-				);
-
-				/*
-				 * Native tab/AJAX code can finish after this click. Keep the exact
-				 * recipient and Quick SMS screen stable through those updates.
-				 */
-				[40, 120, 300, 650, 1200, 2200].forEach(
-					function (delay) {
-						window.setTimeout(
-							function () {
-								if (!mobileCustomerQuickSmsActive ||
-									token !== mobileCustomerQuickSmsToken) {
-									return;
-								}
-
-								window.KlozerPromoteOpenedSmsToMessages();
-
-								forceMobileQuickSmsMode(
-									recipient,
-									delay >= 300
-								);
-
-								if (delay === 650 ||
-									delay === 2200) {
-									refreshMobileQuickSmsSender(
-										token
-									);
-								}
-							},
-							delay
-						);
-					}
-				);
-
-				return true;
-			}
-
-			function installMobileCustomerSmsButtonOverride() {
-				if (!isPhone ||
-					mobileCustomerSmsDelegatedBound) {
-					return;
-				}
-
-				mobileCustomerSmsDelegatedBound = true;
-
-				/*
-				 * Delegated capture listener:
-				 * VICIdial can update/recreate Customer markup. This catches the SMS
-				 * envelope even when the individual button did not exist at mobile
-				 * initialization time.
-				 */
-				document.addEventListener(
-					'click',
-					function (event) {
-						if (!isPhone) return;
-
-						var target = event.target;
-
-						if (!target ||
-							!target.closest) {
-							return;
-						}
-
-						var button =
-							target.closest(
-								'button[onclick*="openQuickSmsModal"]'
-							);
-
-						if (!button) return;
-
-						var onclickText =
-							String(
-								button.getAttribute(
-									'onclick'
-								) || ''
-							);
-
-						var match =
-							onclickText.match(
-								/openQuickSmsModal\s*\(\s*['"](phone_number|alt_phone)['"]\s*\)/i
-							);
-
-						if (!match) return;
-
-						/*
-						 * We invoke the desktop function ourselves exactly once, so
-						 * suppress the button's inline duplicate call.
-						 */
-						event.preventDefault();
-						event.stopPropagation();
-
-						if (typeof event.stopImmediatePropagation === 'function') {
-							event.stopImmediatePropagation();
-						}
-
-						startMobileCustomerQuickSms(
-							button,
-							match[1]
-						);
-					},
-					true
-				);
-			}
-
-
-			function mobileQuickSmsSenderResolved() {
-				var select =
-					document.getElementById('quick_sms_client');
-
-				if (!select) return false;
-
-				var value =
-					String(select.value || '').trim();
-
-				var text =
-					String(select.textContent || '').trim();
-
-				return !!value &&
-					!/Fetching/i.test(text) &&
-					!/Unknown Sender/i.test(text);
-			}
-
-			function fallbackMobileQuickSmsSender(token) {
-				if (!mobileCustomerQuickSmsActive ||
-					token !== mobileCustomerQuickSmsToken) {
-					return;
-				}
-
-				if (mobileQuickSmsSenderResolved()) {
-					return;
-				}
-
-				/*
-				 * Never overwrite with another "Fetching..." state.
-				 * First use preloaded desktop/SMS-list sender data.
-				 */
-				if (applyMobileSmsSenderCacheToQuickSms()) {
-					return;
-				}
-
-				/*
-				 * If not cached yet, run the same desktop sender requests now.
-				 */
-				preloadMobileSmsSenderCache(true);
-			}
-
-
-			window.KlozerMobileCustomerSmsDirect = function (
-				button,
-				fieldId
-			) {
-				if (!isPhone ||
-					!smsEnabledForAgent ||
-					!document.body) {
-					openQuickSmsModal(fieldId);
-					return false;
-				}
-
-				var recipient =
-					resolveMobileCustomerSmsRecipient(
-						button,
-						fieldId
-					);
-
-				recipient =
-					String(recipient || '').trim();
-
-				if (!recipient) {
-					alert(
-						'Please enter a phone number first.'
-					);
-					return false;
-				}
-
-				syncCustomerSmsFieldValue(
-					fieldId,
-					recipient
-				);
-
-				mobileCustomerQuickSmsActive = true;
-				mobileCustomerQuickSmsToken++;
-				mobileCustomerQuickSmsRecipient =
-					recipient;
-
-				var token =
-					mobileCustomerQuickSmsToken;
-
-				/*
-				 * INSTANT RECIPIENT:
-				 * The Quick SMS form already exists in the page DOM, so write the
-				 * recipient BEFORE opening/moving any panel. It is already populated
-				 * by the time Messages becomes visible.
-				 */
-				var receiver =
-					document.getElementById(
-						'quick_sms_phone_number'
-					);
-
-				if (receiver) {
-					receiver.value = recipient;
-					receiver.defaultValue = recipient;
-					receiver.setAttribute(
-						'value',
-						recipient
-					);
-					receiver.setAttribute(
-						'data-klozer-recipient',
-						recipient
-					);
-				}
-
-				/*
-				 * Preselect Quick SMS before the native EmailPanel is shown.
-				 */
-				var panel =
-					document.getElementById(
-						'EmailPanel'
-					);
-
-				if (panel) {
-					panel.classList.remove(
-						'mobile-sms-list'
-					);
-					panel.classList.add(
-						'mobile-quick-sms'
-					);
-				}
-
-				if (window.jQuery) {
-					window.jQuery(
-						'#EmailPanel .chat-app-container'
-					).hide();
-
-					window.jQuery(
-						'#EmailPanel .form_inner_sms'
-					).show();
-
-					window.jQuery(
-						'#EmailPanel .quick_sms'
-					).addClass('active');
-
-					window.jQuery(
-						'#EmailPanel .chat_list'
-					).removeClass('active');
-				}
-
-				/*
-				 * Run the EXACT DESKTOP workflow.
-				 * Its GET_SENDER_ID request remains the primary source of truth.
-				 */
-				openQuickSmsModal(fieldId);
-
-				/*
-				 * openQuickSmsModal() sets the sender dropdown to Fetching before its
-				 * XHR returns. If we preloaded the sender already, immediately replace
-				 * Fetching with the cached desktop/SMS-list sender DID.
-				 */
-				applyMobileSmsSenderCacheToQuickSms();
-
-				/*
-				 * If cache is not ready yet, start the same desktop requests now.
-				 * They will populate the dropdown as soon as either response arrives.
-				 */
-				if (!mobileQuickSmsSenderResolved()) {
-					preloadMobileSmsSenderCache(true);
-				}
-
-				/*
-				 * Mobile presentation only: show the SAME native EmailPanel through
-				 * Messages, never under Customer.
-				 */
-				selectMobilePanel(
-					'EmailPanel',
-					'messages'
-				);
-
-				/*
-				 * Reassert immediately after the panel move. This should not be the
-				 * first recipient write; it is only a guard.
-				 */
-				forceMobileQuickSmsMode(
-					recipient,
-					false
-				);
-
-				/*
-				 * Short, bounded state guards for native Bootstrap/tab updates.
-				 */
-				[
-					30,
-					100,
-					300,
-					650
-				].forEach(
-					function (delay) {
-						window.setTimeout(
-							function () {
-								if (!mobileCustomerQuickSmsActive ||
-									token !==
-									mobileCustomerQuickSmsToken) {
-									return;
-								}
-
-								selectMobilePanel(
-									'EmailPanel',
-									'messages'
-								);
-
-								forceMobileQuickSmsMode(
-									recipient,
-									delay >= 300
-								);
-
-								/*
-								 * Never reset to Fetching. Only apply cache if the
-								 * desktop request has not resolved yet.
-								 */
-								if (!mobileQuickSmsSenderResolved()) {
-									applyMobileSmsSenderCacheToQuickSms();
-								}
-							},
-							delay
-						);
-					}
-				);
-
-				/*
-				 * One bounded late retry for genuinely slow server responses.
-				 */
-				window.setTimeout(
-					function () {
-						fallbackMobileQuickSmsSender(
-							token
-						);
-					},
-					1200
-				);
-
-				return false;
-			};
-
-
-			function initializeMobileApp() {
-				if (initialized || !isPhone || !document.body || isLoggedOut()) return;
-				initialized = true;
-
-				buildInterface();
-				ensureHomeIdentitySection();
-				installActivityObserver();
-				installCloserObserver();
-				installLogoutObserver();
-				installOverlayObserver();
-				portalLeadSearchResultsToBody();
-				installLeadSearchResultsObserver();
-				installCallLogObserver();
-				installCustomerChatMobileResponsive();
-				installInternalChatMobileResponsive();
-				installCustomerLeadIdCapture();
-
-				/*
-				 * Pre-fetch sender DID(s) before the agent taps any Customer SMS
-				 * envelope. This uses the same desktop GET_SENDER_ID and SMS List
-				 * GET_CONVERSATIONS sources.
-				 */
-				preloadMobileSmsSenderCache(false);
-
-				window.setTimeout(function () {
-					if (!mobileSmsSenderCache.length) {
-						preloadMobileSmsSenderCache(true);
-					}
-				}, 1800);
-
-				var quickSmsPanel =
-					document.getElementById('EmailPanel');
-
-				if (window.MutationObserver &&
-					quickSmsPanel &&
-					!window.__klozerQuickSmsStateObserver) {
-					window.__klozerQuickSmsStateObserver =
-						new MutationObserver(
-							function () {
-								if (!mobileCustomerQuickSmsActive ||
-									!mobileCustomerQuickSmsRecipient) {
-									return;
-								}
-
-								/*
-								 * IMPORTANT:
-								 * Do not react to class/style changes here.
-								 * forceMobileQuickSmsMode() itself changes classes and
-								 * styles, which caused V8.58 to retrigger this observer
-								 * indefinitely and freeze the whole dialer.
-								 *
-								 * Only repair the recipient if native AJAX actually
-								 * replaced/cleared the Quick SMS form content.
-								 */
-								var receiver =
-									document.getElementById(
-										'quick_sms_phone_number'
-									);
-
-								if (!receiver ||
-									String(receiver.value || '').trim() !==
-									String(
-										mobileCustomerQuickSmsRecipient || ''
-									).trim()) {
-									forceMobileQuickSmsMode(
-										mobileCustomerQuickSmsRecipient,
-										false
-									);
-								}
-							}
-						);
-
-					window.__klozerQuickSmsStateObserver.observe(
-						quickSmsPanel,
-						{
-							childList: true,
-							subtree: true
-						}
-					);
-				}
-
-				portalNotesHistoryToBody();
-				installNotesHistoryModalObserver();
-
-				if (!window.__klozerNotesViewportFitBound) {
-					window.__klozerNotesViewportFitBound = true;
-
-					window.addEventListener('resize', function () {
-						if (document.body &&
-							document.body.classList.contains('klozer-notes-history-open')) {
-							measureNotesHistoryModalTop();
-							fitNotesHistoryModalToViewport();
-						}
-					}, { passive: true });
-
-					window.addEventListener('orientationchange', function () {
-						window.setTimeout(function () {
-							if (document.body &&
-								document.body.classList.contains('klozer-notes-history-open')) {
-								measureNotesHistoryModalTop();
-								fitNotesHistoryModalToViewport();
-							}
-						}, 100);
-					}, { passive: true });
-				}
-
-				/*
-				 * Let the original WebPhone initialize first, then show Dialer.
-				 * If the native inbound-group selector is open, its observer hides
-				 * this shell until the agent submits the group selection.
-				 */
-				setUiView('dialer', false);
-				syncCloserSelection();
-				syncLogoutState();
-			}
-
-			if (isPhone) {
-				window.addEventListener('load', function () {
-					window.setTimeout(initializeMobileApp, 1500);
-				});
-
-				if (document.readyState === 'complete') {
-					window.setTimeout(initializeMobileApp, 1500);
-				}
-			}
-
-			window.KlozerMobileApp = {
-				setView: setUiView,
-				openMore: openMoreSheet,
-				closeMore: closeMoreSheet,
-				showMessages: showMessages,
-				isPhone: function () { return isPhone; }
-			};
-		} ());
-	</script>
-
-	<style>
-		.my-rank-badge {
-			display: inline-flex;
-			align-items: center;
-			margin-left: 8px;
-			padding: 6px 10px;
-			border: 1px solid #00efd1;
-			border-radius: 8px;
-			background: #00252b;
-			color: #ffce70;
-			font-size: 13px;
-			font-weight: 700;
-			white-space: nowrap;
+function VicidialEmailPanelToFront(x) {
+    // ১. সব প্যানেল থেকে active এবং in ক্লাস সরিয়ে দিন (নতুন প্যানেলগুলোসহ)
+    $('#main_section1, #ScriptPanel, #FormPanel, #EmailPanel, #VicidialEmailPanel, #InternalChatPanel, #CustomerChatPanel').removeClass('active in'); //
+    
+    // ২. শুধু ইমেইল প্যানেলে active ক্লাস যোগ করুন এবং শো করুন
+    $('#VicidialEmailPanel').addClass('active in').show(); //
+    
+    // ৩. Vicidial এর স্ট্যান্ডার্ড হাইড ফাংশনগুলো কল করুন
+    hideDivVisible('main_section1'); //
+    hideDiv('ScriptPanel'); //
+    hideDiv('FormPanel'); //
+    hideDiv('EmailPanel'); // এটি আপনার SMS প্যানেলকে হাইড করবে
+    
+    // ৪. ইন্টারনাল এবং কাস্টমার চ্যাট প্যানেল হাইড করার কমান্ড
+    hideDiv('InternalChatPanel'); //
+    hideDiv('CustomerChatPanel'); //
+    hideDiv('CustomerChatRefresH'); // চ্যাট রিফ্রেশ এলিমেন্ট থাকলে সেটিও হাইড হবে
+}
+
+
+
+
+
+// ============================================
+// EMAIL SOUND FIX - Prevent email from muting call audio
+// ============================================
+
+// Override the function that sets email/chat status
+var original_email_chat_status = currently_in_email_or_chat;
+
+Object.defineProperty(window, 'currently_in_email_or_chat', {
+    get: function() {
+        return 0;  // ALWAYS return 0 (not in email/chat)
+    },
+    set: function(value) {
+        // Ignore any email/chat status changes during calls
+        if ( (VD_live_customer_call == 1) || (MD_channel_look == 1) ) {
+            console.log('Blocked email/chat status change during call');
+            return;
+        }
+        original_email_chat_status = value;
+    }
+});
+
+
+// ============================================
+// SIMPLE EMAIL SOUND FIX
+// ============================================
+
+// Lock the variable so email never affects calls
+setInterval(function() {
+    currently_in_email_or_chat = 0;
+    
+    // Also ensure audio context stays active
+    if (typeof AudioContext !== 'undefined') {
+        try {
+            var ctx = new AudioContext();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        } catch(e) {}
+    }
+}, 500);  // Check every 500ms
+
+
+// ============================================
+// EMAIL SOUND FIX - Implementation
+// ============================================
+
+if (EMAIL_SOUND_FIX == 1) {
+    
+    // Function 1: Block email from muting calls
+    function preventEmailAudioMute() {
+        // Always keep email/chat status at 0 during calls
+        if ( (VD_live_customer_call == 1) || (MD_channel_look == 1) || (XD_live_customer_call == 1) ) {
+            currently_in_email_or_chat = 0;
+        }
+    }
+    
+    // Function 2: Force audio context active
+    function keepAudioAlive() {
+        try {
+            // For WebRTC/WebPhone
+            if (window.webphone && typeof window.webphone.dialButton === 'function') {
+                // WebPhone active, ensure audio
+            }
+            
+            // For HTML5 Audio
+            var audioElements = document.querySelectorAll('audio');
+            for (var i = 0; i < audioElements.length; i++) {
+                if (audioElements[i].paused && audioElements[i].readyState > 0) {
+                    audioElements[i].play().catch(function(e){});
+                }
+            }
+        } catch(e) {}
+    }
+    
+    // Run both functions every second
+    setInterval(function() {
+        preventEmailAudioMute();
+        keepAudioAlive();
+    }, 1000);
+    
+    console.log('Email Sound Fix: ENABLED');
+}
+
+
+
+
+</script>
+
+<!-- Klozer mobile application navigation V8.64 DAILY-ACTIVITY-OBSERVER-FIX
+     The mobile shell selects the real VICIdial panels and restores their native active tab state.
+     WebPhone/call-control functions are not wrapped or redefined. -->
+<script>
+(function () {
+    'use strict';
+
+    var isPhone = (window.KlozerPhoneDevice === true);
+    var nav = null;
+    var moreSheet = null;
+    var homeActivitySection = null;
+    var homeIdentitySection = null;
+    var dailyActivityWidget = null;
+    var activityObserver = null;
+    var closerObserver = null;
+    var logoutObserver = null;
+    var overlayObserver = null;
+    var callLogObserver = null;
+    var callLogFormatting = false;
+    var logoutTimer = null;
+    var initialized = false;
+    var closerWasVisible = false;
+    var overlayReturnView = 'dialer';
+    var overlayReturnPanelId = null;
+
+    /*
+     * Notes History needs the lead_id. VICIdial writes lead_id programmatically
+     * when a lead/call is loaded. On some mobile flows that hidden field can be
+     * cleared/replaced before the History popup request is made, while the
+     * visible Customer record is still on screen.
+     *
+     * Keep the last real non-empty lead ID seen for the currently displayed
+     * Customer record. This is mobile-only and does not change native call logic.
+     */
+    var lastMobileCustomerLeadId = '';
+    var leadIdCaptureTimer = null;
+    var mobileCustomerQuickSmsActive = false;
+    var mobileCustomerQuickSmsToken = 0;
+    var mobileCustomerQuickSmsRecipient = '';
+    var mobileCustomerSmsDelegatedBound = false;
+    var mobileSmsSenderCache = [];
+    var mobileSmsSenderPreloadStarted = false;
+    var mobileSmsSenderLastPreload = 0;
+
+    var smsEnabledForAgent = <?php echo (($allow_sms == 'yes') && ($agentcall_sms > 0)) ? 'true' : 'false'; ?>;
+    var emailEnabledForAgent = <?php echo ($email_enabled > 0) ? 'true' : 'false'; ?>;
+    var chatEnabledForAgent = <?php echo ($chat_enabled > 0) ? 'true' : 'false'; ?>;
+    var customerChatEnabledForAgent = <?php echo (($chat_enabled > 0) && ($campaign_chat_enabled == 'Y')) ? 'true' : 'false'; ?>;
+    var secondScriptEnabledForAgent = <?php echo ($SSenable_second_script > 0) ? 'true' : 'false'; ?>;
+
+    /*
+     * Session identity shown on Home.
+     * These are the same live values already used by the dialer header/details:
+     * campaign = $VD_campaign, agent = $VD_login, phone = $SIP_user.
+     */
+    var mobileHomeIdentity = {
+        campaign: <?php echo json_encode((string)$VD_campaign); ?>,
+        agentId: <?php echo json_encode((string)$VD_login); ?>,
+        phoneId: <?php echo json_encode((string)$SIP_user); ?>
+    };
+
+    /*
+     * IMPORTANT:
+     * In this dialer source Customer is inside #MainPanelCustInfo .tab-content,
+     * but the real Script/Notepad/Email/SMS/Chat/Queue panels are elsewhere
+     * in the legacy document. Never route those features through Customer's
+     * tab-content again.
+     */
+    var standardPanelIds = [
+        'ScriptPanel',
+        'Script2Panel',
+        'FormPanel',
+        'VicidialEmailPanel',
+        'EmailPanel',
+        'InternalChatPanel',
+        'CustomerChatPanel',
+        'callsinqueuedisplay'
+    ];
+
+    var overlayPanelIds = [
+        'SearcHForMDisplaYBox',
+        'CalLLoGDisplaYBox',
+        'AgentViewSpan'
+    ];
+
+    function closestElement(target, selector) {
+        if (!target) return null;
+        if (typeof target.closest === 'function') return target.closest(selector);
+
+        while (target && target.nodeType === 1) {
+            if (target.matches && target.matches(selector)) return target;
+            target = target.parentElement;
+        }
+        return null;
+    }
+
+    function callOriginal(name, args) {
+        var fn = window[name];
+        if (typeof fn !== 'function') return false;
+
+        try {
+            fn.apply(window, args || []);
+            return true;
+        } catch (error) {
+            if (window.console && console.error) {
+                console.error('Klozer mobile UI could not call existing VICidial function:', name, error);
+            }
+            return false;
+        }
+    }
+
+    function getCurrentView() {
+        if (!document.body) return 'dialer';
+        return document.body.getAttribute('data-mobile-view') || 'dialer';
+    }
+
+    function isLoggedOut() {
+        if (!document.body) return false;
+
+        try {
+            if (typeof logout_stop_timeouts !== 'undefined' && Number(logout_stop_timeouts) === 1) {
+                return true;
+            }
+        } catch (e) {}
+
+        var box = document.getElementById('LogouTBox');
+        if (!box) return false;
+
+        var style = window.getComputedStyle ? window.getComputedStyle(box) : box.style;
+        return style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0' &&
+            box.getClientRects().length > 0;
+    }
+
+    function disableMobileShellForLogout() {
+        if (!document.body) return;
+
+        clearMobilePanelSelection();
+        document.body.classList.add('klozer-mobile-logged-out');
+        document.body.classList.remove('mobile-app-ready');
+        document.body.removeAttribute('data-mobile-view');
+
+        closeMoreSheet();
+
+        if (nav) nav.style.setProperty('display', 'none', 'important');
+        if (moreSheet) moreSheet.style.setProperty('display', 'none', 'important');
+        if (homeActivitySection) homeActivitySection.style.setProperty('display', 'none', 'important');
+        if (homeIdentitySection) homeIdentitySection.style.setProperty('display', 'none', 'important');
+    }
+
+    function syncLogoutState() {
+        if (!isPhone || !document.body) return;
+        if (isLoggedOut()) disableMobileShellForLogout();
+    }
+
+    function updateActiveNavigation(view) {
+        if (!nav) return;
+
+        var buttons = nav.querySelectorAll('[data-mobile-view-button]');
+        for (var i = 0; i < buttons.length; i++) {
+            var active = buttons[i].getAttribute('data-mobile-view-button') === view;
+            buttons[i].classList.toggle('is-active', active);
+            buttons[i].setAttribute('aria-current', active ? 'page' : 'false');
+        }
+
+        var moreButton = nav.querySelector('[data-mobile-more-button]');
+        if (moreButton) {
+            moreButton.classList.toggle('is-active', view === 'panel' || view === 'overlay');
+        }
+    }
+
+    function setUiView(view, scrollTop) {
+        if (!isPhone || !document.body || isLoggedOut()) return;
+
+        var allowed = ['dashboard', 'customer', 'dialer', 'messages', 'panel', 'overlay'];
+        if (allowed.indexOf(view) === -1) view = 'dialer';
+        if (view === 'messages' && !smsEnabledForAgent) view = 'dashboard';
+
+        /*
+         * Search Results belong only to the Lead Search overlay.
+         * If the user leaves that overlay, close the native results box too.
+         */
+        if ((view !== 'overlay' ||
+             document.body.getAttribute('data-mobile-overlay') !== 'SearcHForMDisplaYBox') &&
+            document.body.classList.contains('klozer-lead-results-open')) {
+            closeMobileLeadSearchResults();
+        }
+
+        if (view !== 'customer' &&
+            document.body.classList.contains('klozer-notes-history-open')) {
+            callOriginal('hideDivVisible', ['CalLNotesDisplaYBox']);
+            clearMobileNotesHistoryModal();
+        }
+
+        document.body.classList.add('klozer-phone-ui', 'mobile-app-ready');
+        document.body.setAttribute('data-mobile-view', view);
+
+        if (view !== 'overlay') {
+            document.body.removeAttribute('data-mobile-overlay');
+        }
+
+        updateActiveNavigation(view);
+
+        if (scrollTop !== false) {
+            window.scrollTo(0, 0);
+        }
+
+        mountDailyActivityWidget();
+    }
+
+    function clearMobilePanelSelection() {
+        for (var i = 0; i < standardPanelIds.length; i++) {
+            var panel = document.getElementById(standardPanelIds[i]);
+            if (!panel) continue;
+
+            panel.classList.remove('klozer-mobile-selected-panel', 'active', 'in');
+            panel.removeAttribute('data-klozer-mobile-active');
+        }
+
+        if (document.body) {
+            document.body.removeAttribute('data-mobile-panel');
+        }
+    }
+
+    function closeStandardMobilePanelsExcept(exceptId) {
+        for (var i = 0; i < standardPanelIds.length; i++) {
+            var id = standardPanelIds[i];
+            var panel = document.getElementById(id);
+            if (!panel || id === exceptId) continue;
+
+            /*
+             * Close the PREVIOUS feature using VICIdial's own hide helper.
+             * This removes stale inline display:block state as well as the
+             * mobile selected/Bootstrap state.
+             */
+            callOriginal('hideDiv', [id]);
+            panel.classList.remove('klozer-mobile-selected-panel', 'active', 'in');
+            panel.removeAttribute('data-klozer-mobile-active');
+        }
+    }
+
+    function closeNativeMobileOverlaysExcept(exceptId) {
+        /* Lead Search and Call Log are generic More overlays. */
+        var visibilityOverlays = [
+            'SearcHForMDisplaYBox',
+            'CalLLoGDisplaYBox'
+        ];
+
+        for (var i = 0; i < visibilityOverlays.length; i++) {
+            var id = visibilityOverlays[i];
+            var overlay = document.getElementById(id);
+            if (id === exceptId || !overlay) continue;
+
+            callOriginal('hideDivVisible', [id]);
+            callOriginal('hideDiv', [id]);
+            overlay.classList.remove('klozer-mobile-selected-overlay');
+        }
+
+        /* Agents View has its own native open/close state. */
+        var agentView = document.getElementById('AgentViewSpan');
+        if (exceptId !== 'AgentViewSpan' && agentView) {
+            if (nativeOverlayIsOpen('AgentViewSpan')) {
+                callOriginal('AgentsViewOpen', ['AgentViewSpan', 'close']);
+            } else {
+                callOriginal('hideDiv', ['AgentViewSpan']);
+            }
+            agentView.classList.remove('klozer-mobile-selected-overlay');
+        }
+
+        clearMobileOverlaySelection(exceptId);
+    }
+
+    function closePreviousMobileFeatures(exceptId) {
+        closeStandardMobilePanelsExcept(exceptId);
+        closeNativeMobileOverlaysExcept(exceptId);
+    }
+
+    function selectMobilePanel(panelId, view) {
+        var panel = document.getElementById(panelId);
+        if (!panel || !document.body) return false;
+
+        /*
+         * Close every previously opened More screen BEFORE promoting this one.
+         * This is the key V8.2 single-screen rule.
+         */
+        closePreviousMobileFeatures(panelId);
+        clearMobilePanelSelection();
+
+        /*
+         * Several original VICidial panel functions use showDiv()/hideDiv()
+         * but do not add Bootstrap's active/in classes. Email happens to add
+         * them itself, which is why Email worked while Script/Notepad/Chat
+         * stayed hidden. Give the one selected mobile panel the same active
+         * state as the original tab system.
+         */
+        panel.classList.add('klozer-mobile-selected-panel', 'active', 'in');
+        panel.setAttribute('data-klozer-mobile-active', 'true');
+        document.body.setAttribute('data-mobile-panel', panelId);
+
+        setUiView(view || 'panel', true);
+
+        try {
+            panel.scrollTop = 0;
+        } catch (e) {}
+
+        /*
+         * Bootstrap/native code can update tab classes at the end of the same
+         * click. Reassert only the currently selected panel after that cycle.
+         */
+        window.setTimeout(function () {
+            if (!document.body ||
+                document.body.getAttribute('data-mobile-panel') !== panelId) {
+                return;
+            }
+
+            var currentPanel = document.getElementById(panelId);
+            if (!currentPanel) return;
+
+            currentPanel.classList.add('klozer-mobile-selected-panel', 'active', 'in');
+            currentPanel.setAttribute('data-klozer-mobile-active', 'true');
+        }, 40);
+
+        return true;
+    }
+
+    function findOriginalFeatureTab(panelId) {
+        return document.querySelector(
+            'a[data-toggle="tab"][href="#' + panelId + '"]'
+        );
+    }
+
+    function openOriginalFeatureTab(panelId, fallbackFunction, fallbackArgs) {
+        var anchor = findOriginalFeatureTab(panelId);
+
+        if (anchor) {
+            /*
+             * Use the exact original VICidial tab link. This runs its existing
+             * onclick handler AND Bootstrap's tab activation, matching the
+             * normal desktop/default dialer behavior.
+             */
+            anchor.click();
+        } else {
+            callOriginal(fallbackFunction, fallbackArgs || []);
+        }
+
+        selectMobilePanel(panelId, 'panel');
+    }
+
+    function hideStandardPanelsNative() {
+        for (var i = 0; i < standardPanelIds.length; i++) {
+            if (document.getElementById(standardPanelIds[i])) {
+                callOriginal('hideDiv', [standardPanelIds[i]]);
+            }
+        }
+
+        clearMobilePanelSelection();
+    }
+
+    function showCustomer() {
+        hideStandardPanelsNative();
+        closeNativeMobileOverlaysExcept(null);
+        callOriginal('MainPanelToFront', ['NO', 'YES']);
+        setUiView('customer', true);
+    }
+
+    function closeNotesHistoryIfOpen() {
+        if (!document.body ||
+            !document.body.classList.contains('klozer-notes-history-open')) {
+            return;
+        }
+
+        callOriginal('hideDivVisible', ['CalLNotesDisplaYBox']);
+        clearMobileNotesHistoryModal();
+    }
+
+    function showDialer() {
+        hideStandardPanelsNative();
+        closeNativeMobileOverlaysExcept(null);
+        setUiView('dialer', true);
+    }
+
+    function forceSmsListMode() {
+        /*
+         * If Customer -> SMS shortcut is actively opening Quick SMS, do not
+         * let an older/default Messages timer switch it back to SMS List.
+         */
+        if (mobileCustomerQuickSmsActive) return;
+
+        var panel = document.getElementById('EmailPanel');
+
+        if (panel) {
+            panel.classList.remove('mobile-quick-sms');
+            panel.classList.add('mobile-sms-list');
+        }
+
+        if (window.jQuery) {
+            window.jQuery('#EmailPanel .chat-app-container').show();
+            window.jQuery('#EmailPanel .form_inner_sms').hide();
+            window.jQuery('#EmailPanel .chat_list').addClass('active');
+            window.jQuery('#EmailPanel .quick_sms').removeClass('active');
+        } else {
+            var chatContainer = document.querySelector('#EmailPanel .chat-app-container');
+            var formSms = document.querySelector('#EmailPanel .form_inner_sms');
+            if (chatContainer) chatContainer.style.display = 'flex';
+            if (formSms) formSms.style.display = 'none';
+        }
+    }
+
+    function forceMobileQuickSmsMode(recipient, focusMessage) {
+        var panel = document.getElementById('EmailPanel');
+        if (!panel) return false;
+
+        panel.classList.remove('mobile-sms-list');
+        panel.classList.add('mobile-quick-sms');
+
+        if (window.jQuery) {
+            window.jQuery('#EmailPanel .chat-app-container').hide();
+            window.jQuery('#EmailPanel .form_inner_sms').show();
+            window.jQuery('#EmailPanel .quick_sms').addClass('active');
+            window.jQuery('#EmailPanel .chat_list').removeClass('active');
+        } else {
+            var chatContainer = document.querySelector('#EmailPanel .chat-app-container');
+            var formSms = document.querySelector('#EmailPanel .form_inner_sms');
+            var quickTab = document.querySelector('#EmailPanel .quick_sms');
+            var listTab = document.querySelector('#EmailPanel .chat_list');
+
+            if (chatContainer) chatContainer.style.display = 'none';
+            if (formSms) formSms.style.display = 'block';
+            if (quickTab) quickTab.classList.add('active');
+            if (listTab) listTab.classList.remove('active');
+        }
+
+        var receiver = document.getElementById('quick_sms_phone_number');
+        if (receiver) {
+            var cleanRecipient = String(recipient || '').trim();
+            receiver.value = cleanRecipient;
+            receiver.defaultValue = cleanRecipient;
+            receiver.setAttribute('value', cleanRecipient);
+            receiver.setAttribute('data-klozer-recipient', cleanRecipient);
+
+            try {
+                receiver.dispatchEvent(new Event('input', { bubbles: true }));
+                receiver.dispatchEvent(new Event('change', { bubbles: true }));
+            } catch (e) {}
+        }
+
+        if (focusMessage) {
+            var message = document.getElementById('quick_sms_message');
+            if (message && typeof message.focus === 'function') {
+                message.focus();
+            }
+        }
+
+        return true;
+    }
+
+    function normalizeMobileSmsSenderPhone(value) {
+        var raw =
+            String(value || '').trim();
+
+        if (!raw) return '';
+
+        /*
+         * Accept normal phone/DID formatting, but reject labels, usernames,
+         * and short agent/extension IDs such as "KLOZER" or "102".
+         */
+        if (!/^\+?[\d\s().-]+$/.test(raw)) {
+            return '';
+        }
+
+        var digits =
+            raw.replace(/\D/g, '');
+
+        /*
+         * Sender DIDs used here must look like real telephone numbers.
+         * 8-16 digits safely excludes VICIdial agent/extension IDs.
+         */
+        if (digits.length < 8 ||
+            digits.length > 16) {
+            return '';
+        }
+
+        /*
+         * Preserve a leading + if the server supplied one; otherwise use
+         * clean digits so the dropdown contains only the actual number.
+         */
+        return raw.charAt(0) === '+' ?
+            '+' + digits :
+            digits;
+    }
+
+    function populateMobileQuickSmsSenderOptions(numbers) {
+        var select =
+            document.getElementById(
+                'quick_sms_client'
+            );
+
+        if (!select ||
+            !numbers ||
+            !numbers.length) {
+            return false;
+        }
+
+        var lastValid = '';
+
+        /*
+         * Keep ONLY the last valid telephone-like sender.
+         * This intentionally ignores labels such as KLOZER and short
+         * VICIdial agent/extension IDs such as 102.
+         */
+        for (var i = 0; i < numbers.length; i++) {
+            var candidate =
+                normalizeMobileSmsSenderPhone(
+                    numbers[i]
+                );
+
+            if (candidate) {
+                lastValid = candidate;
+            }
+        }
+
+        if (!lastValid) {
+            return false;
+        }
+
+        select.innerHTML = '';
+
+        var option =
+            document.createElement(
+                'option'
+            );
+
+        option.value =
+            lastValid;
+
+        option.textContent =
+            lastValid;
+
+        select.appendChild(
+            option
+        );
+
+        select.value =
+            lastValid;
+
+        return true;
+    }
+
+
+    function getKnownMobileSmsSenderNumbers() {
+        var numbers = [];
+
+        try {
+            if (typeof agent_sms_numbers !== 'undefined' &&
+                Array.isArray(agent_sms_numbers)) {
+                numbers = agent_sms_numbers.slice(0);
+            }
+        } catch (e) {}
+
+        if (!numbers.length) {
+            try {
+                if (typeof agent_sms_number !== 'undefined' && agent_sms_number) {
+                    numbers = [agent_sms_number];
+                }
+            } catch (e) {}
+        }
+
+        return numbers;
+    }
+
+    function mergeMobileSmsSenderCache(numbers) {
+        if (!numbers ||
+            !numbers.length) {
+            return false;
+        }
+
+        var lastValid = '';
+
+        /*
+         * Existing cache may contain a previously-resolved phone DID.
+         */
+        for (var c = 0; c < mobileSmsSenderCache.length; c++) {
+            var cached =
+                normalizeMobileSmsSenderPhone(
+                    mobileSmsSenderCache[c]
+                );
+
+            if (cached) {
+                lastValid = cached;
+            }
+        }
+
+        /*
+         * New server values win, and the LAST valid phone/DID wins.
+         */
+        for (var i = 0; i < numbers.length; i++) {
+            var number =
+                normalizeMobileSmsSenderPhone(
+                    numbers[i]
+                );
+
+            if (number) {
+                lastValid = number;
+            }
+        }
+
+        mobileSmsSenderCache =
+            lastValid ?
+            [lastValid] :
+            [];
+
+        return mobileSmsSenderCache.length > 0;
+    }
+
+
+    function applyMobileSmsSenderCacheToQuickSms() {
+        /*
+         * Also pull in the sender data the normal desktop SMS List already
+         * resolved, if available.
+         */
+        mergeMobileSmsSenderCache(
+            getKnownMobileSmsSenderNumbers()
+        );
+
+        if (!mobileSmsSenderCache.length) {
+            return false;
+        }
+
+        return populateMobileQuickSmsSenderOptions(
+            mobileSmsSenderCache
+        );
+    }
+
+    function preloadMobileSmsSenderCache(forceReload) {
+        if (!isPhone) return;
+
+        var now = Date.now();
+
+        /*
+         * Avoid duplicate request storms. A forced click-time refresh is
+         * still allowed after a short interval.
+         */
+        if (!forceReload &&
+            mobileSmsSenderPreloadStarted &&
+            (now - mobileSmsSenderLastPreload) < 5000) {
+            applyMobileSmsSenderCacheToQuickSms();
+            return;
+        }
+
+        mobileSmsSenderPreloadStarted = true;
+        mobileSmsSenderLastPreload = now;
+
+        /*
+         * First consume anything the desktop SMS List already knows.
+         */
+        if (applyMobileSmsSenderCacheToQuickSms()) {
+            /*
+             * We still refresh in the background below so changes in sender
+             * assignment can be picked up.
+             */
+        }
+
+        var ext = '';
+        var userLogin = '';
+
+        try {
+            ext =
+                (typeof extension !== 'undefined') ?
+                String(extension || '').trim() :
+                '';
+        } catch (e) {}
+
+        try {
+            userLogin =
+                (typeof user !== 'undefined') ?
+                String(user || '').trim() :
+                '';
+        } catch (e) {}
+
+        /*
+         * DESKTOP REFERENCE REQUEST:
+         * This is the exact endpoint/action used by openQuickSmsModal().
+         */
+        var senderXhr = new XMLHttpRequest();
+
+        senderXhr.open(
+            'POST',
+            'send_sms_ajax.php',
+            true
+        );
+
+        senderXhr.setRequestHeader(
+            'Content-Type',
+            'application/x-www-form-urlencoded'
+        );
+
+        senderXhr.onreadystatechange = function () {
+            if (this.readyState !== 4) return;
+
+            if (this.status === 200) {
+                try {
+                    var data =
+                        JSON.parse(this.responseText);
+
+                    if (data && data.sender_id) {
+                        mergeMobileSmsSenderCache(
+                            [data.sender_id]
+                        );
+
+                        applyMobileSmsSenderCacheToQuickSms();
+                    }
+                } catch (e) {}
+            }
+        };
+
+        senderXhr.send(
+            'ACTION=GET_SENDER_ID&extension=' +
+            encodeURIComponent(ext)
+        );
+
+        /*
+         * DESKTOP SMS LIST REFERENCE:
+         * loadSMSConversations() uses this same request and receives
+         * agent_number / agent_numbers. Fetch it in parallel so the sender
+         * can be ready before the user ever taps the Customer envelope.
+         */
+        var conversationsXhr =
+            new XMLHttpRequest();
+
+        conversationsXhr.open(
+            'POST',
+            'send_sms_ajax.php',
+            true
+        );
+
+        conversationsXhr.setRequestHeader(
+            'Content-Type',
+            'application/x-www-form-urlencoded'
+        );
+
+        conversationsXhr.onreadystatechange = function () {
+            if (this.readyState !== 4) return;
+
+            if (this.status === 200) {
+                try {
+                    var data =
+                        JSON.parse(this.responseText);
+
+                    var numbers = [];
+
+                    if (Array.isArray(
+                            data.agent_numbers
+                        )) {
+                        numbers =
+                            data.agent_numbers.slice(0);
+                    }
+
+                    if (!numbers.length &&
+                        data.agent_number) {
+                        numbers =
+                            [data.agent_number];
+                    }
+
+                    if (data.agent_number) {
+                        try {
+                            agent_sms_number =
+                                data.agent_number;
+                        } catch (e) {}
+                    }
+
+                    if (numbers.length) {
+                        try {
+                            agent_sms_numbers =
+                                numbers.slice(0);
+                        } catch (e) {}
+
+                        mergeMobileSmsSenderCache(
+                            numbers
+                        );
+
+                        applyMobileSmsSenderCacheToQuickSms();
+                    }
+                } catch (e) {}
+            }
+        };
+
+        conversationsXhr.send(
+            'ACTION=GET_CONVERSATIONS' +
+            '&extension=' +
+            encodeURIComponent(ext) +
+            '&user_login=' +
+            encodeURIComponent(userLogin)
+        );
+    }
+
+    function refreshMobileQuickSmsSender(token) {
+        if (!mobileCustomerQuickSmsActive ||
+            token !== mobileCustomerQuickSmsToken) {
+            return;
+        }
+
+        var select =
+            document.getElementById('quick_sms_client');
+
+        if (!select) return;
+
+        var resolvedOnce = false;
+
+        function applyNumbers(numbers) {
+            if (!mobileCustomerQuickSmsActive ||
+                token !== mobileCustomerQuickSmsToken) {
+                return false;
+            }
+
+            var applied =
+                populateMobileQuickSmsSenderOptions(
+                    numbers || []
+                );
+
+            if (applied) {
+                resolvedOnce = true;
+            }
+
+            return applied;
+        }
+
+        function applyPayload(data) {
+            if (!data) return false;
+
+            var numbers = [];
+
+            if (Array.isArray(data.agent_numbers)) {
+                numbers =
+                    data.agent_numbers.slice(0);
+            }
+
+            if (!numbers.length &&
+                data.sender_id) {
+                numbers = [data.sender_id];
+            }
+
+            if (!numbers.length &&
+                data.agent_number) {
+                numbers = [data.agent_number];
+            }
+
+            return applyNumbers(numbers);
+        }
+
+        /*
+         * First use sender numbers already resolved by the normal SMS screen.
+         */
+        if (!applyNumbers(
+                getKnownMobileSmsSenderNumbers()
+            )) {
+            select.innerHTML =
+                '<option value="">Fetching...</option>';
+        }
+
+        var ext = '';
+        var userLogin = '';
+
+        try {
+            ext = (typeof extension !== 'undefined') ?
+                extension :
+                '';
+        } catch (e) {}
+
+        try {
+            userLogin = (typeof user !== 'undefined') ?
+                user :
+                '';
+        } catch (e) {}
+
+        /*
+         * Keep the normal desktop/SMS-list loader running too.
+         */
+        try {
+            if (typeof loadSMSConversations === 'function') {
+                loadSMSConversations();
+            }
+        } catch (e) {}
+
+        /*
+         * Request 1: exact desktop Quick SMS sender endpoint.
+         */
+        var senderXhr = new XMLHttpRequest();
+
+        senderXhr.open(
+            'POST',
+            'send_sms_ajax.php',
+            true
+        );
+
+        senderXhr.setRequestHeader(
+            'Content-Type',
+            'application/x-www-form-urlencoded'
+        );
+
+        senderXhr.onreadystatechange = function () {
+            if (this.readyState !== 4 ||
+                !mobileCustomerQuickSmsActive ||
+                token !== mobileCustomerQuickSmsToken) {
+                return;
+            }
+
+            if (this.status === 200) {
+                try {
+                    applyPayload(
+                        JSON.parse(this.responseText)
+                    );
+                } catch (e) {}
+            }
+        };
+
+        senderXhr.send(
+            'ACTION=GET_SENDER_ID&extension=' +
+            encodeURIComponent(ext)
+        );
+
+        /*
+         * Request 2: same endpoint used by SMS List.
+         * This response is known to contain agent_number/agent_numbers.
+         */
+        var conversationsXhr =
+            new XMLHttpRequest();
+
+        conversationsXhr.open(
+            'POST',
+            'send_sms_ajax.php',
+            true
+        );
+
+        conversationsXhr.setRequestHeader(
+            'Content-Type',
+            'application/x-www-form-urlencoded'
+        );
+
+        conversationsXhr.onreadystatechange = function () {
+            if (this.readyState !== 4 ||
+                !mobileCustomerQuickSmsActive ||
+                token !== mobileCustomerQuickSmsToken) {
+                return;
+            }
+
+            if (this.status === 200) {
+                try {
+                    var data =
+                        JSON.parse(this.responseText);
+
+                    if (data.agent_number) {
+                        agent_sms_number =
+                            data.agent_number;
+                    }
+
+                    if (Array.isArray(
+                            data.agent_numbers
+                        )) {
+                        agent_sms_numbers =
+                            data.agent_numbers.slice(0);
+                    } else if (
+                        data.agent_number
+                    ) {
+                        agent_sms_numbers =
+                            [data.agent_number];
+                    }
+
+                    applyPayload(data);
+                } catch (e) {}
+            }
+        };
+
+        conversationsXhr.send(
+            'ACTION=GET_CONVERSATIONS' +
+            '&extension=' +
+            encodeURIComponent(ext) +
+            '&user_login=' +
+            encodeURIComponent(userLogin)
+        );
+
+        /*
+         * Re-read globals after either native request resolves.
+         */
+        [120, 300, 650, 1200, 2200, 3500].forEach(
+            function (delay) {
+                window.setTimeout(
+                    function () {
+                        if (!mobileCustomerQuickSmsActive ||
+                            token !== mobileCustomerQuickSmsToken) {
+                            return;
+                        }
+
+                        applyNumbers(
+                            getKnownMobileSmsSenderNumbers()
+                        );
+                    },
+                    delay
+                );
+            }
+        );
+
+        /*
+         * Never leave the UI stuck on "Fetching..." forever.
+         */
+        window.setTimeout(
+            function () {
+                if (!mobileCustomerQuickSmsActive ||
+                    token !== mobileCustomerQuickSmsToken) {
+                    return;
+                }
+
+                if (!resolvedOnce &&
+                    !applyNumbers(
+                        getKnownMobileSmsSenderNumbers()
+                    )) {
+                    var currentText =
+                        String(
+                            select.textContent || ''
+                        );
+
+                    if (/Fetching/i.test(
+                            currentText
+                        )) {
+                        select.innerHTML =
+                            '<option value="">Unknown Sender</option>';
+                    }
+                }
+            },
+            5000
+        );
+    }
+
+
+    function showMessages() {
+        if (!smsEnabledForAgent) return;
+
+        /*
+         * Explicit Messages bottom-nav click always opens the normal SMS List.
+         */
+        mobileCustomerQuickSmsActive = false;
+        mobileCustomerQuickSmsToken++;
+        mobileCustomerQuickSmsRecipient = '';
+
+        callOriginal('EmailPanelToFront', ['YES']);
+        selectMobilePanel('EmailPanel', 'messages');
+
+        forceSmsListMode();
+        window.setTimeout(forceSmsListMode, 40);
+    }
+
+    /*
+     * Customer Phone / Alt Phone SMS shortcut.
+     *
+     * This is intentionally a separate mobile path from showMessages():
+     * - show the real #EmailPanel in Messages
+     * - open Quick SMS immediately
+     * - copy the Customer phone into Enter Phone Number
+     * - resolve the agent/sender SMS number
+     * - leave only message text for the agent to type
+     */
+    window.KlozerOpenCustomerQuickSms = function (recipient) {
+        if (!smsEnabledForAgent || !document.body) return false;
+
+        var cleanRecipient = String(recipient || '').trim();
+        if (!cleanRecipient) return false;
+
+        mobileCustomerQuickSmsActive = true;
+        mobileCustomerQuickSmsToken++;
+        var token = mobileCustomerQuickSmsToken;
+
+        /* Run VICIdial's real SMS panel function first. */
+        callOriginal('EmailPanelToFront', ['YES']);
+
+        if (selectMobilePanel('EmailPanel', 'messages') !== true) {
+            mobileCustomerQuickSmsActive = false;
+            return false;
+        }
+
+        forceMobileQuickSmsMode(cleanRecipient, false);
+        refreshMobileQuickSmsSender(token);
+
+        /*
+         * Bootstrap/native class updates can finish later in the same click.
+         * Reassert the requested QUICK SMS state and recipient a few times.
+         */
+        [40, 120, 280].forEach(function (delay) {
+            window.setTimeout(function () {
+                if (!mobileCustomerQuickSmsActive ||
+                    token !== mobileCustomerQuickSmsToken) {
+                    return;
+                }
+
+                forceMobileQuickSmsMode(
+                    cleanRecipient,
+                    delay === 280
+                );
+            }, delay);
+        });
+
+        return true;
+    };
+
+    /*
+     * Backward-compatible helper retained for any older Customer shortcut
+     * code that still promotes an already-open SMS panel.
+     */
+    window.KlozerPromoteOpenedSmsToMessages = function () {
+        if (!smsEnabledForAgent || !document.body) return false;
+
+        /*
+         * Presentation only.
+         * The restored desktop openQuickSmsModal() owns recipient and sender.
+         */
+        mobileCustomerQuickSmsActive = true;
+
+        if (selectMobilePanel('EmailPanel', 'messages') !== true) {
+            return false;
+        }
+
+        var panel =
+            document.getElementById('EmailPanel');
+
+        if (panel) {
+            panel.classList.remove(
+                'mobile-sms-list'
+            );
+            panel.classList.add(
+                'mobile-quick-sms'
+            );
+        }
+
+        if (window.jQuery) {
+            window.jQuery(
+                '#EmailPanel .chat-app-container'
+            ).hide();
+
+            window.jQuery(
+                '#EmailPanel .form_inner_sms'
+            ).show();
+
+            window.jQuery(
+                '#EmailPanel .quick_sms'
+            ).addClass('active');
+
+            window.jQuery(
+                '#EmailPanel .chat_list'
+            ).removeClass('active');
+        }
+
+        return true;
+    };
+
+
+    function showStandardPanel(panelId, originalFunction, originalArgs) {
+        /*
+         * Run the original VICIdial function first. It owns data loading,
+         * iframe refreshes and native feature logic. The mobile shell only
+         * chooses which REAL panel is visible afterwards.
+         */
+        callOriginal(originalFunction, originalArgs || []);
+        selectMobilePanel(panelId, 'panel');
+    }
+
+    function elementIsVisible(id) {
+        var el = document.getElementById(id);
+        if (!el) return false;
+
+        var style = window.getComputedStyle ? window.getComputedStyle(el) : el.style;
+        return style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0' &&
+            el.getClientRects().length > 0;
+    }
+
+    function nativeOverlayIsOpen(overlayId) {
+        var el = document.getElementById(overlayId);
+        if (!el) return false;
+
+        /*
+         * Lead Search and Call Log are opened by showDivVisible(), which
+         * writes visibility:visible and display:block directly on the element.
+         * Read THAT native inline state, not computed CSS, because the mobile
+         * shell may deliberately hide the element until it is selected.
+         */
+        if (overlayId === 'SearcHForMDisplaYBox' ||
+            overlayId === 'CalLLoGDisplaYBox') {
+            return el.style.visibility === 'visible' &&
+                el.style.display !== 'none';
+        }
+
+        /*
+         * Agents View uses AgentsViewOpen(), which owns this native state flag.
+         * Its markup can start with display:block, so display alone is not a
+         * reliable open/closed signal.
+         */
+        if (overlayId === 'AgentViewSpan') {
+            try {
+                if (typeof agent_status_view_active !== 'undefined') {
+                    return Number(agent_status_view_active) === 1;
+                }
+            } catch (e) {}
+
+            return el.style.display === 'block' &&
+                el.classList.contains('klozer-mobile-selected-overlay');
+        }
+
+        return false;
+    }
+
+    function anyNativeOverlayVisible() {
+        return nativeOverlayIsOpen('SearcHForMDisplaYBox') ||
+            nativeOverlayIsOpen('CalLLoGDisplaYBox') ||
+            nativeOverlayIsOpen('AgentViewSpan');
+    }
+
+    function clearMobileOverlaySelection(exceptId) {
+        for (var i = 0; i < overlayPanelIds.length; i++) {
+            var id = overlayPanelIds[i];
+            if (id === exceptId) continue;
+
+            var overlay = document.getElementById(id);
+            if (overlay) overlay.classList.remove('klozer-mobile-selected-overlay');
+        }
+
+        if (document.body &&
+            document.body.getAttribute('data-mobile-overlay') !== exceptId) {
+            document.body.removeAttribute('data-mobile-overlay');
+        }
+    }
+
+    function restorePreviousScreen(previousView, previousPanelId) {
+        if (!document.body || isLoggedOut()) return;
+
+        clearMobileOverlaySelection(null);
+        document.body.removeAttribute('data-mobile-overlay');
+
+        if (previousView === 'panel' &&
+            previousPanelId &&
+            standardPanelIds.indexOf(previousPanelId) !== -1) {
+            selectMobilePanel(previousPanelId, 'panel');
+        } else if (previousView === 'messages' && smsEnabledForAgent) {
+            showMessages();
+        } else if (previousView === 'customer') {
+            showCustomer();
+        } else if (previousView === 'dashboard') {
+            hideStandardPanelsNative();
+            closeNativeMobileOverlaysExcept(null);
+            setUiView('dashboard', true);
+        } else {
+            showDialer();
+        }
+    }
+
+    function cleanMobileLeadId(value) {
+        var lead = String(value || '').trim();
+
+        if (!lead || lead === '0') return '';
+
+        /*
+         * VICIdial lead IDs are numeric in the normal agent flow.
+         * Keep this conservative so an unrelated field cannot become lead_id.
+         */
+        if (!/^\d+$/.test(lead)) return '';
+
+        return lead;
+    }
+
+    function currentCustomerRecordLooksLoaded() {
+        if (!document.vicidial_form) return false;
+
+        var fieldNames = [
+            'phone_number',
+            'alt_phone',
+            'first_name',
+            'last_name',
+            'email',
+            'address1',
+            'comments',
+            'call_notes'
+        ];
+
+        for (var i = 0; i < fieldNames.length; i++) {
+            var field = document.vicidial_form[fieldNames[i]];
+
+            if (field &&
+                String(field.value || '').trim().length > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function captureCurrentCustomerLeadId() {
+        if (!document.vicidial_form) return '';
+
+        var lead = '';
+
+        if (document.vicidial_form.lead_id) {
+            lead = cleanMobileLeadId(
+                document.vicidial_form.lead_id.value
+            );
+        }
+
+        /*
+         * Manual/preview dial paths may temporarily retain the same lead in
+         * MDLeadID even if the main hidden lead_id has not settled yet.
+         */
+        if (!lead && document.vicidial_form.MDLeadID) {
+            lead = cleanMobileLeadId(
+                document.vicidial_form.MDLeadID.value
+            );
+        }
+
+        if (lead) {
+            lastMobileCustomerLeadId = lead;
+        }
+
+        return lead;
+    }
+
+    function resolveCustomerNotesLeadId() {
+        var lead = captureCurrentCustomerLeadId();
+
+        if (lead) return lead;
+
+        /*
+         * Use the cached lead only while the Customer form still visibly
+         * contains a record. After disposition VICIdial clears the Customer
+         * fields as well, so stale history is not shown on a blank Customer.
+         */
+        if (currentCustomerRecordLooksLoaded()) {
+            return cleanMobileLeadId(lastMobileCustomerLeadId);
+        }
+
+        return '';
+    }
+
+    function installCustomerLeadIdCapture() {
+        if (!isPhone || leadIdCaptureTimer) return;
+
+        captureCurrentCustomerLeadId();
+
+        /*
+         * Programmatic .value assignments do not emit input/change events.
+         * A very small polling read is the reliable way to catch VICIdial's
+         * native lead_id updates without wrapping/redefining those functions.
+         */
+        leadIdCaptureTimer = window.setInterval(function () {
+            if (!document.body || isLoggedOut()) return;
+            captureCurrentCustomerLeadId();
+        }, 400);
+    }
+
+
+    function openNativeOverlay(functionName, args, overlayId) {
+        if (overlayId !== 'SearcHForMDisplaYBox' &&
+            document.body &&
+            document.body.classList.contains('klozer-lead-results-open')) {
+            closeMobileLeadSearchResults();
+        }
+
+        var previousView = getCurrentView();
+        var previousPanelId = document.body ? document.body.getAttribute('data-mobile-panel') : null;
+
+        if (previousView !== 'overlay') {
+            overlayReturnView = previousView;
+            overlayReturnPanelId = previousPanelId;
+        }
+
+        /* Close only OTHER native overlays first. */
+        closeNativeMobileOverlaysExcept(overlayId);
+
+        /*
+         * IMPORTANT V8.4 FIX:
+         * Run the untouched VICidial function while the current screen is
+         * still intact. Lead Search / Call Log keep their native pause/live
+         * call checks; Agents View keeps its native state handling.
+         */
+        callOriginal(functionName, args || []);
+
+        var promoted = false;
+
+        function promoteIfNativeOpened() {
+            if (promoted || isLoggedOut() || !nativeOverlayIsOpen(overlayId)) {
+                return false;
+            }
+
+            promoted = true;
+
+            /*
+             * Now that native VICidial confirmed the feature is open, remove
+             * every previous More panel and make THIS overlay the only mobile
+             * feature on screen.
+             */
+            closeStandardMobilePanelsExcept(null);
+            clearMobilePanelSelection();
+            closeNativeMobileOverlaysExcept(overlayId);
+            clearMobileOverlaySelection(overlayId);
+
+            var overlay = document.getElementById(overlayId);
+            if (overlay) {
+                overlay.classList.add('klozer-mobile-selected-overlay');
+            }
+
+            if (document.body) {
+                document.body.setAttribute('data-mobile-overlay', overlayId);
+            }
+
+            setUiView('overlay', false);
+            return true;
+        }
+
+        /* Native open operations here are synchronous, but retry once after
+           the click cycle for browser/DOM timing differences. */
+        promoteIfNativeOpened();
+        window.setTimeout(promoteIfNativeOpened, 60);
+
+        /*
+         * If VICidial refused Lead Search / Call Log because the agent was not
+         * in an allowed state, do nothing to the current screen. The native
+         * alert remains authoritative and no blank mobile view is created.
+         */
+    }
+
+    /*
+     * Customer -> Notes -> History:
+     * call the untouched VICidial VieWNotesLoG() through the same overlay
+     * manager already used by Lead Search / Call Log / Agents View.
+     */
+    var notesHistoryModalObserver = null;
+    var notesHistoryOriginalParent = null;
+    var notesHistoryOriginalNextSibling = null;
+
+    function portalNotesHistoryToBody() {
+        var box = document.getElementById('CalLNotesDisplaYBox');
+        if (!box || !document.body) return null;
+
+        /*
+         * ROOT FIX:
+         * In the original VICIdial markup this box is nested inside
+         * .right-sidebar.sidenav. On mobile that sidebar is intentionally moved
+         * off-screen when Customer is selected. Move the SAME native box to
+         * <body> so it can actually overlay Customer immediately.
+         */
+        if (box.parentNode !== document.body) {
+            if (!notesHistoryOriginalParent) {
+                notesHistoryOriginalParent = box.parentNode;
+                notesHistoryOriginalNextSibling = box.nextSibling;
+            }
+
+            document.body.appendChild(box);
+        }
+
+        return box;
+    }
+
+    function notesHistoryNativeOpen() {
+        var box = document.getElementById('CalLNotesDisplaYBox');
+        if (!box) return false;
+
+        /*
+         * Native showDivVisible() writes inline visibility/display.
+         * Read those values directly instead of computed CSS.
+         */
+        return box.style.visibility === 'visible' &&
+            box.style.display !== 'none';
+    }
+
+    function fitNotesHistoryModalToViewport() {
+        var box = document.getElementById('CalLNotesDisplaYBox');
+        if (!box || !document.body) return;
+
+        var viewportWidth =
+            document.documentElement.clientWidth ||
+            window.innerWidth ||
+            360;
+
+        var sideGap = viewportWidth <= 340 ? 8 : 12;
+        var cardWidth = Math.max(
+            260,
+            Math.min(410, viewportWidth - (sideGap * 2))
+        );
+
+        /*
+         * HARD OUTER BOUNDS
+         * -----------------
+         * Use left + right + width:auto so the modal always fills the actual
+         * mobile viewport. Inline !important beats old Bootstrap/mobile rules
+         * that were leaving CalLNotesDisplaYBox at roughly half-screen width.
+         */
+        box.style.setProperty('position', 'fixed', 'important');
+        box.style.setProperty('float', 'none', 'important');
+        box.style.setProperty('left', '0px', 'important');
+        box.style.setProperty('right', '0px', 'important');
+        box.style.setProperty('width', 'auto', 'important');
+        box.style.setProperty('max-width', 'none', 'important');
+        box.style.setProperty('min-width', '0', 'important');
+        box.style.setProperty('margin', '0', 'important');
+        box.style.setProperty('padding-left', sideGap + 'px', 'important');
+        box.style.setProperty('padding-right', sideGap + 'px', 'important');
+        box.style.setProperty('transform', 'none', 'important');
+        box.style.setProperty('box-sizing', 'border-box', 'important');
+        box.style.setProperty('overflow-x', 'hidden', 'important');
+
+        /*
+         * HARD CARD BOUNDS
+         * ----------------
+         * Normalize the legacy nesting that used to inherit desktop widths,
+         * negative Bootstrap row margins and left offsets.
+         */
+        var clMcont = box.querySelector('.cl-mcont');
+        var row = box.querySelector('.row');
+        var sideSpace = box.querySelector('.side_space1');
+        var card = box.querySelector('.block-flat');
+
+        var fullWidthNodes = [clMcont, row, sideSpace];
+
+        for (var i = 0; i < fullWidthNodes.length; i++) {
+            var node = fullWidthNodes[i];
+            if (!node) continue;
+
+            node.style.setProperty('position', 'relative', 'important');
+            node.style.setProperty('float', 'none', 'important');
+            node.style.setProperty('left', 'auto', 'important');
+            node.style.setProperty('right', 'auto', 'important');
+            node.style.setProperty('top', 'auto', 'important');
+            node.style.setProperty('width', '100%', 'important');
+            node.style.setProperty('max-width', '100%', 'important');
+            node.style.setProperty('min-width', '0', 'important');
+            node.style.setProperty('margin-left', '0', 'important');
+            node.style.setProperty('margin-right', '0', 'important');
+            node.style.setProperty('padding-left', '0', 'important');
+            node.style.setProperty('padding-right', '0', 'important');
+            node.style.setProperty('transform', 'none', 'important');
+            node.style.setProperty('box-sizing', 'border-box', 'important');
+        }
+
+        if (clMcont) {
+            clMcont.style.setProperty(
+                'width',
+                cardWidth + 'px',
+                'important'
+            );
+            clMcont.style.setProperty(
+                'max-width',
+                'calc(100vw - ' + (sideGap * 2) + 'px)',
+                'important'
+            );
+            clMcont.style.setProperty(
+                'margin',
+                '0 auto',
+                'important'
+            );
+        }
+
+        if (card) {
+            card.style.setProperty('width', '100%', 'important');
+            card.style.setProperty('max-width', '100%', 'important');
+            card.style.setProperty('min-width', '0', 'important');
+            card.style.setProperty('margin', '0', 'important');
+            card.style.setProperty('transform', 'none', 'important');
+            card.style.setProperty('box-sizing', 'border-box', 'important');
+        }
+
+        /*
+         * Prevent any AJAX-loaded history table/content from increasing the
+         * modal card width. Horizontal scrolling stays inside CallNotesSpan.
+         */
+        var notesSpan = document.getElementById('CallNotesSpan');
+
+        if (notesSpan) {
+            notesSpan.style.setProperty('width', '100%', 'important');
+            notesSpan.style.setProperty('max-width', '100%', 'important');
+            notesSpan.style.setProperty('min-width', '0', 'important');
+            notesSpan.style.setProperty('box-sizing', 'border-box', 'important');
+        }
+    }
+
+
+    function measureNotesHistoryModalTop() {
+        var header =
+            document.querySelector('.navbar.navbar-top') ||
+            document.querySelector('.navbar-top');
+
+        var modalTop = 88;
+
+        if (header && header.getBoundingClientRect) {
+            var rect = header.getBoundingClientRect();
+
+            if (rect &&
+                isFinite(rect.bottom) &&
+                rect.bottom > 0) {
+                modalTop = Math.ceil(rect.bottom) + 10;
+            }
+        }
+
+        if (document.body) {
+            document.body.style.setProperty(
+                '--klozer-notes-modal-top',
+                modalTop + 'px'
+            );
+        }
+    }
+
+    function clearMobileNotesHistoryModal() {
+        var box = document.getElementById('CalLNotesDisplaYBox');
+
+        if (document.body) {
+            document.body.classList.remove('klozer-notes-history-open');
+        }
+
+        if (box) {
+            box.classList.remove(
+                'klozer-mobile-selected-overlay',
+                'klozer-mobile-notes-history-modal'
+            );
+        }
+    }
+
+    function prepareMobileNotesHistoryModal() {
+        if (!document.body) return null;
+
+        var box = portalNotesHistoryToBody();
+        if (!box) return null;
+
+        /*
+         * Keep Customer active. This must never become a More/overlay screen.
+         */
+        if (getCurrentView() !== 'customer') {
+            setUiView('customer', false);
+        }
+
+        measureNotesHistoryModalTop();
+
+        document.body.classList.add('klozer-notes-history-open');
+        box.classList.remove('klozer-mobile-selected-overlay');
+        box.classList.add('klozer-mobile-notes-history-modal');
+
+        /*
+         * Geometry must be normalized AFTER the class is added because legacy
+         * Bootstrap/mobile selectors can otherwise re-apply their old widths.
+         */
+        fitNotesHistoryModalToViewport();
+
+        return box;
+    }
+
+    function syncMobileNotesHistoryModal() {
+        if (!document.body) return;
+
+        var box = document.getElementById('CalLNotesDisplaYBox');
+        if (!box) return;
+
+        if (!notesHistoryNativeOpen()) {
+            clearMobileNotesHistoryModal();
+            return;
+        }
+
+        prepareMobileNotesHistoryModal();
+    }
+
+    function installNotesHistoryModalObserver() {
+        if (notesHistoryModalObserver) return;
+
+        var box = portalNotesHistoryToBody();
+        if (!box || !window.MutationObserver) return;
+
+        notesHistoryModalObserver = new MutationObserver(function () {
+            /*
+             * When native X / Close Info Box sets visibility:hidden, remove the
+             * modal shell immediately. When native opens it, keep it portaled.
+             */
+            window.setTimeout(syncMobileNotesHistoryModal, 0);
+        });
+
+        notesHistoryModalObserver.observe(box, {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+    }
+
+    function setNotesHistoryLoadingState() {
+        var span = document.getElementById('CallNotesSpan');
+        if (!span) return;
+
+        span.innerHTML =
+            '<div class="klozer-notes-loading">' +
+                '<div class="klozer-notes-loading-title">Loading call notes…</div>' +
+                '<div class="klozer-notes-loading-subtitle">' +
+                    "Fetching this customer's note history" +
+                '</div>' +
+            '</div>';
+    }
+
+    window.KlozerOpenMobileNotesHistory = function (logframe) {
+        var form = document.vicidial_form;
+        var resolvedLeadId = resolveCustomerNotesLeadId();
+        var originalLeadId = '';
+
+        /*
+         * Prepare/portal FIRST, before native VieWNotesLoG() runs.
+         * The popup shell therefore exists over Customer during the same click.
+         */
+        var box = prepareMobileNotesHistoryModal();
+        if (!box) return false;
+
+        setNotesHistoryLoadingState();
+
+        if (form && form.lead_id) {
+            originalLeadId = String(form.lead_id.value || '');
+
+            if (resolvedLeadId &&
+                cleanMobileLeadId(originalLeadId) !== resolvedLeadId) {
+                form.lead_id.value = resolvedLeadId;
+            }
+        }
+
+        /*
+         * Call untouched native VICIdial Notes History.
+         * It sets visibility:visible and loads CallNotesSpan through AJAX.
+         */
+        callOriginal('VieWNotesLoG', [logframe]);
+
+        /*
+         * Native show is synchronous. Reassert modal geometry immediately.
+         */
+        prepareMobileNotesHistoryModal();
+
+        window.setTimeout(function () {
+            syncMobileNotesHistoryModal();
+            fitNotesHistoryModalToViewport();
+        }, 0);
+
+        window.setTimeout(function () {
+            syncMobileNotesHistoryModal();
+            fitNotesHistoryModalToViewport();
+        }, 60);
+
+        window.setTimeout(fitNotesHistoryModalToViewport, 220);
+        window.setTimeout(fitNotesHistoryModalToViewport, 500);
+
+        if (form && form.lead_id &&
+            originalLeadId !== form.lead_id.value) {
+            form.lead_id.value = originalLeadId;
+        }
+
+        /*
+         * If the current lead truly cannot be resolved, keep the modal visible
+         * and replace the raw VICIdial error with a polished empty state.
+         */
+        if (!resolvedLeadId) {
+            window.setTimeout(function () {
+                var span = document.getElementById('CallNotesSpan');
+
+                if (span &&
+                    /ERROR:\s*no\s*Lead\s*ID/i.test(
+                        span.textContent || span.innerText || ''
+                    )) {
+                    span.innerHTML =
+                        '<div class="klozer-notes-empty">' +
+                            '<div class="klozer-notes-empty-title">' +
+                                'No note history available' +
+                            '</div>' +
+                            '<div class="klozer-notes-empty-text">' +
+                                'No customer lead is currently selected.' +
+                            '</div>' +
+                        '</div>';
+                }
+            }, 250);
+        }
+
+        return true;
+    };
+
+
+    function restoreAfterOverlayClose() {
+        if (!document.body ||
+            document.body.getAttribute('data-mobile-view') !== 'overlay' ||
+            anyNativeOverlayVisible()) {
+            return;
+        }
+
+        clearMobileOverlaySelection(null);
+
+        var next = overlayReturnView || 'dialer';
+        if (next === 'overlay') next = 'dialer';
+
+        if (next === 'customer') {
+            showCustomer();
+        } else if (next === 'messages' && smsEnabledForAgent) {
+            showMessages();
+        } else if (next === 'panel' && overlayReturnPanelId &&
+                   standardPanelIds.indexOf(overlayReturnPanelId) !== -1) {
+            selectMobilePanel(overlayReturnPanelId, 'panel');
+        } else {
+            setUiView(next, true);
+        }
+
+        overlayReturnPanelId = null;
+    }
+
+    function installOverlayObserver() {
+        if (!window.MutationObserver || overlayObserver) return;
+
+        var ids = [
+            'SearcHForMDisplaYBox',
+            'CalLLoGDisplaYBox',
+            'AgentViewSpan'
+        ];
+        var observed = [];
+
+        overlayObserver = new MutationObserver(function () {
+            window.setTimeout(restoreAfterOverlayClose, 0);
+        });
+
+        for (var i = 0; i < ids.length; i++) {
+            var el = document.getElementById(ids[i]);
+            if (!el) continue;
+
+            overlayObserver.observe(el, {
+                attributes: true,
+                attributeFilter: ['style', 'class']
+            });
+            observed.push(el);
+        }
+
+        if (!observed.length) overlayObserver = null;
+    }
+
+
+    var leadSearchResultsObserver = null;
+    var leadSearchResultsContentObserver = null;
+
+    function portalLeadSearchResultsToBody() {
+        var box = document.getElementById('SearcHResultSDisplaYBox');
+
+        if (!box || !document.body) return null;
+
+        /*
+         * Move the SAME native result box to <body>.
+         * No clone is created, so:
+         * - native LeadSearchSubmit() still opens this exact element
+         * - AJAX still writes into #SearcHResultSSpan
+         * - native X still calls hideDivVisible() on the same element
+         */
+        if (box.parentNode !== document.body) {
+            document.body.appendChild(box);
+        }
+
+        return box;
+    }
+
+    function leadSearchResultsNativeOpen() {
+        var box = document.getElementById('SearcHResultSDisplaYBox');
+        if (!box) return false;
+
+        /*
+         * showDivVisible() writes visibility:visible and display:block.
+         * Read native inline state so native close remains authoritative.
+         */
+        return box.style.visibility === 'visible' &&
+            box.style.display !== 'none';
+    }
+
+    function clearMobileLeadSearchResults() {
+        var box = document.getElementById('SearcHResultSDisplaYBox');
+
+        if (document.body) {
+            document.body.classList.remove('klozer-lead-results-open');
+        }
+
+        if (box) {
+            box.classList.remove('klozer-mobile-lead-results-modal');
+        }
+    }
+
+    function prepareMobileLeadSearchResults() {
+        if (!document.body) return null;
+
+        var box = portalLeadSearchResultsToBody();
+        if (!box) return null;
+
+        /*
+         * Keep the Lead Search form as the active More feature underneath.
+         * Results are a child popup of Lead Search, not a separate More screen.
+         */
+        if (getCurrentView() !== 'overlay' ||
+            document.body.getAttribute('data-mobile-overlay') !== 'SearcHForMDisplaYBox') {
+            document.body.setAttribute(
+                'data-mobile-overlay',
+                'SearcHForMDisplaYBox'
+            );
+            setUiView('overlay', false);
+        }
+
+        document.body.classList.add('klozer-lead-results-open');
+        box.classList.add('klozer-mobile-lead-results-modal');
+
+        return box;
+    }
+
+    function syncMobileLeadSearchResults() {
+        if (!document.body) return;
+
+        if (!leadSearchResultsNativeOpen()) {
+            clearMobileLeadSearchResults();
+            return;
+        }
+
+        prepareMobileLeadSearchResults();
+    }
+
+    function closeMobileLeadSearchResults() {
+        if (!leadSearchResultsNativeOpen()) {
+            clearMobileLeadSearchResults();
+            return;
+        }
+
+        callOriginal(
+            'hideDivVisible',
+            ['SearcHResultSDisplaYBox']
+        );
+
+        clearMobileLeadSearchResults();
+    }
+
+    function installLeadSearchResultsObserver() {
+        var box = portalLeadSearchResultsToBody();
+
+        if (!box) return;
+
+        if (window.MutationObserver && !leadSearchResultsObserver) {
+            leadSearchResultsObserver = new MutationObserver(function () {
+                window.setTimeout(syncMobileLeadSearchResults, 0);
+            });
+
+            leadSearchResultsObserver.observe(box, {
+                attributes: true,
+                attributeFilter: ['style']
+            });
+        }
+
+        /*
+         * The AJAX response replaces #SearcHResultSSpan contents.
+         * Keep the popup class/layout stable when result HTML arrives.
+         */
+        var span = document.getElementById('SearcHResultSSpan');
+
+        if (window.MutationObserver &&
+            span &&
+            !leadSearchResultsContentObserver) {
+            leadSearchResultsContentObserver = new MutationObserver(function () {
+                if (leadSearchResultsNativeOpen()) {
+                    prepareMobileLeadSearchResults();
+                }
+            });
+
+            leadSearchResultsContentObserver.observe(span, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        syncMobileLeadSearchResults();
+    }
+
+
+    function formatMobileCallLog() {
+        var root = document.getElementById('CallLogSpan');
+        if (!root || callLogFormatting) return;
+
+        callLogFormatting = true;
+
+        try {
+
+        /*
+         * ------------------------------------------------------------
+         * 1. Stable mobile top close control
+         * ------------------------------------------------------------
+         * Put the close X on its own top line. The heading is inserted below
+         * it, exactly as requested. The native CalLLoGVieWClose() function is
+         * still used.
+         */
+        var topbar = root.querySelector(
+            ':scope > .klozer-mobile-calllog-topbar'
+        );
+
+        if (!topbar) {
+            topbar = document.createElement('div');
+            topbar.className = 'klozer-mobile-calllog-topbar';
+
+            var topClose = document.createElement('button');
+            topClose.type = 'button';
+            topClose.className = 'klozer-mobile-calllog-top-close';
+            topClose.setAttribute('aria-label', 'Close Call Log');
+            topClose.innerHTML =
+                '<i class="fa fa-times" aria-hidden="true"></i>';
+
+            topClose.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                callOriginal('CalLLoGVieWClose', []);
+            });
+
+            topbar.appendChild(topClose);
+            root.insertBefore(topbar, root.firstChild);
+        } else if (root.firstChild !== topbar) {
+            root.insertBefore(topbar, root.firstChild);
+        }
+
+        /*
+         * ------------------------------------------------------------
+         * 2. Dedicated heading BELOW the X
+         * ------------------------------------------------------------
+         */
+        var heading = root.querySelector(
+            ':scope > .klozer-mobile-calllog-heading'
+        );
+
+        if (!heading) {
+            heading = document.createElement('div');
+            heading.className = 'klozer-mobile-calllog-heading';
+            heading.textContent = 'Agent Call Log:';
+        }
+
+        if (topbar.nextSibling !== heading) {
+            root.insertBefore(heading, topbar.nextSibling);
+        }
+
+        /*
+         * Remove any duplicate native/server "Agent Call Log:" text while
+         * keeping our dedicated heading untouched.
+         */
+        if (document.createTreeWalker && window.NodeFilter) {
+            var walker = document.createTreeWalker(
+                root,
+                NodeFilter.SHOW_TEXT,
+                null
+            );
+
+            var textNodes = [];
+            var textNode;
+
+            while ((textNode = walker.nextNode())) {
+                if (heading.contains(textNode)) continue;
+                textNodes.push(textNode);
+            }
+
+            for (var tn = 0; tn < textNodes.length; tn++) {
+                var node = textNodes[tn];
+                var value = String(node.nodeValue || '');
+
+                if (/Agent\s*Call\s*Log\s*:/i.test(value)) {
+                    node.nodeValue = value.replace(
+                        /Agent\s*Call\s*Log\s*:/ig,
+                        ''
+                    );
+                }
+            }
+        }
+
+        /*
+         * Hide any server-generated X/close-only control, but keep the native
+         * bottom "Close Call Log" button. Our top X is now the mobile X.
+         */
+        var nativeCloseControls = root.querySelectorAll(
+            '[onclick*="CalLLoGVieWClose"]'
+        );
+
+        for (var xc = 0; xc < nativeCloseControls.length; xc++) {
+            var nativeClose = nativeCloseControls[xc];
+            var closeLabel = String(
+                nativeClose.textContent ||
+                nativeClose.innerText ||
+                nativeClose.value ||
+                ''
+            ).trim();
+
+            if (!/Close\s*Call\s*Log/i.test(closeLabel)) {
+                nativeClose.classList.add(
+                    'klozer-mobile-calllog-native-x-hidden'
+                );
+            }
+        }
+
+        /*
+         * ------------------------------------------------------------
+         * 3. Find the real native result table
+         * ------------------------------------------------------------
+         */
+        var tables = root.getElementsByTagName('table');
+        var resultTable = null;
+
+        for (var i = 0; i < tables.length; i++) {
+            tables[i].classList.remove('klozer-mobile-calllog-table');
+
+            var rows = tables[i].rows;
+            if (!rows || !rows.length) continue;
+
+            var firstRow = rows[0];
+
+            if (firstRow &&
+                firstRow.cells &&
+                firstRow.cells.length >= 12) {
+                resultTable = tables[i];
+                resultTable.classList.add(
+                    'klozer-mobile-calllog-table'
+                );
+                break;
+            }
+        }
+
+        /*
+         * ------------------------------------------------------------
+         * 3B. Mobile Dial-column -> Dialer navigation bridge
+         * ------------------------------------------------------------
+         *
+         * The native Call Log DIAL action stays completely untouched.
+         * We only listen for a click in the original 12th table column.
+         * After the native inline onclick has had the current event turn to
+         * execute, switch the bottom navigation to Dialer.
+         */
+        if (!root.__klozerCallLogDialRedirectBound) {
+            root.__klozerCallLogDialRedirectBound = true;
+
+            root.addEventListener('click', function (event) {
+                if (!window.KlozerPhoneDevice) return;
+
+                var target = event.target;
+                if (!target || !target.closest) return;
+
+                var cell = target.closest('td');
+                if (!cell) return;
+
+                var table = cell.closest('table');
+                if (!table ||
+                    !table.classList.contains(
+                        'klozer-mobile-calllog-table'
+                    )) {
+                    return;
+                }
+
+                /*
+                 * Original DIAL is column 12 => zero-based cellIndex 11.
+                 */
+                if (cell.cellIndex !== 11) return;
+
+                /*
+                 * Only react to an actual clickable Dial control/icon.
+                 */
+                var clickable = target.closest(
+                    'a, button, input, [onclick], [role="button"]'
+                );
+
+                if (!clickable || !cell.contains(clickable)) return;
+
+                /*
+                 * Do not preventDefault / stopPropagation.
+                 * Native VICidial DIAL runs first. Then reveal Dialer.
+                 */
+                window.setTimeout(function () {
+                    showDialer();
+                }, 0);
+            }, true);
+        }
+
+        /*
+         * ------------------------------------------------------------
+         * 4. Build the mobile toolbar with ORIGINAL native controls
+         * ------------------------------------------------------------
+         */
+        var shell = root.querySelector(
+            ':scope > .klozer-mobile-calllog-filter-shell'
+        );
+
+        if (!shell) {
+            shell = document.createElement('div');
+            shell.className = 'klozer-mobile-calllog-filter-shell';
+
+            var navRowCreate = document.createElement('div');
+            navRowCreate.className = 'klozer-mobile-calllog-nav-row';
+
+            var searchRowCreate = document.createElement('div');
+            searchRowCreate.className = 'klozer-mobile-calllog-search-row';
+
+            shell.appendChild(navRowCreate);
+            shell.appendChild(searchRowCreate);
+
+            if (heading.nextSibling) {
+                root.insertBefore(shell, heading.nextSibling);
+            } else {
+                root.appendChild(shell);
+            }
+        } else if (heading.nextSibling !== shell) {
+            root.insertBefore(shell, heading.nextSibling);
+        }
+
+        var navRow = shell.querySelector(
+            '.klozer-mobile-calllog-nav-row'
+        );
+        var searchRow = shell.querySelector(
+            '.klozer-mobile-calllog-search-row'
+        );
+
+        /*
+         * Collect controls BEFORE any row synchronization so formatter reruns
+         * cannot lose native controls.
+         */
+        var candidates = Array.prototype.slice.call(
+            root.querySelectorAll('a, input, button, select')
+        );
+
+        var navControls = [];
+        var searchField = null;
+        var goControl = null;
+
+        /*
+         * Resolve VICIdial's REAL Call Log search/current-date field first.
+         * VieWCalLLoG('...', 'form') itself reads:
+         *     document.vicidial_form.calllogdate.value
+         *
+         * Using the exact native field name makes it available immediately,
+         * even before the user focuses or types in it.
+         */
+        var namedSearchField = root.querySelector(
+            'input[name="calllogdate"], input#calllogdate'
+        );
+
+        if (!namedSearchField &&
+            document.vicidial_form &&
+            document.vicidial_form.calllogdate &&
+            document.vicidial_form.calllogdate.nodeType === 1 &&
+            root.contains(document.vicidial_form.calllogdate)) {
+            namedSearchField = document.vicidial_form.calllogdate;
+        }
+
+        if (namedSearchField) {
+            searchField = namedSearchField;
+        }
+
+        for (var c = 0; c < candidates.length; c++) {
+            var el = candidates[c];
+
+            if (topbar.contains(el)) continue;
+            if (resultTable && resultTable.contains(el)) continue;
+
+            var onclick = String(
+                el.getAttribute('onclick') || ''
+            );
+
+            if (/CalLLoGVieWClose/i.test(onclick)) continue;
+
+            var type = String(
+                el.getAttribute('type') || ''
+            ).toLowerCase();
+
+            if (type === 'hidden') continue;
+
+            var label = String(
+                el.value ||
+                el.textContent ||
+                el.innerText ||
+                ''
+            ).trim();
+
+            var isTextualInput =
+                el.tagName === 'INPUT' &&
+                (type === 'text' ||
+                 type === 'date' ||
+                 type === 'search' ||
+                 type === '');
+
+            /*
+             * The exact native calllogdate field can NEVER be a navigation
+             * button, even though its value is also YYYY-MM-DD.
+             */
+            if (searchField && el === searchField) {
+                continue;
+            }
+
+            /*
+             * Fallback search-field detection comes BEFORE nav detection.
+             * This prevents a plain YYYY-MM-DD text input being mistaken for a
+             * date-navigation button.
+             */
+            if (!searchField && isTextualInput) {
+                var fieldIdentity =
+                    String(el.name || '') + ' ' + String(el.id || '');
+
+                if (/calllogdate|date|log/i.test(fieldIdentity) ||
+                    /^\d{4}-\d{2}-\d{2}$/.test(
+                        String(el.value || '').trim()
+                    )) {
+                    searchField = el;
+                    continue;
+                }
+            }
+
+            /*
+             * Native date-navigation controls.
+             * Only NON-textual controls may enter the nav row.
+             */
+            if (!isTextualInput &&
+                (/^\s*<{0,2}\s*\d{4}-\d{2}-\d{2}/.test(label) ||
+                 /^\s*>{0,2}\s*\d{4}-\d{2}-\d{2}/.test(label))) {
+                if (navControls.indexOf(el) < 0) {
+                    navControls.push(el);
+                }
+                continue;
+            }
+
+            /*
+             * GO action.
+             */
+            if (!goControl && /^GO$/i.test(label)) {
+                goControl = el;
+                continue;
+            }
+        }
+
+        /*
+         * Synchronize a row only when its children really differ.
+         * This avoids self-triggered MutationObserver layout churn.
+         */
+        function syncCallLogControlRow(row, desiredControls) {
+            var currentControls = Array.prototype.slice.call(
+                row.children
+            );
+
+            var same =
+                currentControls.length === desiredControls.length;
+
+            if (same) {
+                for (var s = 0; s < desiredControls.length; s++) {
+                    if (currentControls[s] !== desiredControls[s]) {
+                        same = false;
+                        break;
+                    }
+                }
+            }
+
+            if (same) return;
+
+            while (row.firstChild) {
+                row.removeChild(row.firstChild);
+            }
+
+            for (var d = 0; d < desiredControls.length; d++) {
+                row.appendChild(desiredControls[d]);
+            }
+        }
+
+        /*
+         * If two or three date-navigation buttons are returned, keep ALL of
+         * them on one single first row.
+         */
+        var navCount = Math.min(navControls.length, 3);
+        var desiredNavControls = [];
+
+        navRow.setAttribute(
+            'data-klozer-calllog-nav-count',
+            String(navCount)
+        );
+
+        if (navCount > 0) {
+            navRow.style.setProperty(
+                'grid-template-columns',
+                'repeat(' + navCount + ', minmax(0, 1fr))',
+                'important'
+            );
+        }
+
+        for (var n = 0; n < navCount; n++) {
+            navControls[n].classList.add(
+                'klozer-mobile-calllog-nav-control'
+            );
+            desiredNavControls.push(navControls[n]);
+        }
+
+        syncCallLogControlRow(
+            navRow,
+            desiredNavControls
+        );
+
+        /*
+         * Search/current-date + GO are ALWAYS the second row from first paint.
+         */
+        var desiredSearchControls = [];
+
+        if (searchField) {
+            searchField.classList.add(
+                'klozer-mobile-calllog-search-control'
+            );
+            desiredSearchControls.push(searchField);
+        }
+
+        if (goControl) {
+            goControl.classList.add(
+                'klozer-mobile-calllog-go-control'
+            );
+            desiredSearchControls.push(goControl);
+        }
+
+        syncCallLogControlRow(
+            searchRow,
+            desiredSearchControls
+        );
+
+        /*
+         * Hide old native toolbar wrappers after the native controls have been
+         * moved into the mobile shell.
+         */
+        var centers = root.getElementsByTagName('center');
+
+        for (var cc = 0; cc < centers.length; cc++) {
+            var center = centers[cc];
+
+            if (!center.contains(resultTable) &&
+                !center.contains(shell)) {
+                center.classList.add(
+                    'klozer-mobile-calllog-legacy-toolbar'
+                );
+            }
+        }
+
+        var legacyWrappers = root.querySelectorAll('font, b');
+
+        for (var w = 0; w < legacyWrappers.length; w++) {
+            var wrapper = legacyWrappers[w];
+
+            if (shell.contains(wrapper) ||
+                (resultTable && resultTable.contains(wrapper))) {
+                continue;
+            }
+
+            if (!wrapper.querySelector('a, input, button, select') &&
+                String(wrapper.textContent || '').trim() === '') {
+                wrapper.classList.add(
+                    'klozer-mobile-calllog-empty-legacy'
+                );
+            }
+        }
+        }
+        finally {
+            callLogFormatting = false;
+        }
+
+    }
+    function installCallLogObserver() {
+        var root = document.getElementById('CallLogSpan');
+        if (!root) return;
+
+        formatMobileCallLog();
+
+        if (!window.MutationObserver || callLogObserver) return;
+
+        callLogObserver = new MutationObserver(function () {
+            /*
+             * IMPORTANT:
+             * Do NOT defer with setTimeout(0).
+             *
+             * vdc_db_query.php replaces CallLogSpan.innerHTML with the native
+             * desktop Call Log response. MutationObserver callbacks run in the
+             * microtask checkpoint before the browser's next paint.
+             *
+             * Formatting synchronously here means the raw desktop controls are
+             * rearranged into the mobile rows BEFORE they can flash on screen.
+             */
+            formatMobileCallLog();
+        });
+
+        callLogObserver.observe(root, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    var callsQueueOriginalParent = null;
+    var callsQueueOriginalNextSibling = null;
+
+    function portalCallsInQueueToBody() {
+        var panel = document.getElementById('callsinqueuedisplay');
+
+        if (!panel || !document.body) return null;
+
+        /*
+         * ROOT FIX:
+         * #callsinqueuedisplay is originally a tab-pane inside
+         * #MainPanelCustInfo alongside Customer (#main_section1).
+         *
+         * On mobile, keep the SAME native queue panel but move it out of the
+         * Customer/tab-content tree so legacy Customer .tab-pane rules cannot
+         * appear with it.
+         */
+        if (panel.parentNode !== document.body) {
+            if (!callsQueueOriginalParent) {
+                callsQueueOriginalParent = panel.parentNode;
+                callsQueueOriginalNextSibling = panel.nextSibling;
+            }
+
+            document.body.appendChild(panel);
+        }
+
+        return panel;
+    }
+
+    function showCallsInQueue() {
+        var panel = portalCallsInQueueToBody();
+        if (!panel) return;
+
+        /*
+         * Run untouched VICidial queue logic after the panel has been removed
+         * from the Customer tree. show_calls_in_queue() continues updating the
+         * same #callsinqueuedisplay and #callsinqueuelist IDs.
+         */
+        callOriginal('showdiv', []);
+        callOriginal('show_calls_in_queue', ['SHOW']);
+
+        selectMobilePanel('callsinqueuedisplay', 'panel');
+    }
+
+    function openMoreSheet() {
+        if (!moreSheet || !isPhone || isLoggedOut()) return;
+
+        moreSheet.classList.add('is-open');
+        moreSheet.setAttribute('aria-hidden', 'false');
+
+        var closeButton = moreSheet.querySelector('.mobile-more-sheet__close');
+        if (closeButton) closeButton.focus();
+    }
+
+    function closeMoreSheet() {
+        if (!moreSheet) return;
+        moreSheet.classList.remove('is-open');
+        moreSheet.setAttribute('aria-hidden', 'true');
+    }
+
+    function runFeatureAction(action) {
+        closeMoreSheet();
+
+        switch (action) {
+            case 'script':
+                openOriginalFeatureTab('ScriptPanel', 'ScriptPanelToFront', ['YES']);
+                break;
+
+            case 'script-two':
+                openOriginalFeatureTab('Script2Panel', 'ScriptPanel2ToFront', ['YES']);
+                break;
+
+            case 'notepad':
+                openOriginalFeatureTab('FormPanel', 'FormPanelToFront', ['YES']);
+                break;
+
+            case 'email':
+                // Email is already working correctly; preserve its V8 route.
+                showStandardPanel('VicidialEmailPanel', 'VicidialEmailPanelToFront', ['YES']);
+                break;
+
+            case 'internal-chat':
+                openOriginalFeatureTab('InternalChatPanel', 'InternalChatContentsLoad', ['YES']);
+                window.setTimeout(installInternalChatMobileResponsive, 40);
+                window.setTimeout(installInternalChatMobileResponsive, 250);
+                window.setTimeout(installInternalChatMobileResponsive, 900);
+                break;
+
+            case 'customer-chat':
+                openOriginalFeatureTab('CustomerChatPanel', 'CustomerChatPanelToFront', ['1', 'YES']);
+                window.setTimeout(installCustomerChatMobileResponsive, 40);
+                window.setTimeout(installCustomerChatMobileResponsive, 250);
+                break;
+
+            case 'lead-search':
+                openNativeOverlay('OpeNSearcHForMDisplaYBox', [], 'SearcHForMDisplaYBox');
+                break;
+
+            case 'call-log':
+                openNativeOverlay('VieWCalLLoG', [], 'CalLLoGDisplaYBox');
+                break;
+
+            case 'queue':
+                showCallsInQueue();
+                break;
+
+            case 'agents':
+                openNativeOverlay(
+                    'AgentsViewOpen',
+                    ['AgentViewSpan', 'open'],
+                    'AgentViewSpan'
+                );
+                break;
+
+            case 'missed-calls':
+                var missedWindow = window.open('missedcalls.php', '_blank');
+                if (!missedWindow) window.location.href = 'missedcalls.php';
+                break;
+        }
+    }
+
+    function featureButton(action, icon, label) {
+        return '<button type="button" class="mobile-feature-button" data-mobile-feature="' + action + '">' +
+            '<i class="fa ' + icon + '" aria-hidden="true"></i>' +
+            '<span>' + label + '</span>' +
+            '</button>';
+    }
+
+    /*
+     * MOBILE MORE MENU EMAIL TOGGLE
+     * false = hide Email from More on phones
+     * true  = show Email again later
+     *
+     * Desktop Email is NOT affected by this setting.
+     */
+    var showEmailInMobileMore = false;
+
+    function buildMoreFeatures() {
+        var html = '';
+
+        html += featureButton('script', 'fa-file-text-o', 'Script');
+
+        if (secondScriptEnabledForAgent) {
+            html += featureButton('script-two', 'fa-files-o', 'Script 2');
+        }
+
+        html += featureButton('notepad', 'fa-sticky-note-o', 'Notepad');
+
+        if (emailEnabledForAgent && showEmailInMobileMore) {
+            html += featureButton('email', 'fa-envelope-o', 'Email');
+        }
+
+        if (chatEnabledForAgent) {
+            html += featureButton('internal-chat', 'fa-users', 'Internal Chat');
+        }
+
+        if (customerChatEnabledForAgent) {
+            html += featureButton('customer-chat', 'fa-commenting-o', 'Customer Chat');
+        }
+
+        html += featureButton('lead-search', 'fa-search', 'Lead Search');
+        html += featureButton('call-log', 'fa-history', 'Call Log');
+        html += featureButton('queue', 'fa-phone-square', 'Calls in Queue');
+        html += featureButton('agents', 'fa-eye', 'Agents View');
+        html += featureButton('missed-calls', 'fa-phone', 'Missed Calls');
+        
+
+        return html;
+    }
+
+    function buildInterface() {
+        if (!isPhone || !document.body || nav) return;
+
+        document.body.classList.add('klozer-phone-ui');
+
+        nav = document.createElement('nav');
+        nav.id = 'mobileAppNav';
+        nav.className = 'mobile-app-nav';
+        nav.setAttribute('aria-label', 'Agent mobile navigation');
+
+        var html =
+            '<button type="button" class="mobile-app-nav__item" data-mobile-view-button="dashboard" aria-label="Home">' +
+                '<i class="fa fa-home" aria-hidden="true"></i><span>Home</span></button>' +
+            '<button type="button" class="mobile-app-nav__item" data-mobile-view-button="customer" aria-label="Customer">' +
+                '<i class="fa fa-user" aria-hidden="true"></i><span>Customer</span></button>' +
+            '<button type="button" class="mobile-app-nav__item" data-mobile-view-button="dialer" aria-label="Dialer">' +
+                '<i class="fa fa-th" aria-hidden="true"></i><span>Dialer</span></button>';
+
+        if (smsEnabledForAgent) {
+            html +=
+                '<button type="button" class="mobile-app-nav__item" data-mobile-view-button="messages" aria-label="Messages">' +
+                    '<i class="fa fa-comment" aria-hidden="true"></i><span>Messages</span></button>';
+        }
+
+        html +=
+            '<button type="button" class="mobile-app-nav__item" data-mobile-more-button="true" aria-label="More">' +
+                '<i class="fa fa-ellipsis-h" aria-hidden="true"></i><span>More</span></button>';
+
+        nav.innerHTML = html;
+        nav.style.setProperty('--mobile-app-nav-items', smsEnabledForAgent ? '5' : '4');
+
+        moreSheet = document.createElement('div');
+        moreSheet.id = 'mobileMoreSheet';
+        moreSheet.className = 'mobile-more-sheet';
+        moreSheet.setAttribute('aria-hidden', 'true');
+        moreSheet.innerHTML =
+            '<div class="mobile-more-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="mobileMoreTitle">' +
+                '<div class="mobile-more-sheet__handle"></div>' +
+                '<div class="mobile-more-sheet__header">' +
+                    '<h2 class="mobile-more-sheet__title" id="mobileMoreTitle">Tools &amp; Features</h2>' +
+                    '<button type="button" class="mobile-more-sheet__close" aria-label="Close tools">' +
+                        '<i class="fa fa-times" aria-hidden="true"></i>' +
+                    '</button>' +
+                '</div>' +
+                '<div class="mobile-more-sheet__grid">' + buildMoreFeatures() + '</div>' +
+            '</div>';
+
+        document.body.appendChild(nav);
+        document.body.appendChild(moreSheet);
+
+        nav.addEventListener('click', function (event) {
+            var viewButton = closestElement(event.target, '[data-mobile-view-button]');
+
+            if (viewButton) {
+                var view = viewButton.getAttribute('data-mobile-view-button');
+
+                if (view === 'dashboard') {
+                    hideStandardPanelsNative();
+                    closeNativeMobileOverlaysExcept(null);
+                    setUiView('dashboard', true);
+                }
+                else if (view === 'customer') showCustomer();
+                else if (view === 'dialer') showDialer();
+                else if (view === 'messages') showMessages();
+
+                return;
+            }
+
+            if (closestElement(event.target, '[data-mobile-more-button]')) {
+                openMoreSheet();
+            }
+        });
+
+        moreSheet.addEventListener('click', function (event) {
+            if (event.target === moreSheet ||
+                closestElement(event.target, '.mobile-more-sheet__close')) {
+                closeMoreSheet();
+                return;
+            }
+
+            var feature = closestElement(event.target, '[data-mobile-feature]');
+            if (feature) {
+                runFeatureAction(feature.getAttribute('data-mobile-feature'));
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeMoreSheet();
+        });
+    }
+
+    function findDailyActivityWidget() {
+        /*
+         * If we already found the real widget and it still exists, reuse it.
+         * This prevents rescanning the whole VICIdial DOM on every status update.
+         */
+        if (dailyActivityWidget &&
+            document.body &&
+            document.body.contains(dailyActivityWidget)) {
+            return dailyActivityWidget;
+        }
+
+        dailyActivityWidget = null;
+
+        function isSafeActivityCandidate(node) {
+            if (!node ||
+                node === homeActivitySection ||
+                node.id === 'mobileMoreSheet' ||
+                node.id === 'mobileAppNav') {
+                return false;
+            }
+
+            /*
+             * CRITICAL:
+             * Reject BOTH directions of containment.
+             *
+             * - homeActivitySection.contains(node): node is already inside our
+             *   mobile activity container.
+             * - node.contains(homeActivitySection): node is an ancestor of our
+             *   container (for example .left-sidebar.sidenav).
+             *
+             * The second guard fixes the mobile-only HierarchyRequestError where
+             * the dashboard was selected and then appendChild() tried to move the
+             * dashboard inside its own descendant.
+             */
+            if (homeActivitySection &&
+                (homeActivitySection.contains(node) ||
+                 node.contains(homeActivitySection))) {
+                return false;
+            }
+
+            return true;
+        }
+
+        var knownIds = [
+            'dailyActivityStats',
+            'daily_activity_stats',
+            'agentDailyStats',
+            'agentActivityStats',
+            'activityStatsWidget',
+            'dailyStatsWidget',
+            'agentActivityWidget',
+            'daily-activity-stats'
+        ];
+
+        for (var i = 0; i < knownIds.length; i++) {
+            var known = document.getElementById(knownIds[i]);
+
+            if (isSafeActivityCandidate(known)) {
+                dailyActivityWidget = known;
+                return known;
+            }
+        }
+
+        var nodes = document.querySelectorAll('div, section, aside');
+        var best = null;
+        var bestLength = Infinity;
+
+        for (var j = 0; j < nodes.length; j++) {
+            var node = nodes[j];
+
+            if (!isSafeActivityCandidate(node)) {
+                continue;
+            }
+
+            var text = (node.innerText || node.textContent || '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+
+            if (text.indexOf('daily activity stats') === -1 ||
+                text.indexOf('login time') === -1 ||
+                text.indexOf('pause time') === -1) {
+                continue;
+            }
+
+            if (text.length < bestLength) {
+                best = node;
+                bestLength = text.length;
+            }
+        }
+
+        dailyActivityWidget = best;
+        return best;
+    }
+
+
+    function createHomeIdentityItem(label, value) {
+        var item = document.createElement('div');
+        item.className = 'mobile-home-identity__item';
+
+        var labelNode = document.createElement('span');
+        labelNode.className = 'mobile-home-identity__label';
+        labelNode.textContent = label;
+
+        var valueNode = document.createElement('strong');
+        valueNode.className = 'mobile-home-identity__value';
+        valueNode.textContent = (value === null || typeof value === 'undefined' || value === '') ? '-' : String(value);
+
+        item.appendChild(labelNode);
+        item.appendChild(valueNode);
+        return item;
+    }
+
+    function ensureHomeIdentitySection() {
+        if (homeIdentitySection && document.body.contains(homeIdentitySection)) {
+            return homeIdentitySection;
+        }
+
+        var dashboard = document.querySelector('.left-sidebar.sidenav');
+        if (!dashboard) return null;
+
+        homeIdentitySection = document.createElement('section');
+        homeIdentitySection.id = 'mobileHomeIdentitySection';
+        homeIdentitySection.className = 'mobile-home-identity-section';
+        homeIdentitySection.setAttribute('aria-label', 'Current agent session');
+
+        homeIdentitySection.appendChild(
+            createHomeIdentityItem('Camp', mobileHomeIdentity.campaign)
+        );
+        homeIdentitySection.appendChild(
+            createHomeIdentityItem('Agent ID', mobileHomeIdentity.agentId)
+        );
+        homeIdentitySection.appendChild(
+            createHomeIdentityItem('Phone ID', mobileHomeIdentity.phoneId)
+        );
+
+        if (homeActivitySection && homeActivitySection.parentNode === dashboard) {
+            dashboard.insertBefore(homeIdentitySection, homeActivitySection);
+        } else {
+            dashboard.appendChild(homeIdentitySection);
+        }
+		var rankCard = document.getElementById('mobileRankCard');
+
+		if (!rankCard) {
+			rankCard = document.createElement('div');
+			rankCard.id = 'mobileRankCard';
+			rankCard.className = 'mobile-rank-card';
+
+			var rankLabel = document.createElement('span');
+			rankLabel.textContent = '🏆 My Rank';
+
+			var rankValue = document.createElement('strong');
+			rankValue.id = 'myLeaderboardRankMobile';
+
+			// Copy any result received before the mobile layout was created.
+			var desktopBadge = document.getElementById('myLeaderboardRank');
+			var match = desktopBadge &&
+				desktopBadge.textContent.match(/#\d+/);
+
+			rankValue.textContent = match ? match[0] : '—';
+
+			rankCard.appendChild(rankLabel);
+			rankCard.appendChild(rankValue);
 		}
 
-		@media(max-width:767px) {
-			.my-rank-badge {
-				padding: 4px 7px;
-				font-size: 12px;
+		dashboard.insertBefore(rankCard, homeIdentitySection.nextSibling);
+
+        return homeIdentitySection;
+    }
+
+    function ensureHomeActivitySection() {
+        if (homeActivitySection && document.body.contains(homeActivitySection)) {
+            return homeActivitySection;
+        }
+
+        var dashboard = document.querySelector('.left-sidebar.sidenav');
+        if (!dashboard) return null;
+
+        ensureHomeIdentitySection();
+
+        homeActivitySection = document.createElement('section');
+        homeActivitySection.id = 'mobileHomeActivitySection';
+        homeActivitySection.className = 'mobile-home-activity-section';
+        homeActivitySection.setAttribute('aria-label', 'Daily activity statistics');
+        dashboard.appendChild(homeActivitySection);
+
+        return homeActivitySection;
+    }
+
+    function mountDailyActivityWidget() {
+        if (!isPhone || !document.body || isLoggedOut()) return;
+
+        var section = ensureHomeActivitySection();
+        if (!section) return;
+
+        var widget = findDailyActivityWidget();
+        if (!widget || widget === section) return;
+
+        /*
+         * Never allow appendChild() to create a DOM cycle.
+         * This is a final safety guard even if a future finder change returns
+         * an ancestor by mistake.
+         */
+        if (widget.contains && widget.contains(section)) {
+            return;
+        }
+
+        widget.classList.add('mobile-daily-activity-widget');
+        widget.setAttribute('data-klozer-mobile-activity', 'true');
+
+        if (section.contains(widget)) {
+            dailyActivityWidget = widget;
+            return;
+        }
+
+        section.appendChild(widget);
+        dailyActivityWidget = widget;
+    }
+
+    function installActivityObserver() {
+        if (!window.MutationObserver || activityObserver || !document.body) return;
+
+        activityObserver = new MutationObserver(function () {
+            /*
+             * VICIdial updates the DOM constantly while the agent is logged in.
+             * Once the real widget is already mounted, do nothing. This prevents
+             * needless full-DOM scans and avoids observer churn on mobile.
+             */
+            if (homeActivitySection &&
+                dailyActivityWidget &&
+                document.body.contains(dailyActivityWidget) &&
+                homeActivitySection.contains(dailyActivityWidget)) {
+                return;
+            }
+
+            mountDailyActivityWidget();
+        });
+
+        activityObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        window.setTimeout(mountDailyActivityWidget, 250);
+        window.setTimeout(mountDailyActivityWidget, 1000);
+        window.setTimeout(mountDailyActivityWidget, 3000);
+    }
+
+
+    function closerSelectionIsVisible() {
+        var box = document.getElementById('CloserSelectBox');
+        if (!box) return false;
+
+        var style = window.getComputedStyle ? window.getComputedStyle(box) : box.style;
+        return style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0' &&
+            box.getClientRects().length > 0;
+    }
+
+    function syncCloserSelection() {
+        if (!isPhone || !document.body || isLoggedOut()) return;
+
+        var visible = closerSelectionIsVisible();
+
+        if (visible) {
+            clearMobilePanelSelection();
+            document.body.classList.add('klozer-inbound-groups-open');
+            closerWasVisible = true;
+            closeMoreSheet();
+        } else {
+            document.body.classList.remove('klozer-inbound-groups-open');
+
+            if (closerWasVisible) {
+                closerWasVisible = false;
+                hideStandardPanelsNative();
+                setUiView('dashboard', true);
+            }
+        }
+    }
+
+    function installCloserObserver() {
+        var box = document.getElementById('CloserSelectBox');
+
+        if (!box || !window.MutationObserver || closerObserver) {
+            syncCloserSelection();
+            return;
+        }
+
+        closerObserver = new MutationObserver(function () {
+            window.setTimeout(syncCloserSelection, 0);
+        });
+
+        closerObserver.observe(box, {
+            attributes: true,
+            childList: true,
+            subtree: true,
+            attributeFilter: ['style', 'class']
+        });
+
+        syncCloserSelection();
+        window.setTimeout(syncCloserSelection, 300);
+        window.setTimeout(syncCloserSelection, 1200);
+    }
+
+    function installLogoutObserver() {
+        var box = document.getElementById('LogouTBox');
+
+        if (box && window.MutationObserver && !logoutObserver) {
+            logoutObserver = new MutationObserver(function () {
+                window.setTimeout(syncLogoutState, 0);
+            });
+
+            logoutObserver.observe(box, {
+                attributes: true,
+                childList: true,
+                subtree: true,
+                attributeFilter: ['style', 'class']
+            });
+        }
+
+        /*
+         * Passive state check only.
+         * No VICidial logout function is replaced.
+         */
+        logoutTimer = window.setInterval(function () {
+            syncLogoutState();
+
+            if (document.body &&
+                document.body.classList.contains('klozer-mobile-logged-out')) {
+                window.clearInterval(logoutTimer);
+                logoutTimer = null;
+            }
+        }, 500);
+    }
+
+
+    function applyCustomerChatMobileResponsive() {
+        if (!isPhone) return;
+
+        var frame = document.getElementById('CustomerChatIFrame');
+        if (!frame) return;
+
+        try {
+            var frameDoc = frame.contentDocument ||
+                (frame.contentWindow ? frame.contentWindow.document : null);
+
+            if (!frameDoc || !frameDoc.documentElement || !frameDoc.body) return;
+
+            /*
+             * vdc_chat_display.php may not include a mobile viewport meta tag.
+             * Without it, an iframe can keep a desktop layout viewport even
+             * though the visible iframe is phone-width, which is why controls
+             * can still extend beyond the right edge.
+             */
+            var viewportMeta = frameDoc.querySelector('meta[name="viewport"]');
+            if (!viewportMeta) {
+                viewportMeta = frameDoc.createElement('meta');
+                viewportMeta.setAttribute('name', 'viewport');
+                (frameDoc.head || frameDoc.documentElement).appendChild(viewportMeta);
+            }
+            viewportMeta.setAttribute(
+                'content',
+                'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover'
+            );
+
+            /*
+             * Parent CSS cannot style the contents of vdc_chat_display.php.
+             * Inject one phone-only stylesheet into the same-origin iframe.
+             */
+            var styleId = 'klozer-mobile-customer-chat-responsive';
+
+            if (!frameDoc.getElementById(styleId)) {
+                var style = frameDoc.createElement('style');
+                style.id = styleId;
+                style.type = 'text/css';
+                style.textContent = [
+                    'html, body {',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 0 !important;',
+                    '  padding: 0 !important;',
+                    '  overflow-x: hidden !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen {',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 0 !important;',
+                    '  padding: 12px !important;',
+                    '  overflow-x: hidden !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen *,',
+                    'body.klozer-mobile-live-agent-screen *::before,',
+                    'body.klozer-mobile-live-agent-screen *::after {',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen form,',
+                    'body.klozer-mobile-live-agent-screen table,',
+                    'body.klozer-mobile-live-agent-screen tbody,',
+                    'body.klozer-mobile-live-agent-screen tr,',
+                    'body.klozer-mobile-live-agent-screen td {',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen form {',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 0 !important;',
+                    '  padding: 0 !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen table {',
+                    '  display: block !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 0 !important;',
+                    '  table-layout: fixed !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen tbody,',
+                    'body.klozer-mobile-live-agent-screen tr {',
+                    '  display: block !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen td {',
+                    '  display: block !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  padding-left: 0 !important;',
+                    '  padding-right: 0 !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen select,',
+                    'body.klozer-mobile-live-agent-screen textarea,',
+                    'body.klozer-mobile-live-agent-screen input[type="text"],',
+                    'body.klozer-mobile-live-agent-screen input[type="email"],',
+                    'body.klozer-mobile-live-agent-screen input[type="search"],',
+                    'body.klozer-mobile-live-agent-screen input[type="tel"] {',
+                    '  display: block !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin-left: 0 !important;',
+                    '  margin-right: 0 !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen textarea {',
+                    '  min-height: 180px !important;',
+                    '  height: min(42dvh, 340px) !important;',
+                    '  max-height: 46dvh !important;',
+                    '  resize: vertical !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen button,',
+                    'body.klozer-mobile-live-agent-screen input[type="button"],',
+                    'body.klozer-mobile-live-agent-screen input[type="submit"],',
+                    'body.klozer-mobile-live-agent-screen a {',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen .klozer-mobile-live-agent-actions {',
+                    '  display: flex !important;',
+                    '  flex-direction: column !important;',
+                    '  flex-wrap: nowrap !important;',
+                    '  align-items: stretch !important;',
+                    '  justify-content: flex-start !important;',
+                    '  gap: 10px !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 12px 0 0 !important;',
+                    '  padding: 0 !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-live-agent-screen .klozer-mobile-live-agent-actions > * {',
+                    '  flex: 0 0 auto !important;',
+                    '  display: block !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 0 !important;',
+                    '  padding-left: 10px !important;',
+                    '  padding-right: 10px !important;',
+                    '  white-space: normal !important;',
+                    '  text-align: center !important;',
+                    '  overflow-wrap: anywhere !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    '@media (max-width: 360px) {',
+                    '  body.klozer-mobile-live-agent-screen {',
+                    '    padding: 9px !important;',
+                    '  }',
+                    '}'
+                ].join('\n');
+
+                (frameDoc.head || frameDoc.documentElement).appendChild(style);
+            }
+
+            function normalizeText(value) {
+                return (value || '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toUpperCase();
+            }
+
+            function findControlByText(needle) {
+                var controls = frameDoc.querySelectorAll(
+                    'button, input[type="button"], input[type="submit"], a'
+                );
+
+                for (var i = 0; i < controls.length; i++) {
+                    var control = controls[i];
+                    var text = '';
+
+                    if (control.tagName === 'INPUT') {
+                        text = control.value || '';
+                    } else {
+                        text = control.textContent || '';
+                    }
+
+                    if (normalizeText(text).indexOf(needle) !== -1) {
+                        return control;
+                    }
+                }
+
+                return null;
+            }
+
+            function findCommonContainer(a, b) {
+                if (!a || !b) return null;
+
+                var node = a.parentElement;
+                var guard = 0;
+
+                while (node && node !== frameDoc.body && guard < 7) {
+                    if (node.contains(b)) return node;
+                    node = node.parentElement;
+                    guard++;
+                }
+
+                return (a.parentElement === b.parentElement) ?
+                    a.parentElement :
+                    null;
+            }
+
+            function syncLiveAgentScreen() {
+                if (!frameDoc.body) return;
+
+                var bodyText = normalizeText(frameDoc.body.innerText || frameDoc.body.textContent);
+                var isLiveAgentScreen =
+                    bodyText.indexOf('SELECT A LIVE AGENT') !== -1 ||
+                    (
+                        bodyText.indexOf('AVAILABLE AGENTS') !== -1 &&
+                        bodyText.indexOf('START CHAT') !== -1
+                    );
+
+                frameDoc.body.classList.toggle(
+                    'klozer-mobile-live-agent-screen',
+                    isLiveAgentScreen
+                );
+
+                if (!isLiveAgentScreen) return;
+
+                /*
+                 * Remove old fixed/oversized inline geometry only from elements
+                 * that are actually wider than the iframe viewport.
+                 */
+                var viewportWidth = frameDoc.documentElement.clientWidth ||
+                    frameDoc.body.clientWidth ||
+                    0;
+
+                if (viewportWidth > 0) {
+                    var candidates = frameDoc.querySelectorAll(
+                        'form, table, div, section, fieldset, select, textarea, input'
+                    );
+
+                    for (var c = 0; c < candidates.length; c++) {
+                        var el = candidates[c];
+                        var rect = el.getBoundingClientRect ?
+                            el.getBoundingClientRect() :
+                            null;
+
+                        if (rect && rect.width > viewportWidth + 8) {
+                            el.style.setProperty('max-width', '100%', 'important');
+                            el.style.setProperty('min-width', '0', 'important');
+                            el.style.setProperty('box-sizing', 'border-box', 'important');
+
+                            if (el.tagName === 'FORM' ||
+                                el.tagName === 'SELECT' ||
+                                el.tagName === 'TEXTAREA' ||
+                                el.tagName === 'INPUT') {
+                                el.style.setProperty('width', '100%', 'important');
+                            }
+                        }
+                    }
+                }
+
+                /*
+                 * Make the two live-agent actions wrap instead of extending
+                 * beyond the right edge of the phone.
+                 */
+                var backButton = findControlByText('BACK TO CHAT SCREEN');
+                var startButton = findControlByText('START CHAT');
+                var actionContainer = findCommonContainer(backButton, startButton);
+
+                if (actionContainer) {
+                    actionContainer.classList.add(
+                        'klozer-mobile-live-agent-actions'
+                    );
+                }
+
+                /*
+                 * Some vdc_chat_display.php versions render the two controls
+                 * in separate table cells/containers, so there may be no useful
+                 * common wrapper to style. Apply the mobile sizing DIRECTLY to
+                 * both controls and their nearest wrappers as a guaranteed
+                 * fallback.
+                 */
+                var liveAgentButtons = [backButton, startButton];
+
+                for (var b = 0; b < liveAgentButtons.length; b++) {
+                    var liveButton = liveAgentButtons[b];
+                    if (!liveButton) continue;
+
+                    liveButton.style.setProperty('display', 'block', 'important');
+                    liveButton.style.setProperty('width', '100%', 'important');
+                    liveButton.style.setProperty('max-width', '100%', 'important');
+                    liveButton.style.setProperty('min-width', '0', 'important');
+                    liveButton.style.setProperty('margin', '8px 0 0', 'important');
+                    liveButton.style.setProperty('box-sizing', 'border-box', 'important');
+                    liveButton.style.setProperty('white-space', 'normal', 'important');
+                    liveButton.style.setProperty('overflow-wrap', 'anywhere', 'important');
+                    liveButton.style.setProperty('text-align', 'center', 'important');
+
+                    var buttonParent = liveButton.parentElement;
+                    var parentGuard = 0;
+
+                    while (buttonParent &&
+                           buttonParent !== frameDoc.body &&
+                           parentGuard < 3) {
+                        buttonParent.style.setProperty('display', 'block', 'important');
+                        buttonParent.style.setProperty('width', '100%', 'important');
+                        buttonParent.style.setProperty('max-width', '100%', 'important');
+                        buttonParent.style.setProperty('min-width', '0', 'important');
+                        buttonParent.style.setProperty('margin-left', '0', 'important');
+                        buttonParent.style.setProperty('margin-right', '0', 'important');
+                        buttonParent.style.setProperty('box-sizing', 'border-box', 'important');
+                        buttonParent = buttonParent.parentElement;
+                        parentGuard++;
+                    }
+                }
+            }
+
+            syncLiveAgentScreen();
+
+            /*
+             * "Chat with Live Agent" can change the iframe DOM without causing
+             * a new page load. Observe only content changes, not attributes, so
+             * our own class/style updates do not create an observer loop.
+             */
+            if (!frameDoc.documentElement.getAttribute('data-klozer-live-agent-observer')) {
+                frameDoc.documentElement.setAttribute(
+                    'data-klozer-live-agent-observer',
+                    '1'
+                );
+
+                var FrameMutationObserver =
+                    (frame.contentWindow && frame.contentWindow.MutationObserver) ||
+                    window.MutationObserver;
+
+                if (FrameMutationObserver) {
+                    var observer = new FrameMutationObserver(function () {
+                        window.setTimeout(syncLiveAgentScreen, 0);
+                    });
+
+                    observer.observe(frameDoc.body, {
+                        childList: true,
+                        subtree: true,
+                        characterData: true
+                    });
+
+                    frameDoc.__klozerMobileLiveAgentObserver = observer;
+                }
+            }
+
+            window.setTimeout(syncLiveAgentScreen, 80);
+            window.setTimeout(syncLiveAgentScreen, 300);
+
+        } catch (error) {
+            /*
+             * Customer chat normally uses a same-origin relative URL.
+             * If a deployment changes it to a cross-origin URL, leave native
+             * chat untouched instead of breaking the panel.
+             */
+            if (window.console && console.warn) {
+                console.warn(
+                    'Klozer mobile Customer Chat responsive styling was skipped:',
+                    error
+                );
+            }
+        }
+    }
+
+    function installCustomerChatMobileResponsive() {
+        if (!isPhone) return;
+
+        var frame = document.getElementById('CustomerChatIFrame');
+        if (!frame) return;
+
+        if (frame.getAttribute('data-klozer-mobile-responsive-bound') !== '1') {
+            frame.setAttribute('data-klozer-mobile-responsive-bound', '1');
+
+            frame.addEventListener('load', function () {
+                window.setTimeout(applyCustomerChatMobileResponsive, 0);
+                window.setTimeout(applyCustomerChatMobileResponsive, 120);
+            });
+        }
+
+        applyCustomerChatMobileResponsive();
+        window.setTimeout(applyCustomerChatMobileResponsive, 250);
+        window.setTimeout(applyCustomerChatMobileResponsive, 1000);
+    }
+
+
+
+    function applyInternalChatMobileResponsive() {
+        if (!isPhone) return;
+
+        var frame = document.getElementById('InternalChatIFrame');
+        if (!frame) return;
+
+        try {
+            var frameDoc = frame.contentDocument ||
+                (frame.contentWindow ? frame.contentWindow.document : null);
+
+            if (!frameDoc || !frameDoc.documentElement || !frameDoc.body) return;
+
+            /* The live-agent page is inside agc_agent_manager_chat_interface.php.
+               Give THAT iframe document a true phone viewport. */
+            var viewportMeta = frameDoc.querySelector('meta[name="viewport"]');
+            if (!viewportMeta) {
+                viewportMeta = frameDoc.createElement('meta');
+                viewportMeta.setAttribute('name', 'viewport');
+                (frameDoc.head || frameDoc.documentElement).appendChild(viewportMeta);
+            }
+            viewportMeta.setAttribute(
+                'content',
+                'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover'
+            );
+
+            var styleId = 'klozer-mobile-internal-live-agent-responsive';
+
+            if (!frameDoc.getElementById(styleId)) {
+                var style = frameDoc.createElement('style');
+                style.id = styleId;
+                style.type = 'text/css';
+                style.textContent = [
+                    'html, body {',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 0 !important;',
+                    '  padding: 0 !important;',
+                    '  overflow-x: hidden !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent {',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 0 !important;',
+                    '  padding: 12px !important;',
+                    '  overflow-x: hidden !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent *,',
+                    'body.klozer-mobile-internal-live-agent *::before,',
+                    'body.klozer-mobile-internal-live-agent *::after {',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent form,',
+                    'body.klozer-mobile-internal-live-agent fieldset,',
+                    'body.klozer-mobile-internal-live-agent table,',
+                    'body.klozer-mobile-internal-live-agent tbody,',
+                    'body.klozer-mobile-internal-live-agent tr,',
+                    'body.klozer-mobile-internal-live-agent td {',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin-left: 0 !important;',
+                    '  margin-right: 0 !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent table,',
+                    'body.klozer-mobile-internal-live-agent tbody,',
+                    'body.klozer-mobile-internal-live-agent tr,',
+                    'body.klozer-mobile-internal-live-agent td {',
+                    '  display: block !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent td {',
+                    '  padding-left: 0 !important;',
+                    '  padding-right: 0 !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent select,',
+                    'body.klozer-mobile-internal-live-agent textarea,',
+                    'body.klozer-mobile-internal-live-agent input[type="text"],',
+                    'body.klozer-mobile-internal-live-agent input[type="email"],',
+                    'body.klozer-mobile-internal-live-agent input[type="search"],',
+                    'body.klozer-mobile-internal-live-agent input[type="tel"] {',
+                    '  display: block !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin-left: 0 !important;',
+                    '  margin-right: 0 !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent textarea {',
+                    '  height: min(38dvh, 300px) !important;',
+                    '  min-height: 170px !important;',
+                    '  max-height: 42dvh !important;',
+                    '  resize: vertical !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent .klozer-mobile-internal-actions {',
+                    '  display: grid !important;',
+                    '  grid-template-columns: 1fr !important;',
+                    '  gap: 10px !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 12px 0 0 !important;',
+                    '  padding: 0 !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    'body.klozer-mobile-internal-live-agent .klozer-mobile-internal-action {',
+                    '  display: block !important;',
+                    '  width: 100% !important;',
+                    '  max-width: 100% !important;',
+                    '  min-width: 0 !important;',
+                    '  margin: 0 !important;',
+                    '  padding-left: 10px !important;',
+                    '  padding-right: 10px !important;',
+                    '  white-space: normal !important;',
+                    '  overflow-wrap: anywhere !important;',
+                    '  text-align: center !important;',
+                    '  box-sizing: border-box !important;',
+                    '}',
+                    '',
+                    '@media (max-width: 360px) {',
+                    '  body.klozer-mobile-internal-live-agent {',
+                    '    padding: 9px !important;',
+                    '  }',
+                    '}'
+                ].join('\n');
+
+                (frameDoc.head || frameDoc.documentElement).appendChild(style);
+            }
+
+            function normalizeInternalChatText(value) {
+                return (value || '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toUpperCase();
+            }
+
+            function findInternalChatControl(needle) {
+                /*
+                 * First search real controls. V8.15 also searched every
+                 * [onclick] element in the same pass, so an outer legacy table
+                 * wrapper could be selected before the actual button.
+                 */
+                var primaryControls = frameDoc.querySelectorAll(
+                    'button, input[type="button"], input[type="submit"], a'
+                );
+
+                for (var i = 0; i < primaryControls.length; i++) {
+                    var primary = primaryControls[i];
+                    var primaryText = primary.tagName === 'INPUT' ?
+                        (primary.value || '') :
+                        (primary.textContent || '');
+
+                    if (normalizeInternalChatText(primaryText).indexOf(needle) !== -1) {
+                        return primary;
+                    }
+                }
+
+                var fallbackControls = frameDoc.querySelectorAll('[onclick]');
+
+                for (var f = 0; f < fallbackControls.length; f++) {
+                    var fallback = fallbackControls[f];
+                    var fallbackText = fallback.tagName === 'INPUT' ?
+                        (fallback.value || '') :
+                        (fallback.textContent || '');
+
+                    if (normalizeInternalChatText(fallbackText).indexOf(needle) !== -1) {
+                        return fallback;
+                    }
+                }
+
+                return null;
+            }
+
+            function getSmallestCommonInternalParent(a, b) {
+                if (!a || !b) return null;
+
+                var node = a.parentElement;
+                var guard = 0;
+
+                while (node && node !== frameDoc.body && guard < 10) {
+                    if (node.contains(b)) return node;
+                    node = node.parentElement;
+                    guard++;
+                }
+
+                return null;
+            }
+
+            function normalizeInternalLiveAgentScreen() {
+                if (!frameDoc.body) return;
+
+                var bodyText = normalizeInternalChatText(
+                    frameDoc.body.innerText || frameDoc.body.textContent
+                );
+
+                var isLiveAgentScreen =
+                    bodyText.indexOf('SELECT A LIVE AGENT') !== -1 ||
+                    (
+                        bodyText.indexOf('AVAILABLE AGENTS') !== -1 &&
+                        bodyText.indexOf('START CHAT') !== -1
+                    );
+
+                frameDoc.body.classList.toggle(
+                    'klozer-mobile-internal-live-agent',
+                    isLiveAgentScreen
+                );
+
+                if (!isLiveAgentScreen) return;
+
+                /* Hard-stop horizontal page scrolling in the iframe. */
+                frameDoc.documentElement.style.setProperty('width', '100%', 'important');
+                frameDoc.documentElement.style.setProperty('max-width', '100%', 'important');
+                frameDoc.documentElement.style.setProperty('overflow-x', 'hidden', 'important');
+                frameDoc.body.style.setProperty('width', '100%', 'important');
+                frameDoc.body.style.setProperty('max-width', '100%', 'important');
+                frameDoc.body.style.setProperty('min-width', '0', 'important');
+                frameDoc.body.style.setProperty('overflow-x', 'hidden', 'important');
+
+                /* Remove legacy fixed widths from oversized wrappers. */
+                var viewportWidth = frame.clientWidth ||
+                    frameDoc.documentElement.clientWidth ||
+                    0;
+
+                var candidates = frameDoc.querySelectorAll(
+                    'form, fieldset, table, tbody, tr, td, div, section, select, textarea, input'
+                );
+
+                for (var c = 0; c < candidates.length; c++) {
+                    var el = candidates[c];
+
+                    el.style.setProperty('max-width', '100%', 'important');
+                    el.style.setProperty('min-width', '0', 'important');
+                    el.style.setProperty('box-sizing', 'border-box', 'important');
+
+                    var rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+                    if (viewportWidth > 0 && rect && rect.width > viewportWidth + 2) {
+                        el.style.setProperty('width', '100%', 'important');
+                        el.style.setProperty('margin-left', '0', 'important');
+                        el.style.setProperty('margin-right', '0', 'important');
+                        el.style.setProperty('left', 'auto', 'important');
+                        el.style.setProperty('right', 'auto', 'important');
+                    }
+                }
+
+                var backButton = findInternalChatControl('BACK TO CHAT SCREEN');
+                var startButton = findInternalChatControl('START CHAT');
+                var actionContainer = getSmallestCommonInternalParent(
+                    backButton,
+                    startButton
+                );
+
+                if (actionContainer) {
+                    actionContainer.classList.add(
+                        'klozer-mobile-internal-actions'
+                    );
+                }
+
+                var buttons = [backButton, startButton];
+
+                for (var b = 0; b < buttons.length; b++) {
+                    var button = buttons[b];
+                    if (!button) continue;
+
+                    button.classList.add('klozer-mobile-internal-action');
+                    button.style.setProperty('display', 'block', 'important');
+                    button.style.setProperty('width', '100%', 'important');
+                    button.style.setProperty('max-width', '100%', 'important');
+                    button.style.setProperty('min-width', '0', 'important');
+                    button.style.setProperty('margin', '0', 'important');
+                    button.style.setProperty('box-sizing', 'border-box', 'important');
+                    button.style.setProperty('white-space', 'normal', 'important');
+
+                    /*
+                     * Legacy chat markup may put each action in its own table
+                     * cell/wrapper. Normalize that chain so no desktop-width
+                     * cell can push START CHAT off the right side.
+                     */
+                    var parent = button.parentElement;
+                    var parentGuard = 0;
+
+                    while (parent && parent !== frameDoc.body && parentGuard < 5) {
+                        parent.style.setProperty('display', 'block', 'important');
+                        parent.style.setProperty('width', '100%', 'important');
+                        parent.style.setProperty('max-width', '100%', 'important');
+                        parent.style.setProperty('min-width', '0', 'important');
+                        parent.style.setProperty('margin-left', '0', 'important');
+                        parent.style.setProperty('margin-right', '0', 'important');
+                        parent.style.setProperty('padding-left', '0', 'important');
+                        parent.style.setProperty('padding-right', '0', 'important');
+                        parent.style.setProperty('box-sizing', 'border-box', 'important');
+                        parent = parent.parentElement;
+                        parentGuard++;
+                    }
+                }
+
+                /*
+                 * FINAL V8.16 FIT-TO-WIDTH PASS
+                 * --------------------------------
+                 * Some old agent-chat builds still have fixed desktop widths
+                 * buried in nested markup. Instead of only hiding horizontal
+                 * overflow, measure the ACTUAL visible content width and scale
+                 * the complete live-agent form down just enough to fit the
+                 * iframe viewport.
+                 *
+                 * Example:
+                 * iframe = 380px, old visible form = 455px
+                 * scale = 380 / 455 = 0.835
+                 *
+                 * The compensated body width keeps normal 100%-wide controls
+                 * filling the phone after zooming.
+                 */
+                function fitInternalLiveAgentToViewport() {
+                    if (!frameDoc.body) return;
+
+                    var availableWidth = frame.clientWidth ||
+                        frameDoc.documentElement.clientWidth ||
+                        0;
+
+                    if (!availableWidth || availableWidth < 200) return;
+
+                    /* Reset previous fit before measuring the current DOM. */
+                    frameDoc.body.style.removeProperty('zoom');
+                    frameDoc.body.style.removeProperty('transform');
+                    frameDoc.body.style.removeProperty('transform-origin');
+                    frameDoc.body.style.setProperty('width', '100%', 'important');
+                    frameDoc.body.style.setProperty('max-width', '100%', 'important');
+
+                    var bodyRect = frameDoc.body.getBoundingClientRect();
+                    var originLeft = bodyRect.left;
+                    var maxRight = availableWidth;
+
+                    var visibleCandidates = frameDoc.querySelectorAll(
+                        'form, fieldset, table, tbody, tr, td, div, section, ' +
+                        'select, textarea, button, input, a'
+                    );
+
+                    for (var v = 0; v < visibleCandidates.length; v++) {
+                        var visibleEl = visibleCandidates[v];
+                        var visibleStyle = frame.contentWindow &&
+                            frame.contentWindow.getComputedStyle ?
+                            frame.contentWindow.getComputedStyle(visibleEl) :
+                            null;
+
+                        if (visibleStyle &&
+                            (
+                                visibleStyle.display === 'none' ||
+                                visibleStyle.visibility === 'hidden'
+                            )) {
+                            continue;
+                        }
+
+                        var visibleRect = visibleEl.getBoundingClientRect ?
+                            visibleEl.getBoundingClientRect() :
+                            null;
+
+                        if (!visibleRect ||
+                            visibleRect.width <= 0 ||
+                            visibleRect.height <= 0) {
+                            continue;
+                        }
+
+                        maxRight = Math.max(
+                            maxRight,
+                            visibleRect.right - originLeft
+                        );
+                    }
+
+                    var naturalWidth = Math.ceil(maxRight);
+                    var safeWidth = Math.max(220, availableWidth - 4);
+                    var scale = 1;
+
+                    if (naturalWidth > safeWidth + 2) {
+                        scale = safeWidth / naturalWidth;
+                    }
+
+                    /* Do not make the interface unusably tiny if an unrelated
+                       hidden/legacy node reports an extreme width. */
+                    scale = Math.max(0.68, Math.min(1, scale));
+
+                    if (scale < 0.995) {
+                        var compensatedWidth = (100 / scale).toFixed(3) + '%';
+
+                        if (typeof frameDoc.body.style.zoom !== 'undefined') {
+                            frameDoc.body.style.setProperty(
+                                'zoom',
+                                String(scale),
+                                'important'
+                            );
+                            frameDoc.body.style.setProperty(
+                                'width',
+                                compensatedWidth,
+                                'important'
+                            );
+                            frameDoc.body.style.setProperty(
+                                'max-width',
+                                compensatedWidth,
+                                'important'
+                            );
+                        } else {
+                            frameDoc.body.style.setProperty(
+                                'transform',
+                                'scale(' + scale + ')',
+                                'important'
+                            );
+                            frameDoc.body.style.setProperty(
+                                'transform-origin',
+                                'top left',
+                                'important'
+                            );
+                            frameDoc.body.style.setProperty(
+                                'width',
+                                compensatedWidth,
+                                'important'
+                            );
+                            frameDoc.body.style.setProperty(
+                                'max-width',
+                                compensatedWidth,
+                                'important'
+                            );
+                        }
+
+                        frameDoc.body.setAttribute(
+                            'data-klozer-mobile-fit-scale',
+                            scale.toFixed(4)
+                        );
+                    } else {
+                        frameDoc.body.removeAttribute(
+                            'data-klozer-mobile-fit-scale'
+                        );
+                    }
+
+                    /* Keep the viewport anchored to the left after fitting. */
+                    frameDoc.documentElement.scrollLeft = 0;
+                    frameDoc.body.scrollLeft = 0;
+                }
+
+                fitInternalLiveAgentToViewport();
+                window.setTimeout(fitInternalLiveAgentToViewport, 80);
+                window.setTimeout(fitInternalLiveAgentToViewport, 260);
+
+                /* Final overflow guard after layout changes. */
+                frameDoc.documentElement.style.setProperty(
+                    'overflow-x',
+                    'hidden',
+                    'important'
+                );
+                frameDoc.body.style.setProperty(
+                    'overflow-x',
+                    'hidden',
+                    'important'
+                );
+                frameDoc.documentElement.scrollLeft = 0;
+                frameDoc.body.scrollLeft = 0;
+            }
+
+            normalizeInternalLiveAgentScreen();
+
+            /* The Chat with Live Agent action can update the iframe DOM without
+               navigating to a new URL, so watch content changes too. */
+            if (!frameDoc.documentElement.getAttribute('data-klozer-internal-live-observer')) {
+                frameDoc.documentElement.setAttribute(
+                    'data-klozer-internal-live-observer',
+                    '1'
+                );
+
+                var FrameMutationObserver =
+                    (frame.contentWindow && frame.contentWindow.MutationObserver) ||
+                    window.MutationObserver;
+
+                if (FrameMutationObserver) {
+                    var observer = new FrameMutationObserver(function () {
+                        window.setTimeout(normalizeInternalLiveAgentScreen, 0);
+                    });
+
+                    observer.observe(frameDoc.body, {
+                        childList: true,
+                        subtree: true,
+                        characterData: true
+                    });
+
+                    frameDoc.__klozerInternalLiveAgentObserver = observer;
+                }
+            }
+
+            window.setTimeout(normalizeInternalLiveAgentScreen, 60);
+            window.setTimeout(normalizeInternalLiveAgentScreen, 220);
+            window.setTimeout(normalizeInternalLiveAgentScreen, 700);
+
+        } catch (error) {
+            if (window.console && console.warn) {
+                console.warn(
+                    'Klozer mobile Internal Chat responsive styling was skipped:',
+                    error
+                );
+            }
+        }
+    }
+
+    function installInternalChatMobileResponsive() {
+        if (!isPhone) return;
+
+        var frame = document.getElementById('InternalChatIFrame');
+        if (!frame) return;
+
+        if (frame.getAttribute('data-klozer-internal-responsive-bound') !== '1') {
+            frame.setAttribute('data-klozer-internal-responsive-bound', '1');
+
+            frame.addEventListener('load', function () {
+                window.setTimeout(applyInternalChatMobileResponsive, 0);
+                window.setTimeout(applyInternalChatMobileResponsive, 100);
+                window.setTimeout(applyInternalChatMobileResponsive, 350);
+            });
+        }
+
+        applyInternalChatMobileResponsive();
+        window.setTimeout(applyInternalChatMobileResponsive, 200);
+        window.setTimeout(applyInternalChatMobileResponsive, 900);
+    }
+
+
+    function resolveMobileCustomerSmsRecipient(button, fieldId) {
+        var values = [];
+
+        function addValue(value) {
+            value = String(value || '')
+                .replace(/\u00a0/g, ' ')
+                .trim();
+
+            if (value && values.indexOf(value) === -1) {
+                values.push(value);
+            }
+        }
+
+        /*
+         * FIRST: read the input physically beside the envelope button.
+         * This is the exact field the agent can see/type into, so it avoids
+         * stale hidden/duplicate VICIdial fields with the same id/name.
+         */
+        if (button) {
+            var row = button.parentElement;
+            if (row) {
+                var nearby = row.querySelectorAll(
+                    'input, textarea, [id$="DISP"], span'
+                );
+
+                for (var n = 0; n < nearby.length; n++) {
+                    var el = nearby[n];
+                    if (el === button) continue;
+
+                    if (typeof el.value !== 'undefined') {
+                        addValue(el.value);
+                    }
+
+                    addValue(el.textContent || el.innerText || '');
+                }
+            }
+        }
+
+        /* Then try the named VICIdial form control. */
+        try {
+            if (document.vicidial_form &&
+                document.vicidial_form.elements &&
+                document.vicidial_form.elements[fieldId]) {
+                var formField = document.vicidial_form.elements[fieldId];
+
+                if (formField.length && !formField.tagName) {
+                    for (var f = 0; f < formField.length; f++) {
+                        addValue(formField[f].value);
+                    }
+                } else {
+                    addValue(formField.value);
+                }
+            }
+        } catch (e) {}
+
+        /* Finally inspect every matching id/name and prefer non-empty content. */
+        var selectors = [
+            '[name="' + fieldId + '"]',
+            '#' + fieldId,
+            '#' + fieldId + 'DISP'
+        ];
+
+        for (var s = 0; s < selectors.length; s++) {
+            var matches = document.querySelectorAll(selectors[s]);
+
+            for (var m = 0; m < matches.length; m++) {
+                var match = matches[m];
+                if (typeof match.value !== 'undefined') addValue(match.value);
+                addValue(match.textContent || match.innerText || '');
+            }
+        }
+
+        return values.length ? values[0] : '';
+    }
+
+    function syncCustomerSmsFieldValue(fieldId, value) {
+        var cleanValue = String(value || '').trim();
+        if (!cleanValue) return false;
+
+        var candidates = document.querySelectorAll(
+            '[name="' + fieldId + '"], #' + fieldId
+        );
+
+        for (var i = 0; i < candidates.length; i++) {
+            var field = candidates[i];
+
+            if (field &&
+                typeof field.value !== 'undefined') {
+                field.value = cleanValue;
+            }
+        }
+
+        try {
+            if (document.vicidial_form &&
+                document.vicidial_form.elements &&
+                document.vicidial_form.elements[fieldId]) {
+                var formField =
+                    document.vicidial_form.elements[fieldId];
+
+                if (formField.length && !formField.tagName) {
+                    for (var f = 0; f < formField.length; f++) {
+                        if (typeof formField[f].value !== 'undefined') {
+                            formField[f].value = cleanValue;
+                        }
+                    }
+                } else if (typeof formField.value !== 'undefined') {
+                    formField.value = cleanValue;
+                }
+            }
+        } catch (e) {}
+
+        return true;
+    }
+
+    function refreshQuickSmsSenderDesktopStyle() {
+        var clientSelect =
+            document.getElementById('quick_sms_client');
+
+        if (!clientSelect) return;
+
+        var currentText = String(
+            clientSelect.textContent || ''
+        ).trim();
+
+        var currentValue = String(
+            clientSelect.value || ''
+        ).trim();
+
+        if (currentValue &&
+            !/Fetching/i.test(currentText)) {
+            return;
+        }
+
+        var ext = '';
+
+        try {
+            ext = (typeof extension !== 'undefined') ?
+                extension :
+                '';
+        } catch (e) {}
+
+        var sxhr = new XMLHttpRequest();
+        sxhr.open(
+            'POST',
+            'send_sms_ajax.php',
+            true
+        );
+        sxhr.setRequestHeader(
+            'Content-Type',
+            'application/x-www-form-urlencoded'
+        );
+
+        sxhr.onreadystatechange = function () {
+            if (this.readyState !== 4) return;
+
+            if (this.status === 200) {
+                try {
+                    var data = JSON.parse(this.responseText);
+
+                    if (data && data.sender_id) {
+                        clientSelect.innerHTML =
+                            '<option value="' +
+                            String(data.sender_id).replace(/"/g, '&quot;') +
+                            '">' +
+                            String(data.sender_id) +
+                            '</option>';
+                        return;
+                    }
+                } catch (e) {}
+            }
+
+            var fallback = [];
+
+            try {
+                if (typeof agent_sms_numbers !== 'undefined' &&
+                    Array.isArray(agent_sms_numbers)) {
+                    fallback =
+                        agent_sms_numbers.slice(0);
+                }
+            } catch (e) {}
+
+            if (!fallback.length) {
+                try {
+                    if (typeof agent_sms_number !== 'undefined' &&
+                        agent_sms_number) {
+                        fallback = [agent_sms_number];
+                    }
+                } catch (e) {}
+            }
+
+            if (fallback.length) {
+                var seen = {};
+                var html = '';
+
+                for (var n = 0; n < fallback.length; n++) {
+                    var number =
+                        String(fallback[n] || '').trim();
+
+                    if (!number || seen[number]) continue;
+                    seen[number] = true;
+
+                    html +=
+                        '<option value="' +
+                        number.replace(/"/g, '&quot;') +
+                        '">' +
+                        number +
+                        '</option>';
+                }
+
+                if (html) {
+                    clientSelect.innerHTML = html;
+                    return;
+                }
+            }
+
+            clientSelect.innerHTML =
+                '<option value="">Unknown Sender</option>';
+        };
+
+        sxhr.send(
+            'ACTION=GET_SENDER_ID&extension=' +
+            encodeURIComponent(ext)
+        );
+    }
+
+    function keepCustomerQuickSmsMobileState(recipient) {
+        if (!isPhone || !document.body) return;
+
+        mobileCustomerQuickSmsActive = true;
+
+        if (typeof window.KlozerPromoteOpenedSmsToMessages === 'function') {
+            window.KlozerPromoteOpenedSmsToMessages();
+        }
+
+        var panel =
+            document.getElementById('EmailPanel');
+
+        if (panel) {
+            panel.classList.remove('mobile-sms-list');
+            panel.classList.add('mobile-quick-sms');
+        }
+
+        if (window.jQuery) {
+            window.jQuery('#EmailPanel .chat-app-container').hide();
+            window.jQuery('#EmailPanel .form_inner_sms').show();
+            window.jQuery('#EmailPanel .quick_sms').addClass('active');
+            window.jQuery('#EmailPanel .chat_list').removeClass('active');
+        }
+
+        var receiver =
+            document.getElementById('quick_sms_phone_number');
+
+        if (receiver && recipient) {
+            receiver.value =
+                String(recipient).trim();
+        }
+    }
+
+    function startMobileCustomerQuickSms(
+        button,
+        fieldId
+    ) {
+        if (!isPhone ||
+            !smsEnabledForAgent ||
+            !document.body) {
+            return false;
+        }
+
+        var recipient =
+            resolveMobileCustomerSmsRecipient(
+                button,
+                fieldId
+            );
+
+        recipient =
+            String(recipient || '').trim();
+
+        if (!recipient) {
+            alert(
+                'Please enter a phone number first.'
+            );
+            return false;
+        }
+
+        mobileCustomerQuickSmsActive = true;
+        mobileCustomerQuickSmsToken++;
+        mobileCustomerQuickSmsRecipient =
+            recipient;
+
+        var token =
+            mobileCustomerQuickSmsToken;
+
+        /*
+         * Make the exact visible Customer number the value that the original
+         * desktop openQuickSmsModal() reads.
+         */
+        syncCustomerSmsFieldValue(
+            fieldId,
+            recipient
+        );
+
+        /*
+         * Run the proven desktop workflow.
+         */
+        openQuickSmsModal(fieldId);
+
+        /*
+         * Immediately move the real SMS panel to Messages and directly fill
+         * the Quick SMS recipient. Do not wait for Bootstrap/tab timing.
+         */
+        window.KlozerPromoteOpenedSmsToMessages();
+        forceMobileQuickSmsMode(
+            recipient,
+            true
+        );
+
+        /*
+         * Resolve sender using BOTH desktop GET_SENDER_ID and SMS List
+         * GET_CONVERSATIONS sources.
+         */
+        refreshMobileQuickSmsSender(
+            token
+        );
+
+        /*
+         * Native tab/AJAX code can finish after this click. Keep the exact
+         * recipient and Quick SMS screen stable through those updates.
+         */
+        [40, 120, 300, 650, 1200, 2200].forEach(
+            function (delay) {
+                window.setTimeout(
+                    function () {
+                        if (!mobileCustomerQuickSmsActive ||
+                            token !== mobileCustomerQuickSmsToken) {
+                            return;
+                        }
+
+                        window.KlozerPromoteOpenedSmsToMessages();
+
+                        forceMobileQuickSmsMode(
+                            recipient,
+                            delay >= 300
+                        );
+
+                        if (delay === 650 ||
+                            delay === 2200) {
+                            refreshMobileQuickSmsSender(
+                                token
+                            );
+                        }
+                    },
+                    delay
+                );
+            }
+        );
+
+        return true;
+    }
+
+    function installMobileCustomerSmsButtonOverride() {
+        if (!isPhone ||
+            mobileCustomerSmsDelegatedBound) {
+            return;
+        }
+
+        mobileCustomerSmsDelegatedBound = true;
+
+        /*
+         * Delegated capture listener:
+         * VICIdial can update/recreate Customer markup. This catches the SMS
+         * envelope even when the individual button did not exist at mobile
+         * initialization time.
+         */
+        document.addEventListener(
+            'click',
+            function (event) {
+                if (!isPhone) return;
+
+                var target = event.target;
+
+                if (!target ||
+                    !target.closest) {
+                    return;
+                }
+
+                var button =
+                    target.closest(
+                        'button[onclick*="openQuickSmsModal"]'
+                    );
+
+                if (!button) return;
+
+                var onclickText =
+                    String(
+                        button.getAttribute(
+                            'onclick'
+                        ) || ''
+                    );
+
+                var match =
+                    onclickText.match(
+                        /openQuickSmsModal\s*\(\s*['"](phone_number|alt_phone)['"]\s*\)/i
+                    );
+
+                if (!match) return;
+
+                /*
+                 * We invoke the desktop function ourselves exactly once, so
+                 * suppress the button's inline duplicate call.
+                 */
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (typeof event.stopImmediatePropagation === 'function') {
+                    event.stopImmediatePropagation();
+                }
+
+                startMobileCustomerQuickSms(
+                    button,
+                    match[1]
+                );
+            },
+            true
+        );
+    }
+
+
+    function mobileQuickSmsSenderResolved() {
+        var select =
+            document.getElementById('quick_sms_client');
+
+        if (!select) return false;
+
+        var value =
+            String(select.value || '').trim();
+
+        var text =
+            String(select.textContent || '').trim();
+
+        return !!value &&
+            !/Fetching/i.test(text) &&
+            !/Unknown Sender/i.test(text);
+    }
+
+    function fallbackMobileQuickSmsSender(token) {
+        if (!mobileCustomerQuickSmsActive ||
+            token !== mobileCustomerQuickSmsToken) {
+            return;
+        }
+
+        if (mobileQuickSmsSenderResolved()) {
+            return;
+        }
+
+        /*
+         * Never overwrite with another "Fetching..." state.
+         * First use preloaded desktop/SMS-list sender data.
+         */
+        if (applyMobileSmsSenderCacheToQuickSms()) {
+            return;
+        }
+
+        /*
+         * If not cached yet, run the same desktop sender requests now.
+         */
+        preloadMobileSmsSenderCache(true);
+    }
+
+
+    window.KlozerMobileCustomerSmsDirect = function (
+        button,
+        fieldId
+    ) {
+        if (!isPhone ||
+            !smsEnabledForAgent ||
+            !document.body) {
+            openQuickSmsModal(fieldId);
+            return false;
+        }
+
+        var recipient =
+            resolveMobileCustomerSmsRecipient(
+                button,
+                fieldId
+            );
+
+        recipient =
+            String(recipient || '').trim();
+
+        if (!recipient) {
+            alert(
+                'Please enter a phone number first.'
+            );
+            return false;
+        }
+
+        syncCustomerSmsFieldValue(
+            fieldId,
+            recipient
+        );
+
+        mobileCustomerQuickSmsActive = true;
+        mobileCustomerQuickSmsToken++;
+        mobileCustomerQuickSmsRecipient =
+            recipient;
+
+        var token =
+            mobileCustomerQuickSmsToken;
+
+        /*
+         * INSTANT RECIPIENT:
+         * The Quick SMS form already exists in the page DOM, so write the
+         * recipient BEFORE opening/moving any panel. It is already populated
+         * by the time Messages becomes visible.
+         */
+        var receiver =
+            document.getElementById(
+                'quick_sms_phone_number'
+            );
+
+        if (receiver) {
+            receiver.value = recipient;
+            receiver.defaultValue = recipient;
+            receiver.setAttribute(
+                'value',
+                recipient
+            );
+            receiver.setAttribute(
+                'data-klozer-recipient',
+                recipient
+            );
+        }
+
+        /*
+         * Preselect Quick SMS before the native EmailPanel is shown.
+         */
+        var panel =
+            document.getElementById(
+                'EmailPanel'
+            );
+
+        if (panel) {
+            panel.classList.remove(
+                'mobile-sms-list'
+            );
+            panel.classList.add(
+                'mobile-quick-sms'
+            );
+        }
+
+        if (window.jQuery) {
+            window.jQuery(
+                '#EmailPanel .chat-app-container'
+            ).hide();
+
+            window.jQuery(
+                '#EmailPanel .form_inner_sms'
+            ).show();
+
+            window.jQuery(
+                '#EmailPanel .quick_sms'
+            ).addClass('active');
+
+            window.jQuery(
+                '#EmailPanel .chat_list'
+            ).removeClass('active');
+        }
+
+        /*
+         * Run the EXACT DESKTOP workflow.
+         * Its GET_SENDER_ID request remains the primary source of truth.
+         */
+        openQuickSmsModal(fieldId);
+
+        /*
+         * openQuickSmsModal() sets the sender dropdown to Fetching before its
+         * XHR returns. If we preloaded the sender already, immediately replace
+         * Fetching with the cached desktop/SMS-list sender DID.
+         */
+        applyMobileSmsSenderCacheToQuickSms();
+
+        /*
+         * If cache is not ready yet, start the same desktop requests now.
+         * They will populate the dropdown as soon as either response arrives.
+         */
+        if (!mobileQuickSmsSenderResolved()) {
+            preloadMobileSmsSenderCache(true);
+        }
+
+        /*
+         * Mobile presentation only: show the SAME native EmailPanel through
+         * Messages, never under Customer.
+         */
+        selectMobilePanel(
+            'EmailPanel',
+            'messages'
+        );
+
+        /*
+         * Reassert immediately after the panel move. This should not be the
+         * first recipient write; it is only a guard.
+         */
+        forceMobileQuickSmsMode(
+            recipient,
+            false
+        );
+
+        /*
+         * Short, bounded state guards for native Bootstrap/tab updates.
+         */
+        [
+            30,
+            100,
+            300,
+            650
+        ].forEach(
+            function (delay) {
+                window.setTimeout(
+                    function () {
+                        if (!mobileCustomerQuickSmsActive ||
+                            token !==
+                            mobileCustomerQuickSmsToken) {
+                            return;
+                        }
+
+                        selectMobilePanel(
+                            'EmailPanel',
+                            'messages'
+                        );
+
+                        forceMobileQuickSmsMode(
+                            recipient,
+                            delay >= 300
+                        );
+
+                        /*
+                         * Never reset to Fetching. Only apply cache if the
+                         * desktop request has not resolved yet.
+                         */
+                        if (!mobileQuickSmsSenderResolved()) {
+                            applyMobileSmsSenderCacheToQuickSms();
+                        }
+                    },
+                    delay
+                );
+            }
+        );
+
+        /*
+         * One bounded late retry for genuinely slow server responses.
+         */
+        window.setTimeout(
+            function () {
+                fallbackMobileQuickSmsSender(
+                    token
+                );
+            },
+            1200
+        );
+
+        return false;
+    };
+
+
+    function initializeMobileApp() {
+        if (initialized || !isPhone || !document.body || isLoggedOut()) return;
+        initialized = true;
+
+        buildInterface();
+        ensureHomeIdentitySection();
+        installActivityObserver();
+        installCloserObserver();
+        installLogoutObserver();
+        installOverlayObserver();
+        portalLeadSearchResultsToBody();
+        installLeadSearchResultsObserver();
+        installCallLogObserver();
+        installCustomerChatMobileResponsive();
+        installInternalChatMobileResponsive();
+        installCustomerLeadIdCapture();
+
+        /*
+         * Pre-fetch sender DID(s) before the agent taps any Customer SMS
+         * envelope. This uses the same desktop GET_SENDER_ID and SMS List
+         * GET_CONVERSATIONS sources.
+         */
+        preloadMobileSmsSenderCache(false);
+
+        window.setTimeout(function () {
+            if (!mobileSmsSenderCache.length) {
+                preloadMobileSmsSenderCache(true);
+            }
+        }, 1800);
+
+        var quickSmsPanel =
+            document.getElementById('EmailPanel');
+
+        if (window.MutationObserver &&
+            quickSmsPanel &&
+            !window.__klozerQuickSmsStateObserver) {
+            window.__klozerQuickSmsStateObserver =
+                new MutationObserver(
+                    function () {
+                        if (!mobileCustomerQuickSmsActive ||
+                            !mobileCustomerQuickSmsRecipient) {
+                            return;
+                        }
+
+                        /*
+                         * IMPORTANT:
+                         * Do not react to class/style changes here.
+                         * forceMobileQuickSmsMode() itself changes classes and
+                         * styles, which caused V8.58 to retrigger this observer
+                         * indefinitely and freeze the whole dialer.
+                         *
+                         * Only repair the recipient if native AJAX actually
+                         * replaced/cleared the Quick SMS form content.
+                         */
+                        var receiver =
+                            document.getElementById(
+                                'quick_sms_phone_number'
+                            );
+
+                        if (!receiver ||
+                            String(receiver.value || '').trim() !==
+                            String(
+                                mobileCustomerQuickSmsRecipient || ''
+                            ).trim()) {
+                            forceMobileQuickSmsMode(
+                                mobileCustomerQuickSmsRecipient,
+                                false
+                            );
+                        }
+                    }
+                );
+
+            window.__klozerQuickSmsStateObserver.observe(
+                quickSmsPanel,
+                {
+                    childList: true,
+                    subtree: true
+                }
+            );
+        }
+
+        portalNotesHistoryToBody();
+        installNotesHistoryModalObserver();
+
+        if (!window.__klozerNotesViewportFitBound) {
+            window.__klozerNotesViewportFitBound = true;
+
+            window.addEventListener('resize', function () {
+                if (document.body &&
+                    document.body.classList.contains('klozer-notes-history-open')) {
+                    measureNotesHistoryModalTop();
+                    fitNotesHistoryModalToViewport();
+                }
+            }, { passive: true });
+
+            window.addEventListener('orientationchange', function () {
+                window.setTimeout(function () {
+                    if (document.body &&
+                        document.body.classList.contains('klozer-notes-history-open')) {
+                        measureNotesHistoryModalTop();
+                        fitNotesHistoryModalToViewport();
+                    }
+                }, 100);
+            }, { passive: true });
+        }
+
+        /*
+         * Let the original WebPhone initialize first, then show Dialer.
+         * If the native inbound-group selector is open, its observer hides
+         * this shell until the agent submits the group selection.
+         */
+        setUiView('dialer', false);
+        syncCloserSelection();
+        syncLogoutState();
+    }
+
+    if (isPhone) {
+        window.addEventListener('load', function () {
+            window.setTimeout(initializeMobileApp, 1500);
+        });
+
+        if (document.readyState === 'complete') {
+            window.setTimeout(initializeMobileApp, 1500);
+        }
+    }
+
+    window.KlozerMobileApp = {
+        setView: setUiView,
+        openMore: openMoreSheet,
+        closeMore: closeMoreSheet,
+        showMessages: showMessages,
+        isPhone: function () { return isPhone; }
+    };
+}());
+</script>
+
+<style>
+.my-rank-badge { display: inline-flex; align-items: center; margin-left: 8px; padding: 6px 10px; border: 1px solid #00efd1; border-radius: 8px; background: #00252b; color: #ffce70; font-size: 13px; font-weight: 700; white-space: nowrap; }
+@media(max-width:767px) { .my-rank-badge { padding: 4px 7px; font-size: 12px; } }
+.mobile-rank-card {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    #mobileRankCard {
+        display: flex;
+        grid-column: 1 / -1;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 20px;
+        margin: 16px 0;
+        border: 1px solid #00efd1;
+        border-radius: 12px;
+        background: #00252b;
+        color: #00efd1;
+        font-weight: 700;
+    }
+
+    #myLeaderboardRankMobile {
+        color: #ffce70;
+        font-size: 28px;
+    }
+}
+</style>
+<script>
+(function () {
+    async function refreshMyLeaderboardRank() {
+        var badge = document.getElementById('myLeaderboardRank');
+        if (!badge) return;
+        var controller = new AbortController();
+        var timeout = setTimeout(function () { controller.abort(); }, 10000);
+        try {
+            var response = await fetch('agent_rank.php', {
+                credentials: 'same-origin', cache: 'no-store', signal: controller.signal
+            });
+            if (!response.ok) throw new Error('Rank unavailable');
+            var data = await response.json();
+            badge.textContent = data.rank === null ? 'My Rank: —' : 'My Rank: #' + data.rank;
+            badge.title = "Today's rank across all campaigns · Updated " + data.updated_at;
+			var mobileBadge = document.getElementById('myLeaderboardRankMobile');
+
+			if (mobileBadge) {
+				mobileBadge.textContent = data.rank === null
+					? '—'
+					: '#' + data.rank;
+
+				mobileBadge.title = badge.title;
 			}
-		}
+        } catch (error) {
+            badge.textContent = 'My Rank: —';
+            badge.title = 'Rank temporarily unavailable';
+			var mobileBadge = document.getElementById('myLeaderboardRankMobile');
 
-		.mobile-rank-card {
-			display: none;
-		}
-
-		@media (max-width: 767px) {
-			#mobileRankCard {
-				display: flex;
-				grid-column: 1 / -1;
-				align-items: center;
-				justify-content: space-between;
-				gap: 12px;
-				padding: 16px 20px;
-				margin: 16px 0;
-				border: 1px solid #00efd1;
-				border-radius: 12px;
-				background: #00252b;
-				color: #00efd1;
-				font-weight: 700;
+			if (mobileBadge) {
+				mobileBadge.textContent = '—';
+				mobileBadge.title = 'Rank temporarily unavailable';
 			}
-
-			#myLeaderboardRankMobile {
-				color: #ffce70;
-				font-size: 28px;
-			}
-		}
-	</style>
-	<script>
-		(function () {
-			async function refreshMyLeaderboardRank() {
-				var badge = document.getElementById('myLeaderboardRank');
-				if (!badge) return;
-				var controller = new AbortController();
-				var timeout = setTimeout(function () { controller.abort(); }, 10000);
-				try {
-					var response = await fetch('agent_rank.php', {
-						credentials: 'same-origin', cache: 'no-store', signal: controller.signal
-					});
-					if (!response.ok) throw new Error('Rank unavailable');
-					var data = await response.json();
-					badge.textContent = data.rank === null ? 'My Rank: ' : 'My Rank: #' + data.rank;
-					badge.title = "Today's rank across all campaigns · Updated " + data.updated_at;
-					var mobileBadge = document.getElementById('myLeaderboardRankMobile');
-
-					if (mobileBadge) {
-						mobileBadge.textContent = data.rank === null
-							? ''
-							: '#' + data.rank;
-
-						mobileBadge.title = badge.title;
-					}
-				} catch (error) {
-					badge.textContent = 'My Rank: ';
-					badge.title = 'Rank temporarily unavailable';
-					var mobileBadge = document.getElementById('myLeaderboardRankMobile');
-
-					if (mobileBadge) {
-						mobileBadge.textContent = '';
-						mobileBadge.title = 'Rank temporarily unavailable';
-					}
-				} finally {
-					clearTimeout(timeout);
-					setTimeout(refreshMyLeaderboardRank, 30000);
-				}
-			}
-			refreshMyLeaderboardRank();
-		})();
-	</script>
+        } finally {
+            clearTimeout(timeout);
+            setTimeout(refreshMyLeaderboardRank, 30000);
+        }
+    }
+    refreshMyLeaderboardRank();
+})();
+</script>
 </body>
 
 </html>
 <script>
-	function openGoogleMaps() {
-		var address1 = document.getElementById('address1').value.trim();
-		if (!address1) {
-			alert('No address available in Address1 field');
-			return;
-		}
-		var address2 = document.getElementById('address2').value;
-		var city = document.getElementById('city').value;
-		var state = document.getElementById('state').value;
-		var fullAddress = address1;
-		if (address2) fullAddress += ', ' + address2;
-		if (city) fullAddress += ', ' + city;
-		if (state) fullAddress += ', ' + state;
-		var encodedAddress = encodeURIComponent(fullAddress);
-		var googleMapsUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodedAddress;
-		window.open(googleMapsUrl, '_blank');
-	}</script>
+		function openGoogleMaps() {
+			var address1 = document.getElementById('address1').value.trim();
+			if (!address1) {
+				alert('No address available in Address1 field');
+				return;
+			}
+			var address2 = document.getElementById('address2').value;
+			var city = document.getElementById('city').value;
+			var state = document.getElementById('state').value;
+			var fullAddress = address1;
+			if (address2) fullAddress += ', ' + address2;
+			if (city) fullAddress += ', ' + city;
+			if (state) fullAddress += ', ' + state;
+			var encodedAddress = encodeURIComponent(fullAddress);
+			var googleMapsUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodedAddress;
+			window.open(googleMapsUrl, '_blank');
+		}</script>
 <?php
 
 
